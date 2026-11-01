@@ -1,58 +1,49 @@
-import { formatCents, toCents } from './domain/money'
+import { createBrowserRouter, Link, RouterProvider } from 'react-router'
+import { AuthCallbackPage } from './features/auth/AuthCallbackPage'
+import { AuthProvider } from './features/auth/AuthProvider'
+import { RequireAuth } from './features/auth/RequireAuth'
+import { SignInPage } from './features/auth/SignInPage'
+import { AcceptInvitePage } from './features/invites/AcceptInvitePage'
+import { HomePage } from './features/people/HomePage'
+import { AppLayout } from './features/shell/AppLayout'
+import { Card } from './shared/ui'
 
-/**
- * Placeholder home screen for milestone 1. It proves the build, styling and
- * domain layer are wired together. Replaced by the real app shell in M2.
- */
+const router = createBrowserRouter([
+  { path: '/sign-in', element: <SignInPage /> },
+  { path: '/auth/callback', element: <AuthCallbackPage /> },
+  {
+    // Everything below requires a signed-in user.
+    element: <RequireAuth />,
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          { index: true, element: <HomePage /> },
+          { path: 'invite/:token', element: <AcceptInvitePage /> },
+        ],
+      },
+    ],
+  },
+  { path: '*', element: <NotFound /> },
+])
+
 export default function App() {
-  const example = {
-    principal: toCents(20000),
-    charge: toCents(2000),
-  }
-  const total = toCents(example.principal + example.charge)
-
   return (
-    <main className="mx-auto flex min-h-svh max-w-md flex-col justify-center gap-8 px-4 py-12">
-      <header className="flex items-center gap-3">
-        <img src="/favicon.svg" alt="" className="size-10 rounded-xl" />
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Kinvo</h1>
-          <p className="text-sm text-ink-muted">A private lending ledger for families.</p>
-        </div>
-      </header>
-
-      <section
-        aria-labelledby="example-heading"
-        className="rounded-2xl border border-line bg-surface p-5 shadow-sm"
-      >
-        <h2 id="example-heading" className="text-sm font-medium text-ink-muted">
-          Example loan
-        </h2>
-        <dl className="mt-4 space-y-2 tabular-nums">
-          <Row label="Borrowed" value={formatCents(example.principal)} />
-          <Row label="One-off charge" value={formatCents(example.charge)} />
-          <div className="border-t border-line pt-2">
-            <Row label="Total to repay" value={formatCents(total)} emphasis />
-          </div>
-        </dl>
-      </section>
-
-      <p className="text-center text-xs text-ink-muted">In development · fictional data only</p>
-    </main>
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   )
 }
 
-interface RowProps {
-  label: string
-  value: string
-  emphasis?: boolean
-}
-
-function Row({ label, value, emphasis = false }: RowProps) {
+function NotFound() {
   return (
-    <div className="flex justify-between">
-      <dt className={emphasis ? 'font-medium' : 'text-ink-muted'}>{label}</dt>
-      <dd className={emphasis ? 'text-lg font-semibold text-brand' : ''}>{value}</dd>
-    </div>
+    <main className="mx-auto flex min-h-svh max-w-sm flex-col justify-center px-4">
+      <Card className="space-y-2">
+        <h1 className="text-xl font-semibold">Page not found</h1>
+        <Link to="/" className="text-sm font-medium text-brand underline">
+          Go home
+        </Link>
+      </Card>
+    </main>
   )
 }
