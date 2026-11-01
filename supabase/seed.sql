@@ -1,0 +1,6 @@
+-- Local development seed data. FICTIONAL ONLY: never put real people or amounts here.
+--
+-- Runs after migrations on `supabase db reset`. Accounts are created by signing in
+-- locally; to give your local account lender access, run:
+--
+--   update public.profiles set can_lend = true where email = 'you@example.com';
