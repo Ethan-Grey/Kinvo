@@ -50,15 +50,21 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: supabase/setup-cli@v1
+      # Use the Supabase CLI version pinned in package-lock.json, so CI and
+      # local development always run the same version.
+      - uses: actions/setup-node@v5
         with:
-          version: latest
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Start local database
-        run: supabase db start
+        run: npx supabase db start
 
       - name: Lint SQL
-        run: supabase db lint --level error
+        run: npx supabase db lint --level error
 
       - name: Row Level Security and function tests (pgTAP)
-        run: supabase test db
+        run: npx supabase test db
