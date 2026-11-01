@@ -58,7 +58,8 @@ function Rows({ loans }: { loans: LoanSummary[] }) {
   return (
     <ul className="divide-y divide-line">
       {loans.map((loan) => {
-        const badge = statusBadge(loan.status, loan.role, loan.awaitingMe)
+        const overdue = loan.status === 'active' && (loan.balance?.overdueCount ?? 0) > 0
+        const badge = overdue ? { label: 'Overdue', tone: 'danger' as const } : statusBadge(loan.status, loan.role, loan.awaitingMe)
         return (
           <li key={loan.id}>
             <Link to={`/loans/${loan.id}`} className="flex items-center justify-between gap-3 py-3 hover:opacity-80">
@@ -66,10 +67,7 @@ function Rows({ loans }: { loans: LoanSummary[] }) {
                 <p className="font-medium">
                   {loan.role === 'lender' ? `To ${loan.otherPersonName}` : `From ${loan.otherPersonName}`}
                 </p>
-                <p className="text-xs text-ink-muted tabular-nums">
-                  {formatCents(loan.principalCents)} · repay {formatCents(loan.totalCents)}
-                  {loan.firstDueOn ? ` · first due ${formatDate(loan.firstDueOn)}` : ''}
-                </p>
+                <p className="text-xs text-ink-muted tabular-nums">{summaryLine(loan)}</p>
               </div>
               <Badge tone={badge.tone}>{badge.label}</Badge>
             </Link>
@@ -78,4 +76,17 @@ function Rows({ loans }: { loans: LoanSummary[] }) {
       })}
     </ul>
   )
+}
+
+/** One line of figures: owed and next due for funded loans, the terms otherwise. */
+function summaryLine(loan: LoanSummary): string {
+  const balance = loan.balance
+  if (loan.status === 'active' && balance) {
+    const next = balance.nextDueOn ? ` · next due ${formatDate(balance.nextDueOn)}` : ''
+    return `${formatCents(balance.outstandingCents)} owed of ${formatCents(balance.totalCents)}${next}`
+  }
+  if (loan.status === 'completed') return `${formatCents(loan.totalCents)} repaid`
+  if (loan.status === 'written_off' && balance) return `${formatCents(balance.writtenOffCents)} forgiven`
+  const first = loan.firstDueOn ? ` · first due ${formatDate(loan.firstDueOn)}` : ''
+  return `${formatCents(loan.principalCents)} · repay ${formatCents(loan.totalCents)}${first}`
 }
