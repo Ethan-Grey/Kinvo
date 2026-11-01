@@ -1,6 +1,6 @@
 # Database schema
 
-Tables marked **implemented** exist in `supabase/migrations`. The rest are planned for milestones 3–6. Names and columns may change during implementation. If they do, this document is updated in the same pull request.
+Tables marked **implemented** exist in `supabase/migrations`. The rest are planned for milestones 4–6. Names and columns may change during implementation. If they do, this document is updated in the same pull request.
 
 ## Entity relationships
 
@@ -60,7 +60,7 @@ Links one lender to one borrower. Replaces the `family_groups` idea from the bri
 
 Constraints: `UNIQUE (lender_id, borrower_id)`, `CHECK (lender_id <> borrower_id)`.
 
-### `loans`
+### `loans` (implemented)
 The "envelope" for one loan. Terms live in `loan_terms`. The brief's separate `loan_requests` table is folded in here: a request is just a loan in the `negotiating` state whose first terms version was proposed by the borrower.
 
 | Column | Type | Notes |
@@ -72,7 +72,7 @@ The "envelope" for one loan. Terms live in `loan_terms`. The brief's separate `l
 | current_terms_id | uuid | FK → loan_terms, the latest version |
 | funds_sent_at | timestamptz | Set when the lender confirms (AG-04) |
 
-### `loan_terms`
+### `loan_terms` (implemented)
 Immutable. A counter-offer inserts a new row; nothing is updated.
 
 | Column | Type | Notes |
@@ -87,7 +87,7 @@ Immutable. A counter-offer inserts a new row; nothing is updated.
 | conditions | text | Other agreed conditions |
 | terms_hash | text | SHA-256 of the canonical terms, used in acceptances |
 
-### `instalments`
+### `instalments` (implemented)
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid | PK |
@@ -98,7 +98,7 @@ Immutable. A counter-offer inserts a new row; nothing is updated.
 
 Rule (checked in the proposing function): `sum(amount_cents) = principal_cents + charge_cents`.
 
-### `term_acceptances`
+### `term_acceptances` (implemented)
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid | PK |
@@ -147,7 +147,7 @@ Append-only audit log for every state change (NF-03). No client role has `INSERT
 | payload | jsonb | Snapshot of what changed |
 | occurred_at | timestamptz | |
 
-M3 adds a `loan_id` column so loan events can be filtered per loan.
+`loan_id` (FK → loans, nullable) links events to a loan; both parties can see a loan's events.
 
 ### `notifications`
 Outbox for emails and pushes. Rows are inserted by functions and sent by the scheduled job.
@@ -194,3 +194,11 @@ Outbox for emails and pushes. Rows are inserted by functions and sent by the sch
 | `end_relationship(id)` | The lender | Closes a relationship, keeping its history |
 
 Functions raise errors whose message is a stable key (`invite_expired`, `lender_access_required`, …), which the web app maps to friendly text in `data/errors.ts`.
+| `create_loan(relationship, principal, charge, instalments, reason?, late_terms?, conditions?, message?)` | Either party | Starts a request (borrower) or an offer (lender) as version 1 |
+| `counter_offer(loan, expected_terms_id, …terms)` | Either party, while negotiating | Adds a new terms version; fails if `expected_terms_id` isn't current |
+| `accept_terms(loan, terms_id, terms_hash)` | The party who didn't propose | Marks the loan agreed; fails if the terms or fingerprint changed (ADR-0009) |
+| `reject_terms(loan, note?)` | The party who didn't propose | Ends the negotiation as rejected |
+| `withdraw_loan(loan, note?)` | The proposer while negotiating; either party once agreed | Cancels before any money moves |
+| `confirm_funds_sent(loan, sent_on, method, reference?)` | The lender, once agreed | Makes the loan active (LN-07, AG-04) |
+
+`instalments` is passed as JSON: `[{"due_on": "2026-11-09", "amount_cents": 15000}, …]`. The database checks that dates aren't in the past (NZ time), are strictly increasing, and that amounts add up to principal + charge.

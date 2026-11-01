@@ -8,7 +8,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- Sign in with Google or an emailed magic link (Supabase Auth, PKCE flow).
+- Loans: borrowers request and lenders offer, with counter-offers in either direction until one side accepts.
+- Terms form with an even-split schedule builder (weekly, fortnightly, monthly) and editable payments; the charge is shown as a percentage of the amount borrowed.
+- Loan agreement: full terms, a confirmation checkbox and **Accept Loan Agreement**, recorded with a SHA-256 fingerprint of the exact terms (ADR-0009).
+- Loans become active only when the lender confirms the money was sent (date, method, reference).
+- Loan list on the home screen with "your reply needed" first, and a loan page with the proposal history.
+- Database migration with Row Level Security and 41 more pgTAP tests; date and schedule maths with unit tests.
+- Sign in with Google or an email code (Supabase Auth).
 - Lender invite links: single-use, 7-day expiry, hashed tokens, limit of 10 open per lender.
 - People screen showing who you lend to and borrow from, with invite management for lenders.
 - First database migration: profiles, invites, lending relationships, append-only audit events, Row Level Security and API functions.
