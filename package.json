@@ -1,0 +1,13 @@
+{
+  "name": "kinvo",
+  "private": true,
+  "workspaces": ["apps/*"],
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "npm run dev -w @kinvo/web",
+    "build": "npm run build -w @kinvo/web",
+    "typecheck": "npm run typecheck -w @kinvo/web",
+    "lint": "npm run lint -w @kinvo/web",
+    "test": "npm run test -w @kinvo/web"
+  }
+}
