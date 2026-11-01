@@ -162,6 +162,16 @@ Outbox for emails and pushes. Rows are inserted by functions and sent by the sch
 | `list_loan_balances()` (function) | Per funded loan: total, paid, written off, outstanding, next due, overdue amount and count |
 | `borrower_history` | Per relationship: loans, totals, on-time rate, average days late |
 
+### Dashboard functions (M5)
+
+| Function | Returns |
+|---|---|
+| `get_dashboard_summary()` | Lending (owed, overdue, total lent, charges received this NZ tax year), borrowing (owed, overdue, next payment), and counts of things waiting on the caller |
+| `list_upcoming_instalments(limit)` | Unpaid instalments across the caller's active loans, soonest first, with role, other person and overdue flag |
+| `list_borrower_records()` | Lender only: per borrower, loans, money borrowed/repaid/owed/overdue, and on-time statistics (ADR-0011) |
+
+Internally, `private.replay_payments(loan)` reports how each confirmed payment was split across instalments (charge vs principal). `instalment_progress` and the charges-received figure are both built from it.
+
 ## Row Level Security summary
 
 | Table | SELECT | INSERT / UPDATE / DELETE |

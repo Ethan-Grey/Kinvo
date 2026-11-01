@@ -78,7 +78,7 @@ A single account can be a lender to some people and a borrower to others. Roles 
 |---|---|---|
 | DB-01 | Lender: total outstanding, total lent, active loans, pending requests, overdue instalments, recent repayments. | Must |
 | DB-02 | Borrower: outstanding balance, active loans, upcoming and overdue instalments, repayment progress, past loans and payments. | Must |
-| DB-03 | Borrower history: loans taken, total borrowed and repaid, on-time instalment rate, average days late, extensions requested. Visible to the lender and the borrower. | Must |
+| DB-03 | Borrower history: loans taken, total borrowed and repaid, on-time instalment rate, average days late. Visible to the lender only, as numbers without labels (ADR-0011). | Must |
 | DB-04 | Lender: interest/charges received per tax year (1 April – 31 March) for record keeping. | Should |
 
 ## Notifications (NT)
