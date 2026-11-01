@@ -4,10 +4,11 @@ import { useAsync } from '../../shared/useAsync'
 import { Card, Notice, Spinner } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 import { InvitePanel } from '../invites/InvitePanel'
+import { LoansSection } from '../loans/LoansSection'
 
 /**
- * Signed-in home screen for M2: who you're connected to, and (for lenders)
- * invite management. Loan dashboards replace most of this in M5.
+ * Signed-in home screen: your loans, who you're connected to, and (for
+ * lenders) invite management. Fuller dashboards arrive in M5.
  */
 export function HomePage() {
   const { session } = useAuth()
@@ -35,7 +36,9 @@ export function HomePage() {
         <p className="text-sm text-ink-muted">{profile.email}</p>
       </div>
 
-      {justJoined && <Notice tone="success">You’re connected. Loan requests arrive in the next update.</Notice>}
+      {justJoined && <Notice tone="success">You’re connected. You can now request a loan.</Notice>}
+
+      <LoansSection userId={userId} canStartLoan={people.lenders.length + people.borrowers.length > 0} />
 
       <PeopleList
         title="People who lend to you"
