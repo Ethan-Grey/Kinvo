@@ -15,6 +15,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - 37 pgTAP database tests and a CI job that runs them on every pull request.
 - ADR-0008 (lender access and invites) and a setup guide.
 
+### Fixed
+
+- Email sign-in now uses a one-time code, with a link fallback that works in any browser. Links alone failed when opened in a different browser, and can never reach an app installed on an iPhone home screen.
+- Sign-in errors (unauthorised address, rate limits, expired codes) now explain what happened instead of a generic message.
+- A deploy missing its configuration, or any crash, now shows an error screen instead of a blank page.
+
 ## [0.1.0] - 2026-11-02
 
 ### Added

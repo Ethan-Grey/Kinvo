@@ -34,7 +34,12 @@ Useful commands:
    ```
 3. **Authentication → URL Configuration:**
    - Site URL: your production URL, e.g. `https://kinvo.vercel.app`
-   - Redirect URLs: `https://kinvo.vercel.app/auth/callback`, `http://localhost:5173/auth/callback`, and `https://*-ethan-greys-projects.vercel.app/auth/callback` for preview deploys (use your Vercel team slug).
+   - Redirect URLs: `https://kinvo.vercel.app/auth/callback`, `https://kinvo.vercel.app/auth/confirm`, `http://localhost:5173/**`, and `https://*-ethan-greys-projects.vercel.app/**` for preview deploys (use your Vercel team slug).
+4. **Authentication → Email Templates:** for both **Confirm signup** and **Magic Link**, set the subject to `Your Kinvo sign-in code` and paste the contents of [`supabase/templates/sign_in.html`](../supabase/templates/sign_in.html). The default templates only contain a link, which can't reach the app when it's installed on an iPhone home screen.
+5. **Email delivery (required before inviting anyone):** Supabase's built-in email service only delivers to members of your Supabase team, and only about 2 emails an hour. Anyone else gets "Email address not authorized". Set up custom SMTP under **Authentication → Emails → SMTP Settings**. A free option for a family-sized app is Gmail:
+   - Turn on 2-Step Verification for the Google account, then create an **App password** at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+   - Host `smtp.gmail.com`, port `587`, username = the Gmail address, password = the app password, sender email = the same address, sender name `Kinvo`.
+   - Then raise **Authentication → Rate Limits → emails sent per hour** to something like 30.
 
 ## 3. Google sign-in
 
