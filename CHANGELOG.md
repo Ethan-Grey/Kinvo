@@ -8,13 +8,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Kinvo colour palette (Pitch Black, Red, Princeton Orange, Amber Gold, Vanilla Custard) across both themes, with a matching app icon. Text uses darker shades where the brights fall below WCAG contrast.
 - Repayments: lenders record payments directly; borrowers tap "I've paid" and the lender confirms or disputes it.
 - Balances, progress bar and per-instalment status (paid, due, overdue from the day after the due date), calculated by replaying confirmed payments (ADR-0010).
 - Corrections by reversal with a reason, never by editing or deleting; loans complete automatically and reopen if a reversal leaves money owed.
 - Lenders can forgive the remaining balance, closing the loan as written off.
 - Loan list shows what's owed, the next due date and an Overdue badge.
 - 41 more pgTAP tests and 5 component tests.
-
+- Light and dark mode, with a three-way switch (light, match device, dark) in the header and on the sign-in screen. The choice is saved per device and applied before the page paints.
 - Loans: borrowers request and lenders offer, with counter-offers in either direction until one side accepts.
 - Terms form with an even-split schedule builder (weekly, fortnightly, monthly) and editable payments; the charge is shown as a percentage of the amount borrowed.
 - Loan agreement: full terms, a confirmation checkbox and **Accept Loan Agreement**, recorded with a SHA-256 fingerprint of the exact terms (ADR-0009).
