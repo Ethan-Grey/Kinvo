@@ -95,6 +95,7 @@ export interface Database {
           funds_sent_on: string | null
           funds_method: PaymentMethod | null
           funds_reference: string | null
+          written_off_cents: number | null
           closed_at: string | null
           created_at: string
         }
@@ -142,6 +143,28 @@ export interface Database {
           sequence: number
           due_on: string
           amount_cents: number
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      repayments: {
+        Row: {
+          id: string
+          loan_id: string
+          amount_cents: number
+          received_on: string
+          method: PaymentMethod
+          reference: string | null
+          notes: string | null
+          status: RepaymentStatus
+          submitted_by: string
+          created_at: string
+          confirmed_at: string | null
+          disputed_at: string | null
+          dispute_reason: string | null
+          reversed_at: string | null
+          reversal_reason: string | null
         }
         Insert: never
         Update: never
@@ -210,8 +233,64 @@ export interface Database {
         Args: { p_loan_id: string; p_sent_on: string; p_method: PaymentMethod; p_reference?: string | null }
         Returns: undefined
       }
+      get_instalment_progress: {
+        Args: { p_loan_id: string }
+        Returns: {
+          instalment_id: string
+          sequence: number
+          due_on: string
+          amount_cents: number
+          paid_cents: number
+          paid_charge_cents: number
+          paid_principal_cents: number
+          paid_on: string | null
+          status: InstalmentStatus
+        }[]
+      }
+      list_loan_balances: {
+        Args: Record<string, never>
+        Returns: {
+          loan_id: string
+          total_cents: number
+          paid_cents: number
+          written_off_cents: number
+          outstanding_cents: number
+          next_due_on: string | null
+          next_due_cents: number | null
+          overdue_cents: number
+          overdue_count: number
+        }[]
+      }
+      record_repayment: {
+        Args: {
+          p_loan_id: string
+          p_amount_cents: number
+          p_received_on: string
+          p_method: PaymentMethod
+          p_reference?: string | null
+          p_notes?: string | null
+        }
+        Returns: string
+      }
+      confirm_repayment: {
+        Args: { p_repayment_id: string }
+        Returns: undefined
+      }
+      dispute_repayment: {
+        Args: { p_repayment_id: string; p_reason: string }
+        Returns: undefined
+      }
+      reverse_repayment: {
+        Args: { p_repayment_id: string; p_reason: string }
+        Returns: undefined
+      }
+      forgive_remaining: {
+        Args: { p_loan_id: string; p_note?: string | null }
+        Returns: number
+      }
     }
     Enums: {
+      repayment_status: RepaymentStatus
       loan_status: LoanStatus
       payment_method: PaymentMethod
     }
@@ -231,6 +310,8 @@ type TermsArgs = {
 
 export type LoanStatus = 'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off'
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'
+export type RepaymentStatus = 'claimed' | 'confirmed' | 'disputed' | 'reversed'
+export type InstalmentStatus = 'paid' | 'due' | 'overdue'
 
 export type InviteStatus = 'valid' | 'not_found' | 'revoked' | 'used' | 'expired' | 'own_invite'
 
@@ -241,3 +322,4 @@ export type LoanRow = Database['public']['Tables']['loans']['Row']
 export type LoanTermsRow = Database['public']['Tables']['loan_terms']['Row']
 export type InstalmentRow = Database['public']['Tables']['instalments']['Row']
 export type TermAcceptanceRow = Database['public']['Tables']['term_acceptances']['Row']
+export type RepaymentRow = Database['public']['Tables']['repayments']['Row']

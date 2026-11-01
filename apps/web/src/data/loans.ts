@@ -9,6 +9,7 @@ import { toCents, type Cents } from '../domain/money'
 import type { Instalment } from '../domain/schedule'
 import type { InstalmentRow, LoanStatus, LoanTermsRow, PaymentMethod, TermAcceptanceRow } from './database.types'
 import { toAppError } from './errors'
+import { listBalances, type LoanBalance } from './repayments'
 import { supabase } from './supabase'
 
 export type Role = 'lender' | 'borrower'
@@ -59,6 +60,8 @@ export interface LoanSummary {
   principalCents: Cents
   totalCents: Cents
   firstDueOn: IsoDate | null
+  /** Repayment figures, once the loan has been funded. */
+  balance: LoanBalance | null
   /** True when the next step is the current user's. */
   awaitingMe: boolean
   createdAt: string
@@ -93,7 +96,11 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
   if (error) throw toAppError(error)
 
   const termsIds = loans.map((l) => l.current_terms_id).filter((id): id is string => id !== null)
-  const [terms, instalments] = await Promise.all([fetchTerms(termsIds), fetchInstalments(termsIds)])
+  const [terms, instalments, balances] = await Promise.all([
+    fetchTerms(termsIds),
+    fetchInstalments(termsIds),
+    listBalances(),
+  ])
 
   return loans.map((loan) => {
     const current = terms.find((t) => t.id === loan.current_terms_id)
@@ -108,6 +115,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
       principalCents: toCents(principal),
       totalCents: toCents(principal + (current?.charge_cents ?? 0)),
       firstDueOn: firstDue?.due_on ?? null,
+      balance: balances.get(loan.id) ?? null,
       awaitingMe: isAwaitingUser(loan.status, role, current?.proposed_by ?? null, userId),
       createdAt: loan.created_at,
     }
