@@ -288,6 +288,60 @@ export interface Database {
         Args: { p_loan_id: string; p_note?: string | null }
         Returns: number
       }
+      get_dashboard_summary: {
+        Args: Record<string, never>
+        Returns: {
+          lending_owed_cents: number
+          lending_overdue_cents: number
+          lending_overdue_count: number
+          lending_total_lent_cents: number
+          lending_active_count: number
+          charges_received_cents: number
+          tax_year_start: string
+          borrowing_owed_cents: number
+          borrowing_overdue_cents: number
+          borrowing_overdue_count: number
+          borrowing_next_due_on: string | null
+          borrowing_next_due_cents: number | null
+          borrowing_active_count: number
+          replies_needed: number
+          funds_to_send: number
+          claims_to_confirm: number
+          claims_disputed: number
+        }[]
+      }
+      list_upcoming_instalments: {
+        Args: { p_limit?: number }
+        Returns: {
+          loan_id: string
+          role: 'lender' | 'borrower'
+          other_person_name: string
+          sequence: number
+          due_on: string
+          remaining_cents: number
+          status: 'due' | 'overdue'
+        }[]
+      }
+      list_borrower_records: {
+        Args: Record<string, never>
+        Returns: {
+          relationship_id: string
+          borrower_id: string
+          borrower_name: string
+          connected_since: string
+          ended_at: string | null
+          loans_funded: number
+          loans_open: number
+          total_borrowed_cents: number
+          total_repaid_cents: number
+          owed_cents: number
+          overdue_cents: number
+          instalments_assessed: number
+          instalments_on_time: number
+          instalments_late: number
+          average_days_late: number | null
+        }[]
+      }
     }
     Enums: {
       repayment_status: RepaymentStatus

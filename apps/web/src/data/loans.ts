@@ -54,6 +54,7 @@ export interface LoanDetail {
 
 export interface LoanSummary {
   id: string
+  relationshipId: string
   status: LoanStatus
   role: Role
   otherPersonName: string
@@ -109,6 +110,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
     const principal = current?.principal_cents ?? 0
     return {
       id: loan.id,
+      relationshipId: loan.relationship_id,
       status: loan.status,
       role,
       otherPersonName: role === 'lender' ? loan.borrower.display_name : loan.lender.display_name,

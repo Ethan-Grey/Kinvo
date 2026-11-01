@@ -203,3 +203,22 @@ export function FullPageSpinner({ label = 'Loading…' }: { label?: string }) {
 export function Logo({ className = 'size-9' }: { className?: string }) {
   return <img src="/favicon.svg" alt="" className={`${className} rounded-xl`} />
 }
+
+type StatTone = 'default' | 'brand' | 'danger'
+
+const STAT_VALUE: Record<StatTone, string> = {
+  default: 'text-ink',
+  brand: 'text-brand-ink',
+  danger: 'text-danger',
+}
+
+/** A labelled figure for dashboards, e.g. "Owed to you · $150.00". */
+export function Stat({ label, value, hint, tone = 'default' }: { label: string; value: string; hint?: string; tone?: StatTone }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-xs text-ink-muted">{label}</p>
+      <p className={`truncate text-xl font-semibold tabular-nums ${STAT_VALUE[tone]}`}>{value}</p>
+      {hint && <p className="text-xs text-ink-muted">{hint}</p>}
+    </div>
+  )
+}
