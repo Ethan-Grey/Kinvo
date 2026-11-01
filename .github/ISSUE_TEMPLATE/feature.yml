@@ -1,0 +1,25 @@
+name: Feature
+description: A new capability or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      description: As a <lender/borrower>, I want <goal> so that <reason>.
+    validations:
+      required: true
+  - type: input
+    id: requirements
+    attributes:
+      label: Requirement IDs
+      description: From docs/requirements.md, e.g. LN-03
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How will we know this is done?
+      value: |
+        - [ ]
+    validations:
+      required: true

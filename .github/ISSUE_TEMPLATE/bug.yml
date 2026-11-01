@@ -1,0 +1,32 @@
+name: Bug
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      description: e.g. iPhone 15, Safari, installed to home screen
+  - type: markdown
+    attributes:
+      value: "Please don't include real names, amounts or bank details."
