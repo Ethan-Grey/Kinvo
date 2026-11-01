@@ -1,0 +1,38 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Components use these names (e.g. `bg-surface`, `text-ink`)
+ * rather than raw colours, so the palette can change in one place.
+ */
+@theme {
+  --color-brand: #0e3b2e;
+  --color-brand-soft: #e3efe8;
+  --color-canvas: #f6f8f7;
+  --color-surface: #ffffff;
+  --color-ink: #12201b;
+  --color-ink-muted: #5b6b64;
+  --color-line: #dfe6e2;
+  --color-positive: #1f7a4d;
+  --color-warning: #a15c07;
+  --color-danger: #b42318;
+
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    /* Room for the iPhone notch and home bar when installed as an app. */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
+  }
+
+  /* Tabular figures keep columns of money aligned. */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
