@@ -3,12 +3,15 @@ import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { AppError } from '../../data/errors'
 import { SignInPage } from './SignInPage'
 
-const sendMagicLink = vi.fn()
+const sendSignInCode = vi.fn()
+const verifySignInCode = vi.fn()
 
 vi.mock('../../data/auth', () => ({
-  sendMagicLink: (...args: unknown[]) => sendMagicLink(...args),
+  sendSignInCode: (...args: unknown[]) => sendSignInCode(...args),
+  verifySignInCode: (...args: unknown[]) => verifySignInCode(...args),
   signInWithGoogle: vi.fn(),
 }))
 
@@ -26,10 +29,16 @@ function renderAt(url: string) {
   )
 }
 
+async function requestCode(email = 'bob@example.test') {
+  await userEvent.type(screen.getByLabelText(/email/i), email)
+  await userEvent.click(screen.getByRole('button', { name: /email me a code/i }))
+}
+
 describe('SignInPage', () => {
   beforeEach(() => {
     authState.session = null
-    sendMagicLink.mockReset()
+    sendSignInCode.mockReset().mockResolvedValue(undefined)
+    verifySignInCode.mockReset().mockResolvedValue(undefined)
   })
   afterEach(cleanup)
 
@@ -44,25 +53,42 @@ describe('SignInPage', () => {
     expect(screen.getByText(/sign in to accept your invite/i)).toBeTruthy()
   })
 
-  it('sends a magic link that returns to the original destination', async () => {
-    sendMagicLink.mockResolvedValue(undefined)
+  it('sends a code, then signs in with it', async () => {
     renderAt('/sign-in?next=%2Finvite%2Fabc')
+    await requestCode()
 
-    await userEvent.type(screen.getByLabelText(/email/i), 'bob@example.test')
-    await userEvent.click(screen.getByRole('button', { name: /email me a sign-in link/i }))
+    expect(sendSignInCode).toHaveBeenCalledWith('bob@example.test', '/invite/abc')
+    expect(screen.getByText(/we sent a code to/i)).toBeTruthy()
 
-    expect(sendMagicLink).toHaveBeenCalledWith('bob@example.test', '/invite/abc')
-    expect(await screen.findByText(/check/i)).toBeTruthy()
+    await userEvent.type(screen.getByLabelText(/sign-in code/i), '12 34 56')
+    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
+
+    expect(verifySignInCode).toHaveBeenCalledWith('bob@example.test', '123456')
+  })
+
+  it('shows why a code was rejected', async () => {
+    verifySignInCode.mockRejectedValue(new AppError('otp_expired'))
+    renderAt('/sign-in')
+    await requestCode()
+
+    await userEvent.type(screen.getByLabelText(/sign-in code/i), '000000')
+    await userEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
+
+    expect(await screen.findByText(/expired or was already used/i)).toBeTruthy()
+  })
+
+  it('shows why an email could not be sent', async () => {
+    sendSignInCode.mockRejectedValue(new AppError('over_email_send_rate_limit'))
+    renderAt('/sign-in')
+    await requestCode()
+
+    expect(await screen.findByText(/too many sign-in emails/i)).toBeTruthy()
   })
 
   it('ignores unsafe redirect targets', async () => {
-    sendMagicLink.mockResolvedValue(undefined)
     renderAt('/sign-in?next=%2F%2Fevil.example')
-
-    await userEvent.type(screen.getByLabelText(/email/i), 'bob@example.test')
-    await userEvent.click(screen.getByRole('button', { name: /email me a sign-in link/i }))
-
-    expect(sendMagicLink).toHaveBeenCalledWith('bob@example.test', '/')
+    await requestCode()
+    expect(sendSignInCode).toHaveBeenCalledWith('bob@example.test', '/')
   })
 
   it('redirects straight on when already signed in', () => {

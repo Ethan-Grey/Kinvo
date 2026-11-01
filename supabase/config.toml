@@ -244,6 +244,17 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Kinvo's sign-in emails show a one-time code (works in the installed app and
+# across devices) plus a link that doesn't depend on the original browser.
+# Paste the same files into the hosted project: Authentication → Email Templates.
+[auth.email.template.magic_link]
+subject = "Your Kinvo sign-in code"
+content_path = "./supabase/templates/sign_in.html"
+
+[auth.email.template.confirmation]
+subject = "Your Kinvo sign-in code"
+content_path = "./supabase/templates/sign_in.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

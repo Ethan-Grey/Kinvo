@@ -1,15 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
-import { sendMagicLink, signInWithGoogle } from '../../data/auth'
+import { sendSignInCode, signInWithGoogle, verifySignInCode } from '../../data/auth'
 import { safeNextPath } from '../../shared/navigation'
 import { Button, Card, Logo, Notice, TextField } from '../../shared/ui'
 import { useAuth } from './useAuth'
 
-type Status =
-  | { kind: 'idle' }
-  | { kind: 'busy'; method: 'google' | 'email' }
-  | { kind: 'sent'; email: string }
-  | { kind: 'error'; message: string }
+type Step = { kind: 'email' } | { kind: 'code'; email: string }
 
 export function SignInPage() {
   const { session } = useAuth()
@@ -17,32 +13,10 @@ export function SignInPage() {
   const next = safeNextPath(params.get('next'))
   const arrivingFromInvite = next.startsWith('/invite/')
 
-  const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  const [step, setStep] = useState<Step>({ kind: 'email' })
 
+  // Once signed in (by code, or in another tab), continue to the destination.
   if (session) return <Navigate to={next} replace />
-
-  async function handleGoogle() {
-    setStatus({ kind: 'busy', method: 'google' })
-    try {
-      await signInWithGoogle(next) // the browser leaves the page here
-    } catch (error) {
-      setStatus({ kind: 'error', message: (error as Error).message })
-    }
-  }
-
-  async function handleEmail(event: FormEvent) {
-    event.preventDefault()
-    setStatus({ kind: 'busy', method: 'email' })
-    try {
-      await sendMagicLink(email.trim(), next)
-      setStatus({ kind: 'sent', email: email.trim() })
-    } catch (error) {
-      setStatus({ kind: 'error', message: (error as Error).message })
-    }
-  }
-
-  const busy = status.kind === 'busy'
 
   return (
     <main className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4 py-12">
@@ -56,57 +30,158 @@ export function SignInPage() {
         </div>
       </header>
 
-      <Card className="space-y-5">
-        {status.kind === 'sent' ? (
-          <Notice tone="success">
-            Check <strong>{status.email}</strong> for a sign-in link. Open it on this device.
-          </Notice>
+      <Card>
+        {step.kind === 'email' ? (
+          <EmailStep next={next} onCodeSent={(email) => setStep({ kind: 'code', email })} />
         ) : (
-          <>
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={handleGoogle}
-              busy={status.kind === 'busy' && status.method === 'google'}
-              disabled={busy}
-            >
-              <GoogleMark />
-              Continue with Google
-            </Button>
-
-            <div className="flex items-center gap-3 text-xs text-ink-muted">
-              <span className="h-px flex-1 bg-line" />
-              or
-              <span className="h-px flex-1 bg-line" />
-            </div>
-
-            <form onSubmit={handleEmail} className="space-y-3">
-              <TextField
-                label="Email"
-                type="email"
-                autoComplete="email"
-                inputMode="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                hint="We’ll email you a link. No password needed."
-              />
-              <Button
-                type="submit"
-                className="w-full"
-                busy={status.kind === 'busy' && status.method === 'email'}
-                disabled={busy}
-              >
-                Email me a sign-in link
-              </Button>
-            </form>
-          </>
+          <CodeStep email={step.email} next={next} onChangeEmail={() => setStep({ kind: 'email' })} />
         )}
-
-        {status.kind === 'error' && <Notice tone="error">{status.message}</Notice>}
       </Card>
     </main>
+  )
+}
+
+function EmailStep({ next, onCodeSent }: { next: string; onCodeSent: (email: string) => void }) {
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState<'google' | 'email' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleGoogle() {
+    setBusy('google')
+    setError(null)
+    try {
+      await signInWithGoogle(next) // the browser leaves the page here
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(null)
+    }
+  }
+
+  async function handleEmail(event: FormEvent) {
+    event.preventDefault()
+    setBusy('email')
+    setError(null)
+    const trimmed = email.trim()
+    try {
+      await sendSignInCode(trimmed, next)
+      onCodeSent(trimmed)
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(null)
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <Button
+        variant="secondary"
+        className="w-full"
+        onClick={handleGoogle}
+        busy={busy === 'google'}
+        disabled={busy !== null}
+      >
+        <GoogleMark />
+        Continue with Google
+      </Button>
+
+      <div className="flex items-center gap-3 text-xs text-ink-muted">
+        <span className="h-px flex-1 bg-line" />
+        or
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      <form onSubmit={handleEmail} className="space-y-3">
+        <TextField
+          label="Email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          hint="We’ll email you a sign-in code. No password needed."
+        />
+        <Button type="submit" className="w-full" busy={busy === 'email'} disabled={busy !== null}>
+          Email me a code
+        </Button>
+      </form>
+
+      {error && <Notice tone="error">{error}</Notice>}
+    </div>
+  )
+}
+
+function CodeStep({ email, next, onChangeEmail }: { email: string; next: string; onChangeEmail: () => void }) {
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState<'verify' | 'resend' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [resent, setResent] = useState(false)
+
+  async function handleVerify(event: FormEvent) {
+    event.preventDefault()
+    setBusy('verify')
+    setError(null)
+    try {
+      // On success the session changes and SignInPage redirects.
+      await verifySignInCode(email, code)
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(null)
+    }
+  }
+
+  async function handleResend() {
+    setBusy('resend')
+    setError(null)
+    setResent(false)
+    try {
+      await sendSignInCode(email, next)
+      setResent(true)
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm">
+        We sent a code to <strong>{email}</strong>. It can take a minute to arrive, so check your spam folder too.
+      </p>
+
+      <form onSubmit={handleVerify} className="space-y-3">
+        <TextField
+          label="Sign-in code"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          pattern="[0-9]{6,8}"
+          maxLength={8}
+          required
+          autoFocus
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+          placeholder="123456"
+          className="[&_input]:text-center [&_input]:text-xl [&_input]:tracking-[0.3em]"
+        />
+        <Button type="submit" className="w-full" busy={busy === 'verify'} disabled={busy !== null}>
+          Sign in
+        </Button>
+      </form>
+
+      {resent && <Notice tone="success">New code sent. Use the most recent email.</Notice>}
+      {error && <Notice tone="error">{error}</Notice>}
+
+      <div className="flex justify-between">
+        <Button variant="ghost" onClick={onChangeEmail} disabled={busy !== null}>
+          Use a different email
+        </Button>
+        <Button variant="ghost" onClick={handleResend} busy={busy === 'resend'} disabled={busy !== null}>
+          Resend code
+        </Button>
+      </div>
+    </div>
   )
 }
 

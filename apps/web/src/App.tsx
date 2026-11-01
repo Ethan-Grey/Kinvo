@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { AuthCallbackPage } from './features/auth/AuthCallbackPage'
 import { AuthProvider } from './features/auth/AuthProvider'
+import { EmailConfirmPage } from './features/auth/EmailConfirmPage'
 import { RequireAuth } from './features/auth/RequireAuth'
 import { SignInPage } from './features/auth/SignInPage'
 import { AcceptInvitePage } from './features/invites/AcceptInvitePage'
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
     children: [
       { path: '/sign-in', element: <SignInPage /> },
       { path: '/auth/callback', element: <AuthCallbackPage /> },
+      { path: '/auth/confirm', element: <EmailConfirmPage /> },
       {
         // Everything below requires a signed-in user.
         element: <RequireAuth />,
