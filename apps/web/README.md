@@ -14,14 +14,16 @@ Run from the repository root (they forward to this workspace):
 | `npm test` | Vitest unit tests |
 | `npm run build` | Production build with service worker and manifest |
 
+Copy `.env.example` to `apps/web/.env.local` first. See [docs/setup.md](../../docs/setup.md).
+
 ## Structure
 
 ```text
 src/
 ├── domain/      Pure logic (money, schedules, allocation). No React, no network.
-├── data/        Supabase access, one module per feature.      (from M2)
-├── features/    Screens and components grouped by feature.    (from M2)
-└── shared/      UI primitives, formatting, hooks.             (from M2)
+├── data/        Supabase access, one module per feature.
+├── features/    Screens and components grouped by feature.
+└── shared/      UI primitives, formatting, hooks.
 ```
 
 ESLint enforces that `domain/` never imports React, Supabase, or other app layers. See [docs/architecture.md](../../docs/architecture.md).

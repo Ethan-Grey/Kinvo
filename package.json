@@ -1,13 +1,25 @@
 {
   "name": "kinvo",
   "private": true,
-  "workspaces": ["apps/*"],
-  "engines": { "node": ">=22" },
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "npm run dev -w @kinvo/web",
     "build": "npm run build -w @kinvo/web",
     "typecheck": "npm run typecheck -w @kinvo/web",
     "lint": "npm run lint -w @kinvo/web",
-    "test": "npm run test -w @kinvo/web"
+    "test": "npm run test -w @kinvo/web",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:types": "supabase gen types typescript --local > apps/web/src/data/database.types.ts"
+  },
+  "devDependencies": {
+    "supabase": "^2.122.0"
   }
 }
