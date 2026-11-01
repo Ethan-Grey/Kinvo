@@ -1,0 +1,18 @@
+<!--
+  Kinvo sign-in email. Used for both "Magic Link" and "Confirm signup" in
+  Supabase → Authentication → Email Templates. Subject: Your Kinvo sign-in code
+
+  The code works anywhere (including the installed app on iPhone, which can't
+  receive links opened in Safari). The link verifies with a token hash, so it
+  also works when opened in a different browser from the one that asked for it.
+-->
+<div style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 420px; margin: 0 auto; padding: 24px; color: #12201b;">
+  <h2 style="margin: 0 0 8px; font-size: 20px;">Your Kinvo sign-in code</h2>
+  <p style="margin: 0 0 20px; color: #5b6b64;">Enter this code in Kinvo to sign in. It expires in 1 hour.</p>
+  <p style="margin: 0 0 24px; font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #0e3b2e;">{{ .Token }}</p>
+  <p style="margin: 0 0 24px;">
+    Or
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" style="color: #0e3b2e; font-weight: 600;">sign in with this link</a>.
+  </p>
+  <p style="margin: 0; font-size: 12px; color: #5b6b64;">If you didn't ask to sign in to Kinvo, you can ignore this email.</p>
+</div>
