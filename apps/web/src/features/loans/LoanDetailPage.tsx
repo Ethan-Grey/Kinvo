@@ -5,6 +5,7 @@ import { formatCents } from '../../domain/money'
 import { counterOffer, getLoan, isAwaitingUser, type LoanDetail, type TermsVersion } from '../../data/loans'
 import { useAsync } from '../../shared/useAsync'
 import { Badge, Card, Notice, Spinner } from '../../shared/ui'
+import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
 import { useAuth } from '../auth/useAuth'
 import { methodLabel, statusBadge } from './labels'
 import { LoanActions } from './LoanActions'
@@ -31,6 +32,7 @@ export function LoanDetailPage() {
   const data = loan.data
   const badge = statusBadge(data.status, data.role, isAwaitingUser(data.status, data.role, data.currentTerms.proposedBy, userId))
   const otherName = data.role === 'lender' ? data.borrowerName : data.lenderName
+  const funded = data.status === 'active' || data.status === 'completed' || data.status === 'written_off'
 
   return (
     <div className="space-y-5">
@@ -63,6 +65,26 @@ export function LoanDetailPage() {
             }}
           />
         </Card>
+      ) : funded ? (
+        <>
+          <RepaymentsPanel loan={data} userId={userId} onLoanChanged={reload} />
+
+          {data.fundsSentOn && data.fundsMethod && (
+            <p className="text-sm text-ink-muted">
+              {data.lenderName} sent {formatCents(data.currentTerms.principalCents)} by{' '}
+              {methodLabel(data.fundsMethod).toLowerCase()} on {formatDate(data.fundsSentOn)}
+              {data.fundsReference ? ` (ref ${data.fundsReference})` : ''}.
+            </p>
+          )}
+
+          <details className="rounded-2xl border border-line bg-surface p-5">
+            <summary className="cursor-pointer font-semibold">Loan agreement</summary>
+            <div className="mt-4 space-y-5">
+              <ProposalHeader terms={data.currentTerms} loan={data} userId={userId} />
+              <TermsSummary terms={data.currentTerms} lenderName={data.lenderName} borrowerName={data.borrowerName} />
+            </div>
+          </details>
+        </>
       ) : (
         <>
           <Card className="space-y-5">
@@ -74,14 +96,6 @@ export function LoanDetailPage() {
             <Card>
               <LoanActions loan={data} userId={userId} onChanged={reload} onCounter={() => setCountering(true)} />
             </Card>
-          )}
-
-          {data.fundsSentOn && data.fundsMethod && (
-            <Notice tone="success">
-              {data.lenderName} sent {formatCents(data.currentTerms.principalCents)} by {methodLabel(data.fundsMethod).toLowerCase()} on{' '}
-              {formatDate(data.fundsSentOn)}
-              {data.fundsReference ? ` (ref ${data.fundsReference})` : ''}.
-            </Notice>
           )}
         </>
       )}

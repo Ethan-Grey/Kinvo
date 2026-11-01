@@ -59,7 +59,7 @@ A single account can be a lender to some people and a borrower to others. Roles 
 | CA-04 | Charges never compound and are never added automatically. | Must |
 | CA-05 | Late fees, if used, are a configurable term agreed upfront, and only applied by an explicit lender action. | Should |
 | CA-06 | Payments are applied to the oldest unpaid instalment first. Within an instalment, the charge portion is cleared before principal (see ADR-0004). | Must |
-| CA-07 | Overpayments are recorded as credit and shown to both parties, not silently absorbed. | Must |
+| CA-07 | A payment cannot exceed the outstanding balance, so overpayments can't happen (ADR-0010). | Must |
 | CA-08 | The outstanding balance is always calculated from the terms and confirmed payments. It is never stored as an editable field. | Must |
 
 ## Repayments (RP)

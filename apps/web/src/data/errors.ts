@@ -49,6 +49,21 @@ const MESSAGES: Record<string, string> = {
   invalid_sent_date: 'The date sent can’t be in the future.',
   invalid_payment_method: 'Choose how the money was sent.',
   invalid_reference: 'Keep the reference under 100 characters.',
+
+  // Repayments (M4)
+  loan_not_active: 'Payments can only be recorded while the loan is active.',
+  invalid_amount: 'Enter an amount greater than $0.',
+  invalid_received_date: 'The payment date can’t be in the future.',
+  received_before_funds_sent: 'The payment date can’t be before the money was lent.',
+  invalid_notes: 'Keep notes under 500 characters.',
+  amount_exceeds_outstanding: 'That’s more than is still owed on this loan.',
+  duplicate_repayment: 'That payment was just recorded. Check the list before adding it again.',
+  repayment_not_found: 'That payment no longer exists.',
+  repayment_not_pending: 'That payment has already been dealt with.',
+  repayment_not_confirmed: 'Only confirmed payments can be reversed.',
+  reason_required: 'Add a short reason (up to 500 characters).',
+  loan_closed: 'This loan is closed, so its payments can’t be changed.',
+  nothing_outstanding: 'Nothing is owed on this loan.',
 }
 
 const FALLBACK = 'Something went wrong. Please try again.'
