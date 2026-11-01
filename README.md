@@ -68,7 +68,7 @@ Every pull request runs type checks, lint, tests and a production build in GitHu
 - [x] **M1 — Scaffold:** React + TypeScript + Tailwind, CI pipeline, Vercel previews
 - [x] **M2 — Auth & onboarding:** Google and email sign-in, lender invite links
 - [x] **M3 — Loans:** requests, counter-offers, versioned terms, agreement acceptance
-- [ ] **M4 — Repayments:** recording, allocation, borrower payment claims
+- [x] **M4 — Repayments:** recording, allocation, borrower payment claims
 - [ ] **M5 — Dashboards:** lender and borrower views, borrower history
 - [ ] **M6 — Notifications:** email reminders, then PWA push
 - [ ] **M7 — Hardening:** security review, accessibility, release v1.0.0

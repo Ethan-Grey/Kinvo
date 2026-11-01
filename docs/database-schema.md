@@ -1,6 +1,6 @@
 # Database schema
 
-Tables marked **implemented** exist in `supabase/migrations`. The rest are planned for milestones 4–6. Names and columns may change during implementation. If they do, this document is updated in the same pull request.
+Tables marked **implemented** exist in `supabase/migrations`. `notifications` is planned for M6. Names and columns may change during implementation. If they do, this document is updated in the same pull request.
 
 ## Entity relationships
 
@@ -14,8 +14,6 @@ erDiagram
     loan_terms ||--|{ instalments : schedules
     loan_terms ||--o{ term_acceptances : "accepted by"
     loans ||--o{ repayments : receives
-    repayments ||--o{ repayment_allocations : "split into"
-    instalments ||--o{ repayment_allocations : "covered by"
     lending_relationships ||--o{ audit_events : "audit log"
     profiles ||--o{ notifications : receives
 ```
@@ -109,7 +107,7 @@ Rule (checked in the proposing function): `sum(amount_cents) = principal_cents +
 
 `UNIQUE (terms_id, accepted_by)`.
 
-### `repayments`
+### `repayments` (implemented)
 Never updated except for status transitions, and never deleted.
 
 | Column | Type | Notes |
@@ -123,17 +121,9 @@ Never updated except for status transitions, and never deleted.
 | notes | text | Optional |
 | status | repayment_status enum | `claimed`, `confirmed`, `disputed`, `reversed` |
 | submitted_by | uuid | FK → profiles |
-| reverses_id | uuid | FK → repayments, set on a reversing entry |
 
-### `repayment_allocations`
-How a confirmed repayment was split. Written by the confirm function using ADR-0004's rules, then never changed.
-
-| Column | Type | Notes |
-|---|---|---|
-| repayment_id | uuid | FK → repayments |
-| instalment_id | uuid | FK → instalments, null for overpayment credit |
-| charge_cents | bigint | |
-| principal_cents | bigint | |
+### Allocation (derived, not stored)
+How each payment splits across instalments isn't stored. `private.instalment_progress(loan)` replays confirmed payments in the order received (oldest instalment first, charge before principal), so reversals never leave stale data (ADR-0010).
 
 ### `audit_events` (implemented)
 Append-only audit log for every state change (NF-03). No client role has `INSERT`, `UPDATE` or `DELETE`. Rows are written only by database functions.
@@ -168,8 +158,8 @@ Outbox for emails and pushes. Rows are inserted by functions and sent by the sch
 
 | View | Purpose |
 |---|---|
-| `instalment_status` | Per instalment: amount covered, remaining, `paid` / `due` / `overdue` |
-| `loan_balances` | Per loan: total owed, total confirmed paid, outstanding, credit |
+| `get_instalment_progress(loan)` (function) | Per instalment: amount paid (charge and principal), date fully paid, `paid` / `due` / `overdue` |
+| `list_loan_balances()` (function) | Per funded loan: total, paid, written off, outstanding, next due, overdue amount and count |
 | `borrower_history` | Per relationship: loans, totals, on-time rate, average days late |
 
 ## Row Level Security summary
@@ -177,7 +167,7 @@ Outbox for emails and pushes. Rows are inserted by functions and sent by the sch
 | Table | SELECT | INSERT / UPDATE / DELETE |
 |---|---|---|
 | profiles | Self, and people you share a relationship with | None. Name changes via `set_display_name()` |
-| lending_relationships, loans, loan_terms, instalments, term_acceptances, repayments, repayment_allocations | Lender or borrower of the relationship | None. Functions only. |
+| lending_relationships, loans, loan_terms, instalments, term_acceptances, repayments | Lender or borrower of the relationship | None. Functions only. |
 | audit_events | Your own events, and events in your relationships | None. Functions only. |
 | lender_invites | The lender who created it | None. Functions only. |
 | notifications | The recipient | None |
@@ -202,3 +192,8 @@ Functions raise errors whose message is a stable key (`invite_expired`, `lender_
 | `confirm_funds_sent(loan, sent_on, method, reference?)` | The lender, once agreed | Makes the loan active (LN-07, AG-04) |
 
 `instalments` is passed as JSON: `[{"due_on": "2026-11-09", "amount_cents": 15000}, …]`. The database checks that dates aren't in the past (NZ time), are strictly increasing, and that amounts add up to principal + charge.
+| `record_repayment(loan, amount, received_on, method, reference?, notes?)` | Either party, active loan | Lender: confirmed. Borrower: claimed. Rejects amounts over the balance, future or pre-loan dates, and duplicates within 2 minutes |
+| `confirm_repayment(repayment)` | The lender | Confirms a claim; may complete the loan |
+| `dispute_repayment(repayment, reason)` | The lender | Marks a claim as not received |
+| `reverse_repayment(repayment, reason)` | The lender | Undoes a confirmed payment; may reopen a completed loan |
+| `forgive_remaining(loan, note?)` | The lender, active loan | Writes off the balance; returns the amount |

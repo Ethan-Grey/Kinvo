@@ -1,6 +1,6 @@
 # 0004. Allocate payments oldest-instalment first, charge before principal
 
-- **Status:** Accepted
+- **Status:** Accepted. Where allocations are kept is superseded by [ADR-0010](0010-derived-allocation-and-repayment-rules.md).
 - **Date:** 2026-11-02
 
 ## Context
