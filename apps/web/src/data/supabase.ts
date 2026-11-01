@@ -4,6 +4,14 @@ import type { Database } from './database.types'
 let client: SupabaseClient<Database> | undefined
 
 /**
+ * True when the build has the Supabase settings it needs. Vite inlines these
+ * at build time, so a deploy without them can never work until it's rebuilt.
+ */
+export function isSupabaseConfigured(): boolean {
+  return Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+}
+
+/**
  * The single Supabase client for the app, created on first use.
  *
  * Created lazily so that tests and builds don't need Supabase credentials.

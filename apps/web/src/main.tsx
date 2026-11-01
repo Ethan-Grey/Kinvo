@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { isSupabaseConfigured } from './data/supabase'
+import { AppErrorBoundary, ConfigErrorScreen } from './shared/ErrorScreens'
 import './index.css'
 
 const rootElement = document.getElementById('root')
@@ -10,6 +12,6 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <AppErrorBoundary>{isSupabaseConfigured() ? <App /> : <ConfigErrorScreen />}</AppErrorBoundary>
   </StrictMode>,
 )
