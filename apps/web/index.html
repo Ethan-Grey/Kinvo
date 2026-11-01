@@ -4,7 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="A private lending ledger for families." />
-    <meta name="theme-color" content="#0E3B2E" />
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      // Apply the saved light/dark choice before the page paints (see src/shared/theme.ts).
+      ;(function () {
+        var pref = 'system'
+        try {
+          pref = localStorage.getItem('kinvo.theme') || 'system'
+        } catch (e) {}
+        var dark = pref === 'dark' || (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#141e1a' : '#ffffff')
+      })()
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>Kinvo</title>
