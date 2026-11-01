@@ -71,9 +71,89 @@ export interface Database {
           id: number
           actor_id: string | null
           relationship_id: string | null
+          loan_id: string | null
           event_type: string
           payload: Json
           occurred_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      loans: {
+        Row: {
+          id: string
+          relationship_id: string
+          lender_id: string
+          borrower_id: string
+          created_by: string
+          status: LoanStatus
+          reason: string | null
+          current_terms_id: string | null
+          agreed_at: string | null
+          funds_sent_at: string | null
+          funds_sent_on: string | null
+          funds_method: PaymentMethod | null
+          funds_reference: string | null
+          closed_at: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: [
+          {
+            foreignKeyName: 'loans_lender_id_fkey'
+            columns: ['lender_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'loans_borrower_id_fkey'
+            columns: ['borrower_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      loan_terms: {
+        Row: {
+          id: string
+          loan_id: string
+          version: number
+          proposed_by: string
+          principal_cents: number
+          charge_cents: number
+          late_terms: string
+          conditions: string
+          message: string | null
+          terms_hash: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      instalments: {
+        Row: {
+          id: string
+          terms_id: string
+          sequence: number
+          due_on: string
+          amount_cents: number
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      term_acceptances: {
+        Row: {
+          id: string
+          terms_id: string
+          accepted_by: string
+          terms_hash: string
+          accepted_at: string
         }
         Insert: never
         Update: never
@@ -106,14 +186,58 @@ export interface Database {
         Args: { p_relationship_id: string }
         Returns: undefined
       }
+      create_loan: {
+        Args: TermsArgs & { p_relationship_id: string; p_reason?: string | null }
+        Returns: string
+      }
+      counter_offer: {
+        Args: TermsArgs & { p_loan_id: string; p_expected_terms_id: string }
+        Returns: string
+      }
+      accept_terms: {
+        Args: { p_loan_id: string; p_terms_id: string; p_terms_hash: string }
+        Returns: undefined
+      }
+      reject_terms: {
+        Args: { p_loan_id: string; p_note?: string | null }
+        Returns: undefined
+      }
+      withdraw_loan: {
+        Args: { p_loan_id: string; p_note?: string | null }
+        Returns: undefined
+      }
+      confirm_funds_sent: {
+        Args: { p_loan_id: string; p_sent_on: string; p_method: PaymentMethod; p_reference?: string | null }
+        Returns: undefined
+      }
     }
-    Enums: Record<never, never>
+    Enums: {
+      loan_status: LoanStatus
+      payment_method: PaymentMethod
+    }
     CompositeTypes: Record<never, never>
   }
 }
+
+/** Shared arguments of create_loan and counter_offer. Amounts are cents. */
+type TermsArgs = {
+  p_principal_cents: number
+  p_charge_cents: number
+  p_instalments: Json
+  p_late_terms?: string
+  p_conditions?: string
+  p_message?: string | null
+}
+
+export type LoanStatus = 'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off'
+export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'
 
 export type InviteStatus = 'valid' | 'not_found' | 'revoked' | 'used' | 'expired' | 'own_invite'
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type LenderInvite = Database['public']['Tables']['lender_invites']['Row']
 export type LendingRelationship = Database['public']['Tables']['lending_relationships']['Row']
+export type LoanRow = Database['public']['Tables']['loans']['Row']
+export type LoanTermsRow = Database['public']['Tables']['loan_terms']['Row']
+export type InstalmentRow = Database['public']['Tables']['instalments']['Row']
+export type TermAcceptanceRow = Database['public']['Tables']['term_acceptances']['Row']

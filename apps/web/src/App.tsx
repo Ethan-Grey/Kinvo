@@ -5,6 +5,8 @@ import { EmailConfirmPage } from './features/auth/EmailConfirmPage'
 import { RequireAuth } from './features/auth/RequireAuth'
 import { SignInPage } from './features/auth/SignInPage'
 import { AcceptInvitePage } from './features/invites/AcceptInvitePage'
+import { LoanDetailPage } from './features/loans/LoanDetailPage'
+import { NewLoanPage } from './features/loans/NewLoanPage'
 import { HomePage } from './features/people/HomePage'
 import { AppLayout } from './features/shell/AppLayout'
 import { RouteErrorScreen } from './shared/ErrorScreens'
@@ -26,6 +28,8 @@ const router = createBrowserRouter([
             children: [
               { index: true, element: <HomePage /> },
               { path: 'invite/:token', element: <AcceptInvitePage /> },
+              { path: 'loans/new', element: <NewLoanPage /> },
+              { path: 'loans/:id', element: <LoanDetailPage /> },
             ],
           },
         ],

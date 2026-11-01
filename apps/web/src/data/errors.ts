@@ -26,6 +26,29 @@ const MESSAGES: Record<string, string> = {
   invite_expired: 'This invite has expired. Ask for a new link.',
   invite_own: 'This is your own invite. Send it to the person you want to lend to.',
   relationship_not_found: 'That connection no longer exists.',
+  relationship_ended: 'You’re no longer connected with this person.',
+  relationship_has_open_loans: 'Settle or cancel the open loans with this person first.',
+
+  // Loans (M3)
+  loan_not_found: 'That loan doesn’t exist, or you don’t have access to it.',
+  invalid_principal: 'Enter an amount between $0.01 and $100,000.',
+  invalid_charge: 'The charge must be between $0 and $100,000.',
+  invalid_reason: 'Keep the reason under 500 characters.',
+  invalid_schedule: 'Add between 1 and 52 repayments, each with a date and an amount.',
+  schedule_date_in_past: 'Repayment dates can’t be in the past.',
+  schedule_dates_not_increasing: 'Each repayment date must be after the one before it.',
+  schedule_total_mismatch: 'The repayments must add up to the amount borrowed plus the charge.',
+  loan_not_negotiating: 'These terms can no longer be changed.',
+  terms_changed: 'The terms changed while you were looking. Check the latest version.',
+  cannot_accept_own_terms: 'You proposed these terms. Wait for the other person to respond.',
+  cannot_reject_own_terms: 'You proposed these terms. Withdraw them instead.',
+  cannot_withdraw_their_terms: 'These are the other person’s terms. Reject them instead.',
+  loan_not_cancellable: 'This loan can no longer be cancelled.',
+  lender_only: 'Only the lender can do that.',
+  loan_not_agreed: 'This loan isn’t waiting for the money to be sent.',
+  invalid_sent_date: 'The date sent can’t be in the future.',
+  invalid_payment_method: 'Choose how the money was sent.',
+  invalid_reference: 'Keep the reference under 100 characters.',
 }
 
 const FALLBACK = 'Something went wrong. Please try again.'

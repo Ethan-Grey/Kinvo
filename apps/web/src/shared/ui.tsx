@@ -2,7 +2,13 @@
  * Small set of UI building blocks. Every screen uses these, so spacing,
  * colours and focus styles stay consistent.
  */
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
+import type {
+  ButtonHTMLAttributes,
+  InputHTMLAttributes,
+  ReactNode,
+  SelectHTMLAttributes,
+  TextareaHTMLAttributes,
+} from 'react'
 import { useId } from 'react'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
@@ -95,6 +101,74 @@ export function TextField({ label, hint, className = '', ...rest }: TextFieldPro
         </p>
       )}
     </div>
+  )
+}
+
+const FIELD_CLASS =
+  'mt-1.5 block w-full rounded-xl border border-line bg-surface px-3 text-base ' +
+  'placeholder:text-ink-muted/70 focus:border-brand focus:outline-2 focus:outline-brand/20'
+
+interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label: string
+  hint?: string
+}
+
+export function TextArea({ label, hint, className = '', ...rest }: TextAreaProps) {
+  const id = useId()
+  const hintId = hint ? `${id}-hint` : undefined
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="block text-sm font-medium">
+        {label}
+      </label>
+      <textarea id={id} aria-describedby={hintId} rows={3} className={`${FIELD_CLASS} py-2`} {...rest} />
+      {hint && (
+        <p id={hintId} className="mt-1 text-xs text-ink-muted">
+          {hint}
+        </p>
+      )}
+    </div>
+  )
+}
+
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+  label: string
+  options: readonly { value: string; label: string }[]
+}
+
+export function Select({ label, options, className = '', ...rest }: SelectProps) {
+  const id = useId()
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="block text-sm font-medium">
+        {label}
+      </label>
+      <select id={id} className={`${FIELD_CLASS} min-h-11`} {...rest}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+type BadgeTone = 'neutral' | 'brand' | 'positive' | 'warning' | 'danger'
+
+const BADGE_STYLES: Record<BadgeTone, string> = {
+  neutral: 'bg-canvas text-ink-muted border border-line',
+  brand: 'bg-brand-soft text-brand',
+  positive: 'bg-positive/10 text-positive',
+  warning: 'bg-warning/10 text-warning',
+  danger: 'bg-danger/10 text-danger',
+}
+
+export function Badge({ tone = 'neutral', children }: { tone?: BadgeTone; children: ReactNode }) {
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${BADGE_STYLES[tone]}`}>
+      {children}
+    </span>
   )
 }
 
