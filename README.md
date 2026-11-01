@@ -60,13 +60,13 @@ npm run dev        # http://localhost:5173
 npm test           # unit tests
 ```
 
-Every pull request runs type checks, lint, tests and a production build in GitHub Actions. See [`apps/web/README.md`](apps/web/README.md) for all scripts and [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch and commit conventions.
+Every pull request runs type checks, lint, tests and a production build in GitHub Actions. See [`docs/setup.md`](docs/setup.md) for the database and hosted services, [`apps/web/README.md`](apps/web/README.md) for all scripts, and [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch and commit conventions.
 
 ## Roadmap
 
 - [x] **M0 — Foundation:** requirements, architecture, schema design, decision records
 - [x] **M1 — Scaffold:** React + TypeScript + Tailwind, CI pipeline, Vercel previews
-- [ ] **M2 — Auth & onboarding:** Google and email sign-in, lender invite links
+- [x] **M2 — Auth & onboarding:** Google and email sign-in, lender invite links
 - [ ] **M3 — Loans:** requests, counter-offers, versioned terms, agreement acceptance
 - [ ] **M4 — Repayments:** recording, allocation, borrower payment claims
 - [ ] **M5 — Dashboards:** lender and borrower views, borrower history

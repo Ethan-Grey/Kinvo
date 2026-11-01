@@ -1,6 +1,6 @@
-# Database schema (draft)
+# Database schema
 
-This is the planned schema. It will be implemented as migrations in milestone 3. Names and columns may change during implementation. If they do, this document is updated in the same pull request.
+Tables marked **implemented** exist in `supabase/migrations`. The rest are planned for milestones 3–6. Names and columns may change during implementation. If they do, this document is updated in the same pull request.
 
 ## Entity relationships
 
@@ -16,7 +16,7 @@ erDiagram
     loans ||--o{ repayments : receives
     repayments ||--o{ repayment_allocations : "split into"
     instalments ||--o{ repayment_allocations : "covered by"
-    loans ||--o{ loan_events : "audit log"
+    lending_relationships ||--o{ audit_events : "audit log"
     profiles ||--o{ notifications : receives
 ```
 
@@ -24,26 +24,30 @@ erDiagram
 
 All primary keys are `uuid`. All money columns are `bigint` cents with `CHECK (... >= 0)`. All tables have `created_at timestamptz not null default now()`.
 
-### `profiles`
-One row per signed-in user, linked to Supabase's `auth.users`.
+### `profiles` (implemented)
+One row per signed-in user, created automatically on sign-up from `auth.users`.
 
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid | PK, FK → `auth.users.id` |
-| display_name | text | |
+| display_name | text | 1–80 characters, from the Google name or email prefix |
 | email | text | Copied from auth for notifications |
+| can_lend | boolean | Lender access, granted manually (ADR-0008) |
 
-### `lender_invites`
+### `lender_invites` (implemented)
+Single-use, 7-day links (ADR-0008).
+
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid | PK |
 | lender_id | uuid | FK → profiles |
-| token_hash | text | Hash of the secret in the link. The raw token is never stored. |
+| token_hash | text | SHA-256 of the 256-bit token in the link. The raw token is never stored. |
+| note | text | Optional label, e.g. "Cousin Sam" |
 | expires_at | timestamptz | |
-| used_by | uuid | FK → profiles, null until used |
+| accepted_by, accepted_at | uuid, timestamptz | Set together when used |
 | revoked_at | timestamptz | |
 
-### `lending_relationships`
+### `lending_relationships` (implemented)
 Links one lender to one borrower. Replaces the `family_groups` idea from the brief (see ADR-0006).
 
 | Column | Type | Notes |
@@ -51,7 +55,8 @@ Links one lender to one borrower. Replaces the `family_groups` idea from the bri
 | id | uuid | PK |
 | lender_id | uuid | FK → profiles |
 | borrower_id | uuid | FK → profiles |
-| ended_at | timestamptz | Null while active |
+| invite_id | uuid | The invite that created or last reopened it |
+| ended_at | timestamptz | Null while active. Re-inviting reopens the same row. |
 
 Constraints: `UNIQUE (lender_id, borrower_id)`, `CHECK (lender_id <> borrower_id)`.
 
@@ -130,17 +135,19 @@ How a confirmed repayment was split. Written by the confirm function using ADR-0
 | charge_cents | bigint | |
 | principal_cents | bigint | |
 
-### `loan_events`
-Append-only audit log. No role is ever granted `UPDATE` or `DELETE`.
+### `audit_events` (implemented)
+Append-only audit log for every state change (NF-03). No client role has `INSERT`, `UPDATE` or `DELETE`. Rows are written only by database functions.
 
 | Column | Type | Notes |
 |---|---|---|
 | id | bigint | PK, identity |
-| loan_id | uuid | FK → loans |
 | actor_id | uuid | FK → profiles, null for system jobs |
-| event_type | text | e.g. `terms_proposed`, `terms_accepted`, `funds_confirmed`, `repayment_confirmed` |
+| relationship_id | uuid | FK → lending_relationships, null for account-level events |
+| event_type | text | e.g. `invite_created`, `invite_accepted`, `relationship_ended` |
 | payload | jsonb | Snapshot of what changed |
 | occurred_at | timestamptz | |
+
+M3 adds a `loan_id` column so loan events can be filtered per loan.
 
 ### `notifications`
 Outbox for emails and pushes. Rows are inserted by functions and sent by the scheduled job.
@@ -169,7 +176,21 @@ Outbox for emails and pushes. Rows are inserted by functions and sent by the sch
 
 | Table | SELECT | INSERT / UPDATE / DELETE |
 |---|---|---|
-| profiles | Self, and people you share a relationship with | Self (display name only) |
-| lending_relationships, loans, loan_terms, instalments, term_acceptances, repayments, repayment_allocations, loan_events | Lender or borrower of the relationship | None. Functions only. |
+| profiles | Self, and people you share a relationship with | None. Name changes via `set_display_name()` |
+| lending_relationships, loans, loan_terms, instalments, term_acceptances, repayments, repayment_allocations | Lender or borrower of the relationship | None. Functions only. |
+| audit_events | Your own events, and events in your relationships | None. Functions only. |
 | lender_invites | The lender who created it | None. Functions only. |
 | notifications | The recipient | None |
+
+## Functions (implemented)
+
+| Function | Who | What it does |
+|---|---|---|
+| `set_display_name(name)` | Any user | Renames yourself |
+| `create_invite(note?)` | Lenders | Returns a new single-use invite token (shown once) |
+| `preview_invite(token)` | Any user | Lender's name and invite status, before accepting |
+| `accept_invite(token)` | Any user | Creates or reopens a relationship with the lender |
+| `revoke_invite(id)` | The lender | Cancels an unused invite |
+| `end_relationship(id)` | The lender | Closes a relationship, keeping its history |
+
+Functions raise errors whose message is a stable key (`invite_expired`, `lender_access_required`, …), which the web app maps to friendly text in `data/errors.ts`.
