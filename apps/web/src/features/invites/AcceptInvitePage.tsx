@@ -38,7 +38,7 @@ export function AcceptInvitePage() {
     return (
       <Card className="space-y-4">
         <Notice tone="error">{messageFor(code)}</Notice>
-        <Link to="/" className="text-sm font-medium text-brand underline">
+        <Link to="/" className="text-sm font-medium text-brand-ink underline">
           Go to your dashboard
         </Link>
       </Card>

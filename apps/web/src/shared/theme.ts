@@ -16,7 +16,7 @@ export type Theme = 'light' | 'dark'
 export const THEME_STORAGE_KEY = 'kinvo.theme'
 
 /** Browser bar colour for each theme, matching the header. */
-const THEME_COLORS: Record<Theme, string> = { light: '#ffffff', dark: '#141e1a' }
+const THEME_COLORS: Record<Theme, string> = { light: '#ffffff', dark: '#17140a' }
 
 export function resolveTheme(preference: ThemePreference, systemPrefersDark: boolean): Theme {
   if (preference === 'system') return systemPrefersDark ? 'dark' : 'light'

@@ -26,7 +26,7 @@ export function ThemeToggle() {
             onClick={() => setPreference(option.value)}
             className={
               'flex size-8 items-center justify-center rounded-lg transition-colors ' +
-              'focus-visible:outline-2 focus-visible:outline-brand ' +
+              'focus-visible:outline-2 focus-visible:outline-brand-ink ' +
               (selected ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink')
             }
           >

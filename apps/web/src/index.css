@@ -10,8 +10,10 @@
  */
 @theme inline {
   --color-brand: var(--kv-brand);
+  --color-brand-ink: var(--kv-brand-ink);
   --color-on-brand: var(--kv-on-brand);
   --color-brand-soft: var(--kv-brand-soft);
+  --color-attention: var(--kv-attention);
   --color-canvas: var(--kv-canvas);
   --color-surface: var(--kv-surface);
   --color-ink: var(--kv-ink);
@@ -24,35 +26,48 @@
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
+/*
+ * Kinvo palette (docs/design.md):
+ *   Pitch Black #0A0903 · Red #FF0000 · Princeton Orange #FF8200
+ *   Amber Gold #FFC100 · Vanilla Custard #FFEAAE
+ *
+ * Fills (buttons, progress, badges) use the palette directly. Text on light
+ * backgrounds uses darker shades of the same hues, because orange, amber and
+ * pure red on white are below the WCAG 4.5:1 contrast needed for small text.
+ */
 :root {
   color-scheme: light;
-  --kv-brand: #0e3b2e;
-  --kv-on-brand: #ffffff;
-  --kv-brand-soft: #e3efe8;
-  --kv-canvas: #f6f8f7;
+  --kv-brand: #ff8200; /* Princeton Orange: primary fills */
+  --kv-brand-ink: #a84600; /* orange text, 5.9:1 on white */
+  --kv-on-brand: #0a0903; /* Pitch Black on orange, 8:1 */
+  --kv-brand-soft: #ffeaae; /* Vanilla Custard */
+  --kv-attention: #ffc100; /* Amber Gold: "needs you" highlights */
+  --kv-canvas: #fff8e5;
   --kv-surface: #ffffff;
-  --kv-ink: #12201b;
-  --kv-ink-muted: #5b6b64;
-  --kv-line: #dfe6e2;
-  --kv-positive: #1f7a4d;
-  --kv-warning: #a15c07;
-  --kv-danger: #b42318;
+  --kv-ink: #0a0903;
+  --kv-ink-muted: #6b6250;
+  --kv-line: #f0e2bc;
+  --kv-positive: #2e7d32;
+  --kv-warning: #8a5c00;
+  --kv-danger: #c40000; /* Red, darkened for text on white */
 }
 
-/* Dark: deep green-grey surfaces, with a lighter mint brand so text stays readable. */
+/* Dark: Pitch Black surfaces, custard text, the palette's brights for accents. */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --kv-brand: #7dd3a8;
-  --kv-on-brand: #0b2a20;
-  --kv-brand-soft: #1a2e26;
-  --kv-canvas: #0c1311;
-  --kv-surface: #141e1a;
-  --kv-ink: #e4ede8;
-  --kv-ink-muted: #94a79e;
-  --kv-line: #263530;
+  --kv-brand: #ff8200;
+  --kv-brand-ink: #ffc100; /* Amber Gold text, 12:1 */
+  --kv-on-brand: #0a0903;
+  --kv-brand-soft: #2a1c05;
+  --kv-attention: #ffc100;
+  --kv-canvas: #0a0903;
+  --kv-surface: #17140a;
+  --kv-ink: #ffeaae; /* Vanilla Custard text, 15:1 */
+  --kv-ink-muted: #c9b98a;
+  --kv-line: #2e2914;
   --kv-positive: #5fd394;
-  --kv-warning: #f0b44c;
-  --kv-danger: #f2837a;
+  --kv-warning: #ffc100;
+  --kv-danger: #ff4d3d; /* Red, lifted slightly to stay readable on dark tints */
 }
 
 @layer base {
