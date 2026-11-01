@@ -19,7 +19,7 @@ export function LoansSection({ userId, canStartLoan }: { userId: string; canStar
         {canStartLoan && (
           <Link
             to="/loans/new"
-            className="inline-flex min-h-9 items-center rounded-xl bg-brand px-3 text-sm font-medium text-white hover:bg-brand/90"
+            className="inline-flex min-h-9 items-center rounded-xl bg-brand px-3 text-sm font-medium text-on-brand hover:bg-brand/90"
           >
             New loan
           </Link>
