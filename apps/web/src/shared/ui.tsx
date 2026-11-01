@@ -1,0 +1,131 @@
+/**
+ * Small set of UI building blocks. Every screen uses these, so spacing,
+ * colours and focus styles stay consistent.
+ */
+import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
+import { useId } from 'react'
+
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+
+const BUTTON_STYLES: Record<ButtonVariant, string> = {
+  primary: 'bg-brand text-white hover:bg-brand/90',
+  secondary: 'border border-line bg-surface text-ink hover:bg-canvas',
+  ghost: 'text-ink-muted hover:bg-brand-soft hover:text-ink',
+  danger: 'border border-line bg-surface text-danger hover:bg-danger/5',
+}
+
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant
+  busy?: boolean
+}
+
+export function Button({
+  variant = 'primary',
+  busy = false,
+  disabled,
+  className = '',
+  children,
+  type = 'button',
+  ...rest
+}: ButtonProps) {
+  return (
+    <button
+      type={type}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
+      className={
+        'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium ' +
+        'transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ' +
+        'disabled:cursor-not-allowed disabled:opacity-60 ' +
+        `${BUTTON_STYLES[variant]} ${className}`
+      }
+      {...rest}
+    >
+      {busy && <Spinner />}
+      {children}
+    </button>
+  )
+}
+
+export function Spinner({ label }: { label?: string }) {
+  return (
+    <span role={label ? 'status' : undefined} className="inline-flex items-center gap-2">
+      <span
+        aria-hidden="true"
+        className="size-4 animate-spin rounded-full border-2 border-current border-r-transparent"
+      />
+      {label && <span className="text-sm text-ink-muted">{label}</span>}
+    </span>
+  )
+}
+
+export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-2xl border border-line bg-surface p-5 shadow-sm ${className}`}>
+      {children}
+    </section>
+  )
+}
+
+interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string
+  hint?: string
+}
+
+export function TextField({ label, hint, className = '', ...rest }: TextFieldProps) {
+  const id = useId()
+  const hintId = hint ? `${id}-hint` : undefined
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="block text-sm font-medium">
+        {label}
+      </label>
+      <input
+        id={id}
+        aria-describedby={hintId}
+        className={
+          'mt-1.5 block min-h-11 w-full rounded-xl border border-line bg-surface px-3 text-base ' +
+          'placeholder:text-ink-muted/70 focus:border-brand focus:outline-2 focus:outline-brand/20'
+        }
+        {...rest}
+      />
+      {hint && (
+        <p id={hintId} className="mt-1 text-xs text-ink-muted">
+          {hint}
+        </p>
+      )}
+    </div>
+  )
+}
+
+type NoticeTone = 'info' | 'success' | 'error'
+
+const NOTICE_STYLES: Record<NoticeTone, string> = {
+  info: 'bg-brand-soft text-ink',
+  success: 'bg-positive/10 text-positive',
+  error: 'bg-danger/10 text-danger',
+}
+
+export function Notice({ tone = 'info', children }: { tone?: NoticeTone; children: ReactNode }) {
+  return (
+    <div
+      role={tone === 'error' ? 'alert' : 'status'}
+      className={`rounded-xl px-4 py-3 text-sm ${NOTICE_STYLES[tone]}`}
+    >
+      {children}
+    </div>
+  )
+}
+
+/** Full-screen centred loading state. */
+export function FullPageSpinner({ label = 'Loading…' }: { label?: string }) {
+  return (
+    <div className="flex min-h-svh items-center justify-center text-brand">
+      <Spinner label={label} />
+    </div>
+  )
+}
+
+export function Logo({ className = 'size-9' }: { className?: string }) {
+  return <img src="/favicon.svg" alt="" className={`${className} rounded-xl`} />
+}
