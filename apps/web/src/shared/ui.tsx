@@ -14,7 +14,7 @@ import { useId } from 'react'
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 const BUTTON_STYLES: Record<ButtonVariant, string> = {
-  primary: 'bg-brand text-white hover:bg-brand/90',
+  primary: 'bg-brand text-on-brand hover:bg-brand/90',
   secondary: 'border border-line bg-surface text-ink hover:bg-canvas',
   ghost: 'text-ink-muted hover:bg-brand-soft hover:text-ink',
   danger: 'border border-line bg-surface text-danger hover:bg-danger/5',

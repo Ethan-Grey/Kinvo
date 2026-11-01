@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { sendSignInCode, signInWithGoogle, verifySignInCode } from '../../data/auth'
 import { safeNextPath } from '../../shared/navigation'
+import { ThemeToggle } from '../../shared/ThemeToggle'
 import { Button, Card, Logo, Notice, TextField } from '../../shared/ui'
 import { useAuth } from './useAuth'
 
@@ -19,7 +20,10 @@ export function SignInPage() {
   if (session) return <Navigate to={next} replace />
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4 py-12">
+    <main className="relative mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4 py-12">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <header className="flex items-center gap-3">
         <Logo className="size-10" />
         <div>

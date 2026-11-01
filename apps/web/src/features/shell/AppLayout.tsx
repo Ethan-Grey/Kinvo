@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, Outlet } from 'react-router'
 import { signOut } from '../../data/auth'
+import { ThemeToggle } from '../../shared/ThemeToggle'
 import { Button, Logo } from '../../shared/ui'
 
 /** Header and page frame for signed-in screens. */
@@ -24,9 +25,12 @@ export function AppLayout() {
             <Logo className="size-7" />
             Kinvo
           </Link>
-          <Button variant="ghost" onClick={handleSignOut} busy={signingOut}>
-            Sign out
-          </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button variant="ghost" onClick={handleSignOut} busy={signingOut}>
+              Sign out
+            </Button>
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-4 py-6">

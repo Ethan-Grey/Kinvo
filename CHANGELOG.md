@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Light and dark mode, with a three-way switch (light, match device, dark) in the header and on the sign-in screen. The choice is saved per device and applied before the page paints.
 - Loans: borrowers request and lenders offer, with counter-offers in either direction until one side accepts.
 - Terms form with an even-split schedule builder (weekly, fortnightly, monthly) and editable payments; the charge is shown as a percentage of the amount borrowed.
 - Loan agreement: full terms, a confirmation checkbox and **Accept Loan Agreement**, recorded with a SHA-256 fingerprint of the exact terms (ADR-0009).
