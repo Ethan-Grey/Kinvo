@@ -1,5 +1,7 @@
 # Kinvo
 
+[![CI](https://github.com/Ethan-Grey/Kinvo/actions/workflows/ci.yml/badge.svg)](https://github.com/Ethan-Grey/Kinvo/actions/workflows/ci.yml)
+
 A private lending ledger for families. Kinvo records who borrowed what, on which terms, and how it's being repaid — so nobody has to rely on memory or screenshots of text messages.
 
 > **Status:** Early development. The design is documented; application code is being built feature by feature. See the [roadmap](#roadmap).
@@ -50,12 +52,20 @@ kinvo/
 
 ## Getting started
 
-Setup instructions will be added once the web app is scaffolded (milestone 1). See [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch and commit conventions.
+Requires Node.js 22+.
+
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm test           # unit tests
+```
+
+Every pull request runs type checks, lint, tests and a production build in GitHub Actions. See [`apps/web/README.md`](apps/web/README.md) for all scripts and [`CONTRIBUTING.md`](CONTRIBUTING.md) for branch and commit conventions.
 
 ## Roadmap
 
 - [x] **M0 — Foundation:** requirements, architecture, schema design, decision records
-- [ ] **M1 — Scaffold:** React + TypeScript + Tailwind, CI pipeline, Vercel previews
+- [x] **M1 — Scaffold:** React + TypeScript + Tailwind, CI pipeline, Vercel previews
 - [ ] **M2 — Auth & onboarding:** Google and email sign-in, lender invite links
 - [ ] **M3 — Loans:** requests, counter-offers, versioned terms, agreement acceptance
 - [ ] **M4 — Repayments:** recording, allocation, borrower payment claims
