@@ -37,8 +37,8 @@ export function NewLoanPage() {
       <Card className="space-y-3">
         <h1 className="text-xl font-semibold">No one to lend with yet</h1>
         <p className="text-sm text-ink-muted">You need to be connected through an invite link first.</p>
-        <Link to="/" className="text-sm font-medium text-brand-ink underline">
-          Back home
+        <Link to="/loans" className="text-sm font-medium text-brand-ink underline">
+          Back to loans
         </Link>
       </Card>
     )
@@ -50,8 +50,8 @@ export function NewLoanPage() {
 
   return (
     <div className="space-y-5">
-      <Link to="/" className="text-sm text-ink-muted hover:text-ink">
-        ← Home
+      <Link to="/loans" className="text-sm text-ink-muted hover:text-ink">
+        ← Loans
       </Link>
       <h1 className="text-2xl font-semibold tracking-tight">
         {isRequest ? `Ask ${selected.personName} for a loan` : `Offer ${selected.personName} a loan`}
