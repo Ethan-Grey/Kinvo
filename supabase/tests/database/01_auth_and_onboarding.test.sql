@@ -10,7 +10,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(37);
+select plan(38);
 
 -- -----------------------------------------------------------------------------
 -- Fixtures (as the database owner)
@@ -309,6 +309,22 @@ select throws_ok(
   'select public.create_invite()',
   'P0001', 'not_authenticated',
   'functions require a user id'
+);
+
+-- -----------------------------------------------------------------------------
+-- Deleting someone who used an invite keeps the invite marked as used
+-- -----------------------------------------------------------------------------
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-4000-8000-00000000000d', 'dana@example.test');
+insert into public.lender_invites (id, lender_id, token_hash, expires_at, accepted_by, accepted_at) values (
+  '00000000-0000-4000-8000-0000000000f1', '00000000-0000-4000-8000-00000000000a',
+  encode(extensions.digest('dana-token', 'sha256'), 'hex'), now() + interval '1 day',
+  '00000000-0000-4000-8000-00000000000d', now());
+delete from auth.users where id = '00000000-0000-4000-8000-00000000000d';
+select ok(
+  (select accepted_by is null and accepted_at is not null from public.lender_invites
+   where id = '00000000-0000-4000-8000-0000000000f1'),
+  'deleting a user who accepted an invite works, and the invite stays used'
 );
 
 select * from finish();
