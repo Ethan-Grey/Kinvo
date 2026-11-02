@@ -44,6 +44,7 @@ Single-use, 7-day links (ADR-0008).
 | expires_at | timestamptz | |
 | accepted_by, accepted_at | uuid, timestamptz | Set together when used |
 | revoked_at | timestamptz | |
+| existing_debt | jsonb | Optional debt from before Kinvo, turned into a loan on acceptance (ADR-0012) |
 
 ### `lending_relationships` (implemented)
 Links one lender to one borrower. Replaces the `family_groups` idea from the brief (see ADR-0006).
@@ -69,6 +70,8 @@ The "envelope" for one loan. Terms live in `loan_terms`. The brief's separate `l
 | reason | text | Borrower's stated reason |
 | current_terms_id | uuid | FK → loan_terms, the latest version |
 | funds_sent_at | timestamptz | Set when the lender confirms (AG-04) |
+| kind | text | `new`, or `existing_debt` for a debt from before Kinvo |
+| originally_lent_on | date | For existing debts only |
 
 ### `loan_terms` (implemented)
 Immutable. A counter-offer inserts a new row; nothing is updated.
