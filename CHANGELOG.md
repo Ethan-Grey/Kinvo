@@ -6,6 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- New look and navigation (docs/design.md):
+  - A bottom tab bar with a raised + for the most common actions.
+  - Repayment rings around each person.
+  - A bold balance card, and "Needs you" tiles on Home.
+  - Filters on the loan list, and a timeline for each loan's schedule.
+  - Alerts with icons, grouped by day.
+  - A settings-style Account page.
+- Faster forms:
+  - One-tap charge and payment amounts.
+  - Pill buttons for payment method and frequency.
+  - Optional terms tucked away until needed.
+  - A person picker for new loans.
+- Bricolage Grotesque for headings and amounts, self-hosted.
+
 ## [1.0.0] - 2026-11-02
 
 First complete release: loans, agreements, repayments, dashboards, notifications and account settings (milestones M0–M7).
