@@ -7,6 +7,28 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(41);
 
+-- Every payment and money-sent needs a receipt (ADR-0016). These stand-ins
+-- upload one and pass it along, so the tests can focus on the payment rules.
+create function pg_temp.receipt(p_loan uuid) returns text language plpgsql security definer as $h$
+declare v_path text := p_loan || '/' || gen_random_uuid() || '.jpg';
+begin
+  if to_regclass('storage.objects') is not null then
+    execute 'insert into storage.objects (bucket_id, name) values ($1, $2)' using 'receipts', v_path;
+  end if;
+  return v_path;
+end
+$h$;
+create function pg_temp.record_repayment(
+  p_loan uuid, p_amount bigint, p_on date, p_method public.payment_method, p_ref text default null, p_notes text default null
+) returns uuid language sql as $h$
+  select public.record_repayment(p_loan, p_amount, p_on, p_method, p_ref, p_notes, pg_temp.receipt(p_loan));
+$h$;
+create function pg_temp.confirm_funds_sent(p_loan uuid, p_on date, p_method public.payment_method, p_ref text default null)
+returns void language sql as $h$
+  select public.confirm_funds_sent(p_loan, p_on, p_method, p_ref, pg_temp.receipt(p_loan));
+$h$;
+grant execute on all functions in schema pg_temp to authenticated;
+
 -- -----------------------------------------------------------------------------
 -- Fixtures: Lena (lender), Bob (borrower), Casey (outsider)
 -- -----------------------------------------------------------------------------
@@ -214,7 +236,7 @@ select throws_ok(
   'P0001', 'loan_not_negotiating', 'agreed terms cannot be countered'
 );
 select throws_ok(
-  format('select public.confirm_funds_sent(%L, %L, %L)',
+  format('select pg_temp.confirm_funds_sent(%L, %L, %L)',
     current_setting('test.loan'), current_setting('test.today'), 'bank_transfer'),
   'P0001', 'lender_only', 'only the lender can confirm funds were sent'
 );
@@ -226,12 +248,12 @@ select throws_ok(
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 
 select throws_ok(
-  format('select public.confirm_funds_sent(%L, %L, %L)',
+  format('select pg_temp.confirm_funds_sent(%L, %L, %L)',
     current_setting('test.loan'), current_setting('test.tomorrow'), 'bank_transfer'),
   'P0001', 'invalid_sent_date', 'funds cannot be confirmed for a future date'
 );
 select lives_ok(
-  format('select public.confirm_funds_sent(%L, %L, %L, %L)',
+  format('select pg_temp.confirm_funds_sent(%L, %L, %L, %L)',
     current_setting('test.loan'), current_setting('test.today'), 'bank_transfer', 'KINVO-1'),
   'the lender can confirm funds were sent'
 );

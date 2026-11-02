@@ -7,6 +7,28 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(19);
 
+-- Every payment and money-sent needs a receipt (ADR-0016). These stand-ins
+-- upload one and pass it along, so the tests can focus on the payment rules.
+create function pg_temp.receipt(p_loan uuid) returns text language plpgsql security definer as $h$
+declare v_path text := p_loan || '/' || gen_random_uuid() || '.jpg';
+begin
+  if to_regclass('storage.objects') is not null then
+    execute 'insert into storage.objects (bucket_id, name) values ($1, $2)' using 'receipts', v_path;
+  end if;
+  return v_path;
+end
+$h$;
+create function pg_temp.record_repayment(
+  p_loan uuid, p_amount bigint, p_on date, p_method public.payment_method, p_ref text default null, p_notes text default null
+) returns uuid language sql as $h$
+  select public.record_repayment(p_loan, p_amount, p_on, p_method, p_ref, p_notes, pg_temp.receipt(p_loan));
+$h$;
+create function pg_temp.confirm_funds_sent(p_loan uuid, p_on date, p_method public.payment_method, p_ref text default null)
+returns void language sql as $h$
+  select public.confirm_funds_sent(p_loan, p_on, p_method, p_ref, pg_temp.receipt(p_loan));
+$h$;
+grant execute on all functions in schema pg_temp to authenticated;
+
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-8000-00000000000a', 'lena@example.test', '{"full_name": "Lena Lender"}'),
   ('00000000-0000-4000-8000-00000000000b', 'bob@example.test',  '{"full_name": "Bob Borrower"}');
@@ -80,7 +102,7 @@ select lives_ok(
 -- =============================================================================
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select public.accept_terms(current_setting('test.loan')::uuid, (pg_temp.terms()).id, (pg_temp.terms()).terms_hash);
-select public.confirm_funds_sent(current_setting('test.loan')::uuid, (now() at time zone 'Pacific/Auckland')::date, 'cash');
+select pg_temp.confirm_funds_sent(current_setting('test.loan')::uuid, (now() at time zone 'Pacific/Auckland')::date, 'cash');
 select is(
   (select lending_total_lent_cents from public.get_dashboard_summary()), 5000::bigint,
   'before removal it counts towards total lent'
