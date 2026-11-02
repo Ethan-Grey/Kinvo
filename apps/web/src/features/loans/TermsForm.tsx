@@ -31,7 +31,13 @@ interface TermsFormProps {
   /** Pre-fills the form, e.g. with the terms being countered. */
   initial?: TermsInput
   submitLabel: string
-  messageLabel: string
+  /** Label for the note to the other person. Omit to hide the field. */
+  messageLabel?: string
+  /**
+   * 'existing_debt' records money already owed from before Kinvo: one amount
+   * owed now, no charge (ADR-0012).
+   */
+  variant?: 'new' | 'existing_debt'
   onSubmit: (input: TermsInput) => Promise<void>
   onCancel?: () => void
 }
@@ -51,11 +57,14 @@ function rowsFrom(instalments: readonly Instalment[]): Row[] {
  * The schedule is built automatically from "N payments, every week, from
  * <date>". Editing any row switches to manual mode until rebuilt.
  */
-export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCancel }: TermsFormProps) {
+export function TermsForm({ initial, submitLabel, messageLabel, variant = 'new', onSubmit, onCancel }: TermsFormProps) {
+  const isExistingDebt = variant === 'existing_debt'
   const today = todayInNZ()
 
   const [principalText, setPrincipalText] = useState(initial ? centsToText(initial.principalCents) : '')
   const [chargeText, setChargeText] = useState(initial ? centsToText(initial.chargeCents) : '0')
+  // An existing debt has no separate charge: the amount owed is the total.
+  const effectiveChargeText = variant === 'existing_debt' ? '0' : chargeText
   const [count, setCount] = useState(String(initial?.instalments.length || 1))
   const [frequency, setFrequency] = useState<Frequency>('weekly')
   const [firstDueOn, setFirstDueOn] = useState<string>(initial?.instalments[0]?.dueOn ?? addDays(today, 7))
@@ -68,7 +77,7 @@ export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCanc
   const [showProblems, setShowProblems] = useState(false)
 
   const principal = parseDollars(principalText)
-  const charge = parseDollars(chargeText || '0')
+  const charge = parseDollars(effectiveChargeText || '0')
   const principalCents = principal.ok ? principal.cents : ZERO
   const chargeCents = charge.ok ? charge.cents : ZERO
   const totalCents = toCents(principalCents + chargeCents)
@@ -89,7 +98,7 @@ export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCanc
   const scheduleTotal = sumCents(instalments.map((i) => i.amountCents))
 
   const fieldErrors = [
-    !principal.ok || principalCents === 0 ? 'Enter the amount to borrow.' : null,
+    !principal.ok || principalCents === 0 ? (isExistingDebt ? 'Enter the amount they owe.' : 'Enter the amount to borrow.') : null,
     !charge.ok ? 'Enter the charge in dollars, or 0.' : null,
   ].filter((e): e is string => e !== null)
 
@@ -116,15 +125,16 @@ export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCanc
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={isExistingDebt ? '' : 'grid grid-cols-2 gap-3'}>
         <TextField
-          label="Amount to borrow ($)"
+          label={isExistingDebt ? 'Amount they owe you now ($)' : 'Amount to borrow ($)'}
           inputMode="decimal"
           required
           value={principalText}
           onChange={(e) => setPrincipalText(e.target.value)}
           placeholder="200"
         />
+        {!isExistingDebt && (
         <TextField
           label="One-off charge ($)"
           inputMode="decimal"
@@ -133,12 +143,15 @@ export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCanc
           placeholder="0"
           hint={principal.ok && charge.ok && principalCents > 0 ? `${chargePercent(principalCents, chargeCents)} of the amount borrowed` : undefined}
         />
+        )}
       </div>
 
-      <div className="flex items-baseline justify-between rounded-xl bg-brand-soft px-4 py-3">
-        <span className="text-sm">Total to repay</span>
-        <span className="text-lg font-semibold tabular-nums text-brand-ink">{formatCents(totalCents)}</span>
-      </div>
+      {!isExistingDebt && (
+        <div className="flex items-baseline justify-between rounded-xl bg-brand-soft px-4 py-3 text-on-brand-soft">
+          <span className="text-sm">Total to repay</span>
+          <span className="text-lg font-semibold tabular-nums">{formatCents(totalCents)}</span>
+        </div>
+      )}
 
       <fieldset className="min-w-0 space-y-3">
         <legend className="text-sm font-semibold">Repayments</legend>
@@ -235,13 +248,15 @@ export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCanc
         value={conditions}
         onChange={(e) => setConditions(e.target.value)}
       />
-      <TextArea
-        label={messageLabel}
-        maxLength={500}
-        rows={2}
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-      />
+      {messageLabel && (
+        <TextArea
+          label={messageLabel}
+          maxLength={500}
+          rows={2}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+      )}
 
       {showProblems && (fieldErrors.length > 0 || problems.length > 0) && (
         <Notice tone="error">

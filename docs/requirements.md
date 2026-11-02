@@ -23,6 +23,7 @@ A single account can be a lender to some people and a borrower to others. Roles 
 | AC-04 | Users can only see loans where they are the lender or the borrower. Enforced by the database, not just the UI. | Must |
 | AC-05 | A lender can remove a borrower link. Existing loan history is kept. | Should |
 | AC-06 | Users can export their own data and request account deletion. | Should |
+| AC-08 | A lender can attach a debt from before Kinvo to an invite. It counts only once the borrower confirms it (ADR-0012). | Must |
 | AC-07 | Sign in with Apple. Deferred: requires a paid Apple Developer account (see ADR-0005). | Could |
 
 ## Loan lifecycle (LN)

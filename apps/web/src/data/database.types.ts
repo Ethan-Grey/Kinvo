@@ -33,6 +33,7 @@ export interface Database {
           accepted_at: string | null
           revoked_at: string | null
           created_at: string
+          existing_debt: Json | null
         }
         Insert: never
         Update: never
@@ -96,6 +97,8 @@ export interface Database {
           funds_method: PaymentMethod | null
           funds_reference: string | null
           written_off_cents: number | null
+          kind: LoanKind
+          originally_lent_on: string | null
           closed_at: string | null
           created_at: string
         }
@@ -190,12 +193,19 @@ export interface Database {
         Returns: undefined
       }
       create_invite: {
-        Args: { p_note?: string | null }
+        Args: { p_note?: string | null; p_existing_debt?: Json | null }
         Returns: { invite_id: string; token: string; expires_at: string }[]
       }
       preview_invite: {
         Args: { p_token: string }
-        Returns: { lender_name: string | null; expires_at: string | null; status: InviteStatus }[]
+        Returns: {
+          lender_name: string | null
+          expires_at: string | null
+          status: InviteStatus
+          debt_amount_cents: number | null
+          debt_lent_on: string | null
+          debt_reason: string | null
+        }[]
       }
       accept_invite: {
         Args: { p_token: string }
@@ -363,6 +373,7 @@ type TermsArgs = {
 }
 
 export type LoanStatus = 'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off'
+export type LoanKind = 'new' | 'existing_debt'
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'
 export type RepaymentStatus = 'claimed' | 'confirmed' | 'disputed' | 'reversed'
 export type InstalmentStatus = 'paid' | 'due' | 'overdue'

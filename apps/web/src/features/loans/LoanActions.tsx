@@ -29,7 +29,13 @@ export function LoanActions({ loan, userId, onChanged, onCounter }: ActionProps)
 
   if (loan.status === 'negotiating') {
     return proposedByMe ? (
-      <WaitingForReply otherName={otherName} loanId={loan.id} onChanged={onChanged} onCounter={onCounter} />
+      <WaitingForReply
+        otherName={otherName}
+        loanId={loan.id}
+        isDebt={loan.kind === 'existing_debt'}
+        onChanged={onChanged}
+        onCounter={onCounter}
+      />
     ) : (
       <ReplyToProposal loan={loan} otherName={otherName} onChanged={onChanged} onCounter={onCounter} />
     )
@@ -64,6 +70,16 @@ function ReplyToProposal({
   const [busy, setBusy] = useState<'accept' | 'reject' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const isBorrower = loan.role === 'borrower'
+  const isDebt = loan.kind === 'existing_debt'
+  const total = formatCents(loan.currentTerms.totalCents)
+
+  const statement = isDebt
+    ? isBorrower
+      ? `I confirm I owe ${loan.lenderName} ${total}, and I agree to repay it on the dates above.`
+      : `I confirm ${loan.borrowerName} owes me ${total}, to be repaid on the dates above.`
+    : isBorrower
+      ? `I agree to repay ${loan.lenderName} ${total} on the dates above, under these terms.`
+      : `I agree to lend ${loan.borrowerName} ${formatCents(loan.currentTerms.principalCents)} under these terms.`
 
   async function run(kind: 'accept' | 'reject', action: () => Promise<void>) {
     setBusy(kind)
@@ -86,11 +102,7 @@ function ReplyToProposal({
           onChange={(e) => setAgreed(e.target.checked)}
           className="mt-0.5 size-5 shrink-0 accent-brand"
         />
-        <span>
-          {isBorrower
-            ? `I agree to repay ${loan.lenderName} ${formatCents(loan.currentTerms.totalCents)} on the dates above, under these terms.`
-            : `I agree to lend ${loan.borrowerName} ${formatCents(loan.currentTerms.principalCents)} under these terms.`}
-        </span>
+        <span>{statement}</span>
       </label>
 
       {error && <Notice tone="error">{error}</Notice>}
@@ -101,7 +113,7 @@ function ReplyToProposal({
         busy={busy === 'accept'}
         onClick={() => run('accept', () => acceptTerms(loan.id, loan.currentTerms))}
       >
-        Accept Loan Agreement
+        {isDebt ? 'Confirm this debt' : 'Accept Loan Agreement'}
       </Button>
       <div className="grid grid-cols-2 gap-2">
         <Button variant="secondary" onClick={onCounter} disabled={busy !== null}>
@@ -112,12 +124,15 @@ function ReplyToProposal({
           busy={busy === 'reject'}
           disabled={busy !== null}
           onClick={() => {
-            if (window.confirm(`Decline ${otherName}'s proposal? This ends the request.`)) {
+            const question = isDebt
+              ? `Tell ${otherName} this debt isn't right? It won't be recorded. You can talk it through and they can invite you again.`
+              : `Decline ${otherName}'s proposal? This ends the request.`
+            if (window.confirm(question)) {
               void run('reject', () => rejectTerms(loan.id, ''))
             }
           }}
         >
-          Decline
+          {isDebt ? 'This isn’t right' : 'Decline'}
         </Button>
       </div>
       <p className="text-xs text-ink-muted">
@@ -131,11 +146,13 @@ function ReplyToProposal({
 function WaitingForReply({
   otherName,
   loanId,
+  isDebt,
   onChanged,
   onCounter,
 }: {
   otherName: string
   loanId: string
+  isDebt: boolean
   onChanged: () => void
   onCounter: () => void
 }) {
@@ -156,7 +173,7 @@ function WaitingForReply({
 
   return (
     <div className="space-y-3">
-      <Notice>Waiting for {otherName} to reply.</Notice>
+      <Notice>Waiting for {otherName} to {isDebt ? 'confirm this debt' : 'reply'}.</Notice>
       {error && <Notice tone="error">{error}</Notice>}
       <div className="grid grid-cols-2 gap-2">
         <Button variant="secondary" onClick={onCounter} disabled={busy}>

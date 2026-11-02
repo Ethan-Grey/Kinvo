@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Existing debts: when inviting someone, a lender can record money they already owe from before Kinvo, with a repayment plan. The borrower sees it before joining and must confirm it; once confirmed it's active straight away (ADR-0012). 20 more pgTAP tests.
 - Bottom tab bar: Home, Loans and People.
 - Home dashboard: a "Needs you" panel (proposals to answer, money to send, payments to confirm or disputed), lending figures (owed to you, overdue, total lent, charges received this tax year), borrowing figures (what you owe, next payment) and upcoming payments across all loans.
 - People tab and person pages, with each borrower's track record (on-time payments and average lateness), visible to the lender only (ADR-0011).
