@@ -8,6 +8,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- One question per step:
+  - Asking for, offering or changing a loan goes through short steps: who, how much, any charge, how it's paid back, then check and send.
+  - Recording a payment asks how much, then how and when.
+  - The loan page shows the proposal in one sentence. Accept, Suggest changes, I've sent the money and Record a payment each open their own page.
+- Screens update by themselves (ADR-0014): a new loan request or payment appears on the other person's open app within seconds. The app also refreshes when reopened and when you pull down from the top of a screen.
 - New look and navigation (docs/design.md):
   - A bottom tab bar with a raised + for the most common actions.
   - Repayment rings around each person.

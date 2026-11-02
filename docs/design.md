@@ -61,3 +61,20 @@ Kinvo's signature element is a ring around each person's avatar that fills as th
 | Date tiles | Coming up on Home | The day stands out more than a date string |
 | Empty states | Loans, Alerts, People | Say what will appear and what to do next |
 | Skeletons | Every screen while loading | The layout doesn't jump when data arrives |
+
+## One action per page
+
+Anything that asks for more than one decision is split into steps, one question each, with a progress bar, "Step 2 of 4", and Back and Continue in the same place every time (`shared/Wizard.tsx`).
+
+| Flow | Steps |
+|---|---|
+| Ask to borrow or offer a loan | Who with (only if there's a choice), how much, any charge, how it's paid back, check and send |
+| Existing debt on an invite | How much they owe now, how it's paid back, check (when lent, what for) |
+| Suggest changes | The same steps, filled in with the current terms |
+| Record a payment | How much, then how and when |
+
+The loan page shows where things stand in one sentence and one number, then at most one main button (Accept, I've sent the money, Record a payment), one alternative (Suggest changes), and one quiet way out (Decline, Withdraw, Cancel). Each main button opens its own page (`/loans/:id/accept`, `/change`, `/sent`, `/pay`). The full terms, payment history and earlier versions are folded away until wanted.
+
+## Live updates
+
+Screens update by themselves (ADR-0014): a new notification arriving over Supabase Realtime, the app coming back to the foreground, or a pull down from the top of any screen fetches fresh data. The screen updates in place rather than flashing a loading state.
