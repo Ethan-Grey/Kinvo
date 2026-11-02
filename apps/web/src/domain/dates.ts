@@ -66,3 +66,15 @@ const displayFormat = new Intl.DateTimeFormat('en-NZ', {
 export function formatDate(date: IsoDate): string {
   return displayFormat.format(toUtc(date))
 }
+
+const shortFormat = new Intl.DateTimeFormat('en-NZ', {
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  timeZone: 'UTC',
+})
+
+/** "Mon, 9 Nov", for lists where the year is obvious. */
+export function formatShortDate(date: IsoDate): string {
+  return shortFormat.format(toUtc(date))
+}

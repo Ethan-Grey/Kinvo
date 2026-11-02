@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+/* Display face, self-hosted so the Content Security Policy can stay font-src 'self'. */
+@import '@fontsource-variable/bricolage-grotesque';
 
 /*
  * Design tokens. Components use these names (e.g. `bg-surface`, `text-ink`)
@@ -26,7 +28,15 @@
   --color-danger: var(--kv-danger);
   --color-on-danger: var(--kv-on-danger);
 
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --color-on-brand-muted: var(--kv-on-brand-muted);
+  --color-ring-track: var(--kv-ring-track);
+
+  /* The phone's own UI font for reading; Bricolage Grotesque for headings and money. */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+
+  --animate-sheet-up: sheet-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-fade-in: fade-in 180ms ease-out;
 }
 
 /*
@@ -57,6 +67,8 @@
   --kv-on-positive: #ffffff;
   --kv-danger: #c40000;
   --kv-on-danger: #ffffff;
+  --kv-on-brand-muted: #e4dcfa; /* secondary text on Violet Twilight, 5.4:1 */
+  --kv-ring-track: #e4e4e7;
 }
 
 :root[data-theme='dark'] {
@@ -77,6 +89,20 @@
   --kv-on-positive: #000000;
   --kv-danger: #ff6b6b;
   --kv-on-danger: #000000;
+  --kv-on-brand-muted: #e4dcfa;
+  --kv-ring-track: #2a2a2a;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
 }
 
 @layer base {
@@ -87,8 +113,28 @@
   body {
     @apply bg-canvas font-sans text-ink antialiased;
     /* Room for the iPhone notch and home bar when installed as an app. */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
-      env(safe-area-inset-left);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* Native dialogs (the + sheet) dim the page behind them. */
+  dialog::backdrop {
+    background: rgb(0 0 0 / 0.45);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      transition-duration: 1ms !important;
+    }
   }
 
   /* Tabular figures keep columns of money aligned. */
