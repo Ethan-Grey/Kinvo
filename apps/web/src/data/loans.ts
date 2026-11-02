@@ -7,7 +7,7 @@
 import type { IsoDate } from '../domain/dates'
 import { toCents, type Cents } from '../domain/money'
 import type { Instalment } from '../domain/schedule'
-import type { InstalmentRow, LoanStatus, LoanTermsRow, PaymentMethod, TermAcceptanceRow } from './database.types'
+import type { InstalmentRow, LoanKind, LoanStatus, LoanTermsRow, PaymentMethod, TermAcceptanceRow } from './database.types'
 import { toAppError } from './errors'
 import { listBalances, type LoanBalance } from './repayments'
 import { supabase } from './supabase'
@@ -34,6 +34,9 @@ export interface LoanDetail {
   id: string
   relationshipId: string
   status: LoanStatus
+  kind: LoanKind
+  /** For an existing debt: when the money was originally lent, before Kinvo. */
+  originallyLentOn: IsoDate | null
   role: Role
   lenderId: string
   borrowerId: string
@@ -56,6 +59,7 @@ export interface LoanSummary {
   id: string
   relationshipId: string
   status: LoanStatus
+  kind: LoanKind
   role: Role
   otherPersonName: string
   principalCents: Cents
@@ -112,6 +116,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
       id: loan.id,
       relationshipId: loan.relationship_id,
       status: loan.status,
+      kind: loan.kind,
       role,
       otherPersonName: role === 'lender' ? loan.borrower.display_name : loan.lender.display_name,
       principalCents: toCents(principal),
@@ -145,6 +150,8 @@ export async function getLoan(loanId: string, userId: string): Promise<LoanDetai
     id: loan.id,
     relationshipId: loan.relationship_id,
     status: loan.status,
+    kind: loan.kind,
+    originallyLentOn: loan.originally_lent_on,
     role: loan.lender_id === userId ? 'lender' : 'borrower',
     lenderId: loan.lender_id,
     borrowerId: loan.borrower_id,

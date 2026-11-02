@@ -64,6 +64,10 @@ const MESSAGES: Record<string, string> = {
   reason_required: 'Add a short reason (up to 500 characters).',
   loan_closed: 'This loan is closed, so its payments can’t be changed.',
   nothing_outstanding: 'Nothing is owed on this loan.',
+
+  // Existing debts
+  invalid_existing_debt: 'Check the existing debt details and try again.',
+  invalid_lent_date: 'The date the money was lent can’t be in the future.',
 }
 
 const FALLBACK = 'Something went wrong. Please try again.'
