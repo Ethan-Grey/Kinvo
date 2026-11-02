@@ -70,7 +70,7 @@ select is(
   (select coalesce(string_agg(p.proname, ', ' order by p.proname), '')
    from pg_proc p
    where p.pronamespace = 'public'::regnamespace
-     and p.proname in ('claim_notification_emails', 'finish_notification_email')
+     and p.proname in ('claim_notification_emails', 'finish_notification_email', 'claim_notification_pushes', 'finish_notification_push')
      and has_function_privilege('authenticated', p.oid, 'execute')),
   '', 'signed-in users cannot touch the email outbox'
 );
