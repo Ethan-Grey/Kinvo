@@ -20,7 +20,7 @@ import { RingAvatar } from '../../shared/Avatar'
 import { CheckIcon, PaymentIcon } from '../../shared/icons'
 import { Badge, Button, Card, Notice, Skeleton, TextField } from '../../shared/ui'
 import { methodLabel } from '../loans/labels'
-import { ReceiptLink } from './ReceiptField'
+import { ReceiptThumb } from './ReceiptViewer'
 
 interface PanelProps {
   loan: LoanDetail
@@ -101,6 +101,8 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
         <h2 className="text-lg font-semibold">Schedule</h2>
         <ScheduleProgress progress={progress} />
       </Card>
+
+      <ProofOfPayment loan={loan} repayments={repayments} />
 
       {settled.length > 0 && (
         <details className="group rounded-3xl border border-line bg-surface p-5">
@@ -247,15 +249,85 @@ function ScheduleProgress({ progress }: { progress: InstalmentProgress[] }) {
 
 function PaymentLine({ repayment }: { repayment: Repayment }) {
   return (
-    <div className="min-w-0">
-      <p className="font-display text-lg font-semibold tabular-nums">{formatCents(repayment.amountCents)}</p>
-      <p className="text-sm text-ink-muted">
-        {methodLabel(repayment.method)} on {formatShortDate(repayment.receivedOn)}
-        {repayment.reference ? `, ref ${repayment.reference}` : ''}
-      </p>
-      {repayment.notes && <p className="text-sm text-ink-muted">“{repayment.notes}”</p>}
-      {repayment.receiptPath && <ReceiptLink path={repayment.receiptPath} />}
+    <div className="flex min-w-0 items-start gap-3">
+      {repayment.receiptPath && (
+        <ReceiptThumb
+          path={repayment.receiptPath}
+          label={`receipt for ${formatCents(repayment.amountCents)} on ${formatShortDate(repayment.receivedOn)}`}
+          className="size-14"
+        />
+      )}
+      <div className="min-w-0">
+        <p className="font-display text-lg font-semibold tabular-nums">{formatCents(repayment.amountCents)}</p>
+        <p className="text-sm text-ink-muted">
+          {methodLabel(repayment.method)} on {formatShortDate(repayment.receivedOn)}
+          {repayment.reference ? `, ref ${repayment.reference}` : ''}
+        </p>
+        {repayment.notes && <p className="text-sm text-ink-muted">“{repayment.notes}”</p>}
+      </div>
     </div>
+  )
+}
+
+/**
+ * Every receipt on the loan in one place, for both people: the money the
+ * lender sent, then each payment back. Tap one to see it full size or save it.
+ */
+function ProofOfPayment({ loan, repayments }: { loan: LoanDetail; repayments: Repayment[] }) {
+  const items = [
+    loan.fundsSentOn && {
+      key: 'funds',
+      title: `${loan.lenderName.split(' ')[0]} sent`,
+      amountCents: loan.currentTerms.principalCents,
+      date: loan.fundsSentOn,
+      path: loan.fundsReceiptPath,
+      cash: loan.fundsMethod === 'cash',
+      note: null as string | null,
+    },
+    ...repayments
+      .filter((r) => r.status !== 'reversed')
+      .slice()
+      .reverse()
+      .map((r) => ({
+        key: r.id,
+        title: r.submittedBy === loan.lenderId ? 'Recorded by lender' : `${loan.borrowerName.split(' ')[0]} paid`,
+        amountCents: r.amountCents,
+        date: r.receivedOn,
+        path: r.receiptPath,
+        cash: r.method === 'cash',
+        note: r.status === 'claimed' ? 'Waiting to be confirmed' : r.status === 'disputed' ? 'Disputed' : null,
+      })),
+  ].filter((item): item is Exclude<typeof item, '' | null | undefined> => Boolean(item))
+
+  if (items.length === 0) return null
+
+  return (
+    <Card>
+      <h2 className="text-lg font-semibold">Proof of payment</h2>
+      <p className="text-sm text-ink-muted">Receipts for money sent and paid back. Both of you can see them.</p>
+      <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+        {items.map((item) => (
+          <li key={item.key} className="min-w-0">
+            {item.path ? (
+              <ReceiptThumb
+                path={item.path}
+                label={`receipt: ${item.title.toLowerCase()} ${formatCents(item.amountCents)} on ${formatShortDate(item.date)}`}
+                className="aspect-[3/4] w-full"
+              />
+            ) : (
+              <div className="flex aspect-[3/4] w-full items-center justify-center rounded-2xl border border-dashed border-line p-3 text-center text-sm text-ink-muted">
+                {item.cash ? 'Cash, no receipt' : 'No receipt (added before receipts were required)'}
+              </div>
+            )}
+            <p className="mt-1.5 truncate text-sm font-semibold tabular-nums">
+              {formatCents(item.amountCents)}{' '}
+              <span className="font-normal text-ink-muted">{formatShortDate(item.date)}</span>
+            </p>
+            <p className="truncate text-xs text-ink-muted">{item.note ?? item.title}</p>
+          </li>
+        ))}
+      </ul>
+    </Card>
   )
 }
 

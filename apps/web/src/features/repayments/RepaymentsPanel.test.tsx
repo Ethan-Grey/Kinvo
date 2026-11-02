@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -21,6 +21,8 @@ const api = vi.hoisted(() => ({
   forgiveRemaining: vi.fn(),
 }))
 vi.mock('../../data/repayments', () => api)
+const receiptObjectUrl = vi.hoisted(() => vi.fn(() => Promise.resolve('blob:receipt')))
+vi.mock('../../data/images', () => ({ receiptObjectUrl }))
 
 const today = todayInNZ()
 
@@ -33,6 +35,8 @@ const loan = {
   lenderName: 'Lena',
   borrowerName: 'Bob',
   fundsSentOn: '2026-10-01',
+  fundsMethod: 'bank_transfer',
+  fundsReceiptPath: 'loan-1/sent.jpg',
   currentTerms: { principalCents: toCents(20000) },
 } as unknown as LoanDetail
 
@@ -133,5 +137,17 @@ describe('RepaymentsPanel', () => {
     const { container } = renderPanel()
     await screen.findByText(/paid \$150\.00 of \$300\.00/i)
     await expectNoAxeViolations(container)
+  })
+
+  it('shows every receipt to both people under Proof of payment', async () => {
+    for (const role of ['lender', 'borrower'] as const) {
+      renderPanel(role)
+      expect(await screen.findByRole('heading', { name: 'Proof of payment' })).toBeTruthy()
+      expect(screen.getAllByRole('button', { name: /view receipt: lena sent \$200\.00/i }).length).toBe(1)
+      expect(screen.getAllByRole('button', { name: /view receipt/i }).length).toBeGreaterThanOrEqual(2)
+      // The images themselves load for whoever is looking.
+      await waitFor(() => expect(document.querySelectorAll('img[src="blob:receipt"]').length).toBeGreaterThanOrEqual(2))
+      cleanup()
+    }
   })
 })

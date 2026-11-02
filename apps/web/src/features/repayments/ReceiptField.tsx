@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { cleanImage, imageFromClipboard, receiptObjectUrl, ReceiptError, uploadReceipt } from '../../data/images'
+import { cleanImage, imageFromClipboard, ReceiptError, uploadReceipt } from '../../data/images'
 import { CloseIcon, DocumentIcon } from '../../shared/icons'
 import { Button, Notice, Spinner } from '../../shared/ui'
 
@@ -119,64 +119,5 @@ export function ReceiptField({ loanId, onChange }: { loanId: string; onChange: (
       </div>
       {error && <Notice tone="error">{error}</Notice>}
     </div>
-  )
-}
-
-/** "View receipt" link that opens the image full screen. */
-export function ReceiptLink({ path, label = 'View receipt' }: { path: string; label?: string }) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-  const [url, setUrl] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(
-    () => () => {
-      if (url) URL.revokeObjectURL(url)
-    },
-    [url],
-  )
-
-  async function open() {
-    setError(null)
-    dialogRef.current?.showModal()
-    if (url) return
-    try {
-      setUrl(await receiptObjectUrl(path))
-    } catch (err) {
-      setError((err as Error).message)
-    }
-  }
-
-  return (
-    <>
-      <button type="button" onClick={open} className="text-sm font-medium text-brand-ink underline">
-        {label}
-      </button>
-      <dialog
-        ref={dialogRef}
-        aria-label="Receipt"
-        onClick={(e) => {
-          if (e.target === dialogRef.current) dialogRef.current?.close()
-        }}
-        className="m-auto max-h-[90svh] w-[min(100%-2rem,40rem)] max-w-none rounded-3xl border border-line bg-surface p-3 text-ink"
-      >
-        <div className="mb-2 flex justify-end">
-          <button
-            type="button"
-            onClick={() => dialogRef.current?.close()}
-            aria-label="Close"
-            className="flex size-10 items-center justify-center rounded-full text-ink-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-brand-ink"
-          >
-            <CloseIcon />
-          </button>
-        </div>
-        {error ? (
-          <Notice tone="error">{error}</Notice>
-        ) : url ? (
-          <img src={url} alt="Receipt" className="max-h-[75svh] w-full object-contain" />
-        ) : (
-          <Spinner label="Loading receipt…" />
-        )}
-      </dialog>
-    </>
   )
 }
