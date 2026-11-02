@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Avatar } from '../../shared/Avatar'
 import { ChevronIcon, PeopleIcon } from '../../shared/icons'
 import { createLoan } from '../../data/loans'
+import { toCents } from '../../domain/money'
 import { listPeople, type Connection } from '../../data/people'
 import { useAsync } from '../../shared/useAsync'
 import { Card, EmptyState, Notice, PageHeader, PageSkeleton, TextField } from '../../shared/ui'
@@ -102,6 +103,7 @@ export function NewLoanPage() {
       <TermsForm
         key={selected.relationshipId}
         perspective={selected.myRole}
+        fixedCharge={isRequest ? () => toCents(0) : undefined}
         submitLabel={isRequest ? 'Send request' : 'Send offer'}
         messageLabel={`Message to ${selected.personName.split(' ')[0]} (optional)`}
         onBackFromStart={canChangePerson ? () => setChosen(null) : undefined}

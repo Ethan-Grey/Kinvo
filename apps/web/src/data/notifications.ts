@@ -51,6 +51,12 @@ export async function markRead(ids?: string[]): Promise<void> {
   if (error) throw toAppError(error)
 }
 
+/** Deletes the given alerts, or all of them. The loan records themselves are untouched. */
+export async function clearNotifications(ids?: string[]): Promise<void> {
+  const { error } = await supabase().rpc('clear_notifications', { p_ids: ids ?? null })
+  if (error) throw toAppError(error)
+}
+
 /** "just now", "5m ago", "3h ago", "2d ago", then a date like "4 Nov". */
 export function timeAgo(iso: string, now: Date = new Date()): string {
   const seconds = Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / 1000))

@@ -29,6 +29,8 @@ export function statusBadge(status: LoanStatus, role: Role, awaitingMe: boolean)
       return { label: 'Cancelled', tone: 'neutral' }
     case 'written_off':
       return { label: 'Written off', tone: 'neutral' }
+    case 'removed':
+      return { label: 'Removed', tone: 'neutral' }
   }
 }
 

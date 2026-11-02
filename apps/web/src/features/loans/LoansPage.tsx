@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router'
+import { useLocation, useSearchParams } from 'react-router'
 import { listLoans, type LoanSummary } from '../../data/loans'
 import { LoansIcon } from '../../shared/icons'
 import { useAsync } from '../../shared/useAsync'
@@ -28,6 +28,7 @@ export function LoansPage() {
   const [params, setParams] = useSearchParams()
   const show = params.get('show')
   const filter: Filter = isFilter(show) ? show : 'all'
+  const flash = (useLocation().state as { flash?: string } | null)?.flash
   const [loans] = useAsync(() => listLoans(userId), userId)
 
   if (loans.status === 'loading') return <PageSkeleton label="Loading loans" />
@@ -46,6 +47,7 @@ export function LoansPage() {
   return (
     <div className="space-y-5">
       <PageHeader title="Loans" />
+      {flash && <Notice tone="success">{flash}</Notice>}
 
       {all.length > 0 && options.length > 1 && (
         <Segmented

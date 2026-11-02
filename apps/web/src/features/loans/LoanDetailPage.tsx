@@ -1,4 +1,4 @@
-import { useLocation, useParams } from 'react-router'
+import { Link, useLocation, useParams } from 'react-router'
 import { formatDate } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
 import { getLoan, isAwaitingUser, type LoanDetail, type TermsVersion } from '../../data/loans'
@@ -88,6 +88,15 @@ export function LoanDetailPage() {
       )}
 
       {data.history.length > 1 && <History loan={data} userId={userId} />}
+
+      {data.role === 'lender' && (
+        <Link
+          to={`/loans/${data.id}/remove`}
+          className="flex min-h-11 items-center justify-center text-sm font-medium text-ink-muted hover:text-danger"
+        >
+          Remove this loan
+        </Link>
+      )}
     </div>
   )
 }

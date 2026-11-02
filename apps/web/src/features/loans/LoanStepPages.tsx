@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { formatCents, toCents } from '../../domain/money'
-import { counterOffer, getLoan, type LoanDetail } from '../../data/loans'
+import { borrowerCharge, counterOffer, getLoan, removeLoan, type LoanDetail } from '../../data/loans'
 import { getBalance, getInstalmentProgress } from '../../data/repayments'
 import { useAsync } from '../../shared/useAsync'
-import { Card, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
+import { Button, Card, Notice, PageHeader, PageSkeleton, TextField } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 import { PaymentForm } from '../repayments/PaymentForm'
 import { AcceptForm, FundsSentForm } from './LoanActions'
@@ -71,6 +72,7 @@ export function ChangeTermsPage() {
         <TermsForm
           initial={{ ...loan.currentTerms, message: '' }}
           perspective={loan.role}
+          fixedCharge={loan.role === 'borrower' ? (principal) => borrowerCharge(loan, principal) : undefined}
           variant={loan.kind}
           submitLabel={`Send to ${otherOf(loan)}`}
           messageLabel={`Message to ${otherOf(loan)} (optional)`}
@@ -127,5 +129,69 @@ function PaymentStep({ loan, onDone }: { loan: LoanDetail; onDone: (flash: strin
       earliestDate={loan.fundsSentOn ?? '2000-01-01'}
       onRecorded={() => onDone(isLender ? 'Payment recorded.' : `Sent to ${loan.lenderName} to confirm.`)}
     />
+  )
+}
+
+/**
+ * /loans/:id/remove — lender only. Hides a loan that shouldn't be there, such
+ * as a test or a mistake, from every list and total (ADR-0015).
+ */
+export function RemoveLoanPage() {
+  return (
+    <LoanStep title={() => 'Remove this loan?'}>
+      {(loan) =>
+        loan.role === 'lender' ? <RemoveForm loan={loan} /> : <Notice>Only the lender can remove a loan.</Notice>
+      }
+    </LoanStep>
+  )
+}
+
+function RemoveForm({ loan }: { loan: LoanDetail }) {
+  const navigate = useNavigate()
+  const [reason, setReason] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const funded = loan.status === 'active' || loan.status === 'completed' || loan.status === 'written_off'
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    setBusy(true)
+    setError(null)
+    try {
+      await removeLoan(loan.id, reason)
+      navigate('/loans', { replace: true, state: { flash: 'Loan removed.' } })
+    } catch (err) {
+      setError((err as Error).message)
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <p>
+        Use this for a test or a mistake. The loan with {loan.borrowerName.split(' ')[0]} will disappear for both of
+        you:
+      </p>
+      <ul className="list-inside list-disc space-y-1 text-sm text-ink-muted">
+        <li>from your loans, alerts and reminders</li>
+        {funded && <li>from what’s owed, total lent and charges received</li>}
+        {funded && <li>from {loan.borrowerName.split(' ')[0]}’s track record</li>}
+      </ul>
+      <p className="text-sm text-ink-muted">
+        Kinvo keeps a private note that it was removed, by whom and when. If this is a real loan that’s been settled or
+        you’re letting go, use “Forgive the rest” instead.
+      </p>
+      <TextField
+        label="Reason (optional)"
+        maxLength={500}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        placeholder="e.g. Just testing"
+      />
+      {error && <Notice tone="error">{error}</Notice>}
+      <Button type="submit" variant="danger" className="w-full" busy={busy}>
+        Remove loan
+      </Button>
+    </form>
   )
 }

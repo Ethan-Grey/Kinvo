@@ -98,6 +98,7 @@ export interface Database {
           funds_method: PaymentMethod | null
           funds_reference: string | null
           written_off_cents: number | null
+          removed_reason: string | null
           kind: LoanKind
           originally_lent_on: string | null
           closed_at: string | null
@@ -210,6 +211,14 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      remove_loan: {
+        Args: { p_loan_id: string; p_reason?: string | null }
+        Returns: undefined
+      }
+      clear_notifications: {
+        Args: { p_ids?: string[] | null }
+        Returns: undefined
+      }
       set_email_notifications: {
         Args: { p_enabled: boolean }
         Returns: undefined
@@ -406,7 +415,8 @@ type TermsArgs = {
   p_message?: string | null
 }
 
-export type LoanStatus = 'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off'
+export type LoanStatus =
+  'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off' | 'removed'
 export type LoanKind = 'new' | 'existing_debt'
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'
 export type RepaymentStatus = 'claimed' | 'confirmed' | 'disputed' | 'reversed'

@@ -1,6 +1,12 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { listNotifications, markRead, timeAgo, type AppNotification } from '../../data/notifications'
+import {
+  clearNotifications,
+  listNotifications,
+  markRead,
+  timeAgo,
+  type AppNotification,
+} from '../../data/notifications'
 import {
   AlertIcon,
   BellIcon,
@@ -13,7 +19,7 @@ import {
   SendIcon,
 } from '../../shared/icons'
 import { useAsync } from '../../shared/useAsync'
-import { EmptyState, IconBubble, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
+import { Button, EmptyState, IconBubble, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
 import { useUnreadCount } from './useUnreadCount'
 
 type Tone = 'brand' | 'soft' | 'attention' | 'positive' | 'danger' | 'neutral'
@@ -58,7 +64,19 @@ function dayGroup(iso: string, now: Date = new Date()): 'Today' | 'Yesterday' | 
  * page marks them read; unread ones keep their highlight until you leave.
  */
 export function NotificationsPage() {
-  const [state] = useAsync(() => listNotifications())
+  const [state, reload] = useAsync(() => listNotifications())
+  const [clearing, setClearing] = useState(false)
+
+  async function handleClear() {
+    if (!window.confirm('Clear all alerts? Your loans and payments aren’t affected.')) return
+    setClearing(true)
+    try {
+      await clearNotifications()
+      reload()
+    } finally {
+      setClearing(false)
+    }
+  }
   const { refresh } = useUnreadCount()
 
   const hasUnread = state.status === 'success' && state.data.some((n) => n.readAt === null)
@@ -79,7 +97,16 @@ export function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Alerts" />
+      <PageHeader
+        title="Alerts"
+        action={
+          state.data.length > 0 && (
+            <Button variant="ghost" className="min-h-10 px-3" busy={clearing} onClick={handleClear}>
+              Clear all
+            </Button>
+          )
+        }
+      />
       {state.data.length === 0 ? (
         <EmptyState icon={<BellIcon className="size-6" />} title="You’re all caught up">
           Loan requests, payments and due-date reminders will appear here, and by email.

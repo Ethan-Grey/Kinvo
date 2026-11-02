@@ -7,7 +7,14 @@
 import type { IsoDate } from '../domain/dates'
 import { toCents, type Cents } from '../domain/money'
 import type { Instalment } from '../domain/schedule'
-import type { InstalmentRow, LoanKind, LoanStatus, LoanTermsRow, PaymentMethod, TermAcceptanceRow } from './database.types'
+import type {
+  InstalmentRow,
+  LoanKind,
+  LoanStatus,
+  LoanTermsRow,
+  PaymentMethod,
+  TermAcceptanceRow,
+} from './database.types'
 import { toAppError } from './errors'
 import { listBalances, type LoanBalance } from './repayments'
 import { supabase } from './supabase'
@@ -97,6 +104,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
   const { data: loans, error } = await supabase()
     .from('loans')
     .select(LOAN_WITH_NAMES)
+    .neq('status', 'removed')
     .order('created_at', { ascending: false })
   if (error) throw toAppError(error)
 
@@ -132,6 +140,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
 export async function getLoan(loanId: string, userId: string): Promise<LoanDetail> {
   const { data: loan, error } = await supabase().from('loans').select(LOAN_WITH_NAMES).eq('id', loanId).single()
   if (error) throw toAppError({ ...error, message: error.code === 'PGRST116' ? 'loan_not_found' : error.message })
+  if (loan.status === 'removed') throw toAppError({ message: 'loan_removed' })
 
   const { data: termsRows, error: termsError } = await supabase()
     .from('loan_terms')
@@ -262,7 +271,11 @@ function bySequence(a: InstalmentRow, b: InstalmentRow) {
   return a.sequence - b.sequence
 }
 
-function toTermsVersion(row: LoanTermsRow, instalments: InstalmentRow[], acceptances: TermAcceptanceRow[]): TermsVersion {
+function toTermsVersion(
+  row: LoanTermsRow,
+  instalments: InstalmentRow[],
+  acceptances: TermAcceptanceRow[],
+): TermsVersion {
   return {
     id: row.id,
     version: row.version,
@@ -285,3 +298,24 @@ function toTermsVersion(row: LoanTermsRow, instalments: InstalmentRow[], accepta
   }
 }
 
+/**
+ * Lender only: hide a loan that shouldn't be there (a test or a mistake).
+ * It drops out of every list and total; the audit log keeps a note (ADR-0015).
+ */
+export async function removeLoan(loanId: string, reason: string): Promise<void> {
+  const { error } = await supabase().rpc('remove_loan', { p_loan_id: loanId, p_reason: reason.trim() || null })
+  if (error) throw toAppError(error)
+}
+
+/**
+ * The charge a borrower's proposal must carry: the lender's latest rate
+ * applied to the new amount (0 if the lender hasn't proposed a charge).
+ * Mirrors private.required_borrower_charge in the database.
+ */
+export function borrowerCharge(loan: Pick<LoanDetail, 'history' | 'lenderId'> | null, principalCents: number): Cents {
+  const lenderTerms = loan?.history
+    .filter((t) => t.proposedBy === loan.lenderId)
+    .sort((a, b) => b.version - a.version)[0]
+  if (!lenderTerms || lenderTerms.principalCents === 0) return toCents(0)
+  return toCents(Math.round((principalCents * lenderTerms.chargeCents) / lenderTerms.principalCents))
+}
