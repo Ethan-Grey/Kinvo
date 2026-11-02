@@ -173,6 +173,27 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      notifications: {
+        Row: {
+          id: string
+          recipient_id: string
+          kind: string
+          loan_id: string | null
+          title: string
+          body: string
+          link_path: string
+          dedupe_key: string
+          created_at: string
+          read_at: string | null
+          email_status: 'pending' | 'sending' | 'sent' | 'failed'
+          email_attempts: number
+          email_sent_at: string | null
+          email_last_error: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       term_acceptances: {
         Row: {
           id: string
@@ -188,6 +209,10 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      mark_notifications_read: {
+        Args: { p_ids?: string[] | null }
+        Returns: undefined
+      }
       set_display_name: {
         Args: { p_display_name: string }
         Returns: undefined

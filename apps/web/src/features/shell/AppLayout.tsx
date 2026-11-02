@@ -2,6 +2,8 @@ import { useState, type ReactNode } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { signOut } from '../../data/auth'
 import { ThemeToggle } from '../../shared/ThemeToggle'
+import { NotificationBell } from '../notifications/NotificationBell'
+import { UnreadCountProvider } from '../notifications/UnreadCountProvider'
 import { Button, Logo } from '../../shared/ui'
 
 /** Header, page frame and bottom tab bar for signed-in screens. */
@@ -18,29 +20,32 @@ export function AppLayout() {
   }
 
   return (
-    <div className="min-h-svh">
-      <header className="sticky top-0 z-10 border-b border-line bg-surface">
-        <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
-          <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <Logo className="size-7" />
-            Kinvo
-          </Link>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button variant="ghost" onClick={handleSignOut} busy={signingOut}>
-              Sign out
-            </Button>
+    <UnreadCountProvider>
+      <div className="min-h-svh">
+        <header className="sticky top-0 z-10 border-b border-line bg-surface">
+          <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
+            <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
+              <Logo className="size-7" />
+              Kinvo
+            </Link>
+            <div className="flex items-center gap-1 sm:gap-2">
+              <NotificationBell />
+              <ThemeToggle />
+              <Button variant="ghost" onClick={handleSignOut} busy={signingOut}>
+                Sign out
+              </Button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Bottom padding keeps content clear of the tab bar and the iPhone home bar. */}
-      <main className="mx-auto max-w-2xl px-4 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
-        <Outlet />
-      </main>
+        {/* Bottom padding keeps content clear of the tab bar and the iPhone home bar. */}
+        <main className="mx-auto max-w-2xl px-4 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+          <Outlet />
+        </main>
 
-      <TabBar />
-    </div>
+        <TabBar />
+      </div>
+    </UnreadCountProvider>
   )
 }
 
