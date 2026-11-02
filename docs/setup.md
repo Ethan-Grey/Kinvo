@@ -88,3 +88,26 @@ Kinvo emails people about loan events and due dates (ADR-0013). The database que
    from public.notifications order by created_at desc limit 20;
    ```
    `failed` rows (after 5 attempts) show the last error. A wrong app password shows up as an authentication error.
+
+## 7. Automatic deploys from GitHub
+
+After this one-time setup, merging a pull request that changes `supabase/migrations`, `supabase/functions` or `supabase/config.toml` applies the change to the live project (`.github/workflows/deploy-supabase.yml`). No more pasting SQL.
+
+1. **Tell the CLI which migrations are already applied.** Migrations pasted into the SQL Editor aren't recorded, so without this step the first deploy would try to run them all again (and stop at the first one, changing nothing). In the repository folder on your computer:
+   ```bash
+   git pull
+   npx supabase link --project-ref odyvgnlofdtbaqvopupn
+   npx supabase migration list
+   ```
+   `link` asks for the database password (**Project Settings → Database**; reset it there if you don't have it). `migration list` shows two columns, Local and Remote. Mark every migration you've already run in the SQL Editor as applied, for example:
+   ```bash
+   npx supabase migration repair --status applied 20261102102500 20261102120000 20261102130000 20261102140000 20261102150000 20261102160000 20261102170000
+   ```
+   Leave out any you haven't run; the deploy will apply those. Run `migration list` again: everything you've run should now appear in both columns.
+2. **Create an access token** at [supabase.com/dashboard/account/tokens](https://supabase.com/dashboard/account/tokens), named e.g. `github-deploy`.
+3. **Add two repository secrets** in GitHub under **Settings → Secrets and variables → Actions → New repository secret**:
+   - `SUPABASE_ACCESS_TOKEN`: the token from step 2
+   - `SUPABASE_DB_PASSWORD`: the database password from step 1
+4. **Try it:** **Actions → Deploy Supabase → Run workflow**. The "Show pending migrations" step lists what it's about to apply.
+
+Edge Function secrets (`GMAIL_USER` and so on) and Vault secrets stay where they are; the workflow never touches them.
