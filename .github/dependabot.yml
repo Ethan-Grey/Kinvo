@@ -18,6 +18,10 @@ updates:
       # Pinned until typescript-eslint supports TypeScript 7 (see apps/web/package.json).
       - dependency-name: typescript
         update-types: [version-update:semver-major]
+      # Node's types should match the Node version we run (22, see CI and
+      # "engines"), not the newest release, or code could use APIs we don't have.
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
