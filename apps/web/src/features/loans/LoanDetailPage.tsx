@@ -1,15 +1,13 @@
-import { useState } from 'react'
-import { useParams } from 'react-router'
+import { useLocation, useParams } from 'react-router'
 import { formatDate } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
-import { counterOffer, getLoan, isAwaitingUser, type LoanDetail, type TermsVersion } from '../../data/loans'
+import { getLoan, isAwaitingUser, type LoanDetail, type TermsVersion } from '../../data/loans'
 import { useAsync } from '../../shared/useAsync'
-import { Badge, Card, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
+import { Badge, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
 import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
 import { useAuth } from '../auth/useAuth'
 import { methodLabel, statusBadge } from './labels'
 import { LoanActions } from './LoanActions'
-import { TermsForm } from './TermsForm'
 import { TermsSummary } from './TermsSummary'
 
 const timestamp = new Intl.DateTimeFormat('en-NZ', {
@@ -24,7 +22,8 @@ export function LoanDetailPage() {
   const { session } = useAuth()
   const userId = session?.user.id ?? ''
   const [loan, reload] = useAsync(() => getLoan(id, userId), `${id}:${userId}`)
-  const [countering, setCountering] = useState(false)
+  const location = useLocation()
+  const flash = (location.state as { flash?: string } | null)?.flash
 
   if (loan.status === 'loading') return <PageSkeleton label="Loading loan" />
   if (loan.status === 'error') return <Notice tone="error">{loan.error.message}</Notice>
@@ -62,23 +61,9 @@ export function LoanDetailPage() {
         action={<Badge tone={badge.tone}>{badge.label}</Badge>}
       />
 
-      {countering ? (
-        <Card>
-          <h2 className="mb-4 text-lg font-semibold">Suggest different terms</h2>
-          <TermsForm
-            initial={{ ...data.currentTerms, message: '' }}
-            variant={data.kind}
-            submitLabel={`Send to ${otherName}`}
-            messageLabel={`Message to ${otherName} (optional)`}
-            onCancel={() => setCountering(false)}
-            onSubmit={async (input) => {
-              await counterOffer(data.id, data.currentTerms.id, input)
-              setCountering(false)
-              reload()
-            }}
-          />
-        </Card>
-      ) : funded ? (
+      {flash && <Notice tone="success">{flash}</Notice>}
+
+      {funded ? (
         <>
           <RepaymentsPanel loan={data} userId={userId} onLoanChanged={reload} />
 
@@ -90,26 +75,15 @@ export function LoanDetailPage() {
             </p>
           )}
 
-          <details className="rounded-3xl border border-line bg-surface p-5">
-            <summary className="cursor-pointer font-display text-lg font-semibold">Loan agreement</summary>
-            <div className="mt-4 space-y-5">
-              <ProposalHeader terms={data.currentTerms} loan={data} userId={userId} />
-              <TermsSummary terms={data.currentTerms} lenderName={data.lenderName} borrowerName={data.borrowerName} />
-            </div>
-          </details>
+          <FullTerms loan={data} userId={userId} title="Loan agreement" showMessage />
         </>
       ) : (
         <>
-          <Card className="space-y-5">
-            <ProposalHeader terms={data.currentTerms} loan={data} userId={userId} />
-            <TermsSummary terms={data.currentTerms} lenderName={data.lenderName} borrowerName={data.borrowerName} />
-          </Card>
-
+          <ProposalCard loan={data} userId={userId} />
           {(data.status === 'negotiating' || data.status === 'agreed') && (
-            <Card>
-              <LoanActions loan={data} userId={userId} onChanged={reload} onCounter={() => setCountering(true)} />
-            </Card>
+            <LoanActions loan={data} userId={userId} onChanged={reload} />
           )}
+          <FullTerms loan={data} userId={userId} title="Full terms" />
         </>
       )}
 
@@ -118,19 +92,106 @@ export function LoanDetailPage() {
   )
 }
 
+/** The proposal in one sentence and one number, so it's clear at a glance. */
+function ProposalCard({ loan, userId }: { loan: LoanDetail; userId: string }) {
+  const terms = loan.currentTerms
+  const proposer = nameOf(loan, userId, terms.proposedBy)
+  const byMe = terms.proposedBy === userId
+  const isDebt = loan.kind === 'existing_debt'
+  const first = loan.borrowerName.split(' ')[0]
+  const headline = isDebt
+    ? loan.role === 'lender'
+      ? `${first} owes you`
+      : `You owe ${loan.lenderName.split(' ')[0]}`
+    : loan.role === 'lender'
+      ? byMe
+        ? `You offered ${first}`
+        : `${first} asks to borrow`
+      : byMe
+        ? 'You asked to borrow'
+        : `${loan.lenderName.split(' ')[0]} offers you`
+  const last = terms.instalments.at(-1)
+  const count = terms.instalments.length
+
+  return (
+    <section className="space-y-4 rounded-3xl border border-line p-5">
+      <div>
+        <p className="text-sm text-ink-muted">{headline}</p>
+        <p className="font-display text-[2.75rem] leading-none font-semibold tabular-nums">
+          {formatCents(terms.principalCents)}
+        </p>
+        <p className="mt-2">
+          {isDebt ? 'Paid back' : 'Repay'}{' '}
+          <span className="font-semibold tabular-nums">{formatCents(terms.totalCents)}</span>
+          {terms.chargeCents > 0 && (
+            <span className="text-ink-muted"> (includes {formatCents(terms.chargeCents)} charge)</span>
+          )}
+          {' in '}
+          {count === 1 ? 'one payment' : `${count} payments`}
+          {last && (
+            <>
+              {count === 1 ? ' on ' : ', the last on '}
+              <span className="font-semibold">{formatDate(last.dueOn)}</span>
+            </>
+          )}
+          .
+        </p>
+      </div>
+      {terms.message && (
+        <blockquote className="rounded-2xl rounded-tl-sm bg-brand-soft px-4 py-3 text-sm text-on-brand-soft">
+          <span className="font-semibold">{proposer}:</span> {terms.message}
+        </blockquote>
+      )}
+    </section>
+  )
+}
+
+/** Everything else (each payment, conditions, who proposed what), folded away until wanted. */
+function FullTerms({
+  loan,
+  userId,
+  title,
+  showMessage = false,
+}: {
+  loan: LoanDetail
+  userId: string
+  title: string
+  showMessage?: boolean
+}) {
+  return (
+    <details className="group rounded-3xl border border-line bg-surface p-5">
+      <summary className="cursor-pointer list-none font-display text-lg font-semibold">{title}</summary>
+      <div className="mt-4 space-y-5">
+        <ProposalHeader terms={loan.currentTerms} loan={loan} userId={userId} showMessage={showMessage} />
+        <TermsSummary terms={loan.currentTerms} lenderName={loan.lenderName} borrowerName={loan.borrowerName} />
+      </div>
+    </details>
+  )
+}
+
 function nameOf(loan: LoanDetail, userId: string, personId: string): string {
   if (personId === userId) return 'You'
   return personId === loan.lenderId ? loan.lenderName : loan.borrowerName
 }
 
-function ProposalHeader({ terms, loan, userId }: { terms: TermsVersion; loan: LoanDetail; userId: string }) {
+function ProposalHeader({
+  terms,
+  loan,
+  userId,
+  showMessage,
+}: {
+  terms: TermsVersion
+  loan: LoanDetail
+  userId: string
+  showMessage: boolean
+}) {
   const proposer = nameOf(loan, userId, terms.proposedBy)
   return (
     <div className="space-y-2">
       <p className="text-sm text-ink-muted">
         Version {terms.version}, proposed by {proposer} on {timestamp.format(new Date(terms.createdAt))}
       </p>
-      {terms.message && (
+      {showMessage && terms.message && (
         <blockquote className="rounded-2xl rounded-tl-sm bg-brand-soft px-4 py-3 text-sm text-on-brand-soft">
           <span className="font-medium">{proposer}:</span> {terms.message}
         </blockquote>

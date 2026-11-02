@@ -119,28 +119,13 @@ describe('RepaymentsPanel', () => {
     renderPanel('borrower')
     expect(await screen.findByText(/waiting for confirmation/i)).toBeTruthy()
     expect(screen.queryByRole('button', { name: /i received it/i })).toBeNull()
-    expect(screen.getByRole('button', { name: /tell them i’ve paid/i })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /i’ve paid/i }).getAttribute('href')).toBe('/loans/loan-1/pay')
   })
 
-  it('pre-fills the next amount due and records a lender payment', async () => {
+  it('links the lender to the record-a-payment page', async () => {
     renderPanel()
-    const amount = (await screen.findByLabelText(/^amount/i)) as HTMLInputElement
-    expect(amount.value).toBe('150')
-    await userEvent.click(screen.getByRole('button', { name: /record payment/i }))
-    expect(api.recordRepayment).toHaveBeenCalledWith(
-      'loan-1',
-      expect.objectContaining({ amountCents: 15000, receivedOn: today, method: 'bank_transfer' }),
-    )
-  })
-
-  it('refuses a payment larger than what is owed', async () => {
-    renderPanel()
-    const amount = await screen.findByLabelText(/^amount/i)
-    await userEvent.clear(amount)
-    await userEvent.type(amount, '200')
-    await userEvent.click(screen.getByRole('button', { name: /record payment/i }))
-    expect(api.recordRepayment).not.toHaveBeenCalled()
-    expect(screen.getByText(/most you can record is \$150\.00/i)).toBeTruthy()
+    const link = await screen.findByRole('link', { name: /record a payment/i })
+    expect(link.getAttribute('href')).toBe('/loans/loan-1/pay')
   })
 
   it('has no accessibility problems', async () => {

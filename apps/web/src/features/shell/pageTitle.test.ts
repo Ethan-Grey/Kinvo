@@ -9,5 +9,7 @@ describe('pageTitle', () => {
     expect(pageTitle('/loans/3f2a')).toBe('Loan · Kinvo')
     expect(pageTitle('/people/r1')).toBe('Person · Kinvo')
     expect(pageTitle('/account')).toBe('Account · Kinvo')
+    expect(pageTitle('/loans/3f2a/pay')).toBe('Record a payment · Kinvo')
+    expect(pageTitle('/loans/3f2a/accept')).toBe('Accept · Kinvo')
   })
 })
