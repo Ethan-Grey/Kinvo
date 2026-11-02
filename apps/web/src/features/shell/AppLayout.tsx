@@ -1,24 +1,11 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
-import { signOut } from '../../data/auth'
-import { ThemeToggle } from '../../shared/ThemeToggle'
+import { Logo } from '../../shared/ui'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { UnreadCountProvider } from '../notifications/UnreadCountProvider'
-import { Button, Logo } from '../../shared/ui'
 
 /** Header, page frame and bottom tab bar for signed-in screens. */
 export function AppLayout() {
-  const [signingOut, setSigningOut] = useState(false)
-
-  async function handleSignOut() {
-    setSigningOut(true)
-    try {
-      await signOut()
-    } finally {
-      setSigningOut(false)
-    }
-  }
-
   return (
     <UnreadCountProvider>
       <div className="min-h-svh">
@@ -28,12 +15,9 @@ export function AppLayout() {
               <Logo className="size-7" />
               Kinvo
             </Link>
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1">
               <NotificationBell />
-              <ThemeToggle />
-              <Button variant="ghost" onClick={handleSignOut} busy={signingOut}>
-                Sign out
-              </Button>
+              <AccountLink />
             </div>
           </div>
         </header>
@@ -46,6 +30,26 @@ export function AppLayout() {
         <TabBar />
       </div>
     </UnreadCountProvider>
+  )
+}
+
+function AccountLink() {
+  return (
+    <NavLink
+      to="/account"
+      aria-label="Account"
+      title="Account"
+      className={({ isActive }) =>
+        'inline-flex size-10 items-center justify-center rounded-xl transition-colors ' +
+        'hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-brand-ink ' +
+        (isActive ? 'text-brand-ink' : 'text-ink')
+      }
+    >
+      <svg {...iconProps}>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 21a8 8 0 0 1 16 0" />
+      </svg>
+    </NavLink>
   )
 }
 

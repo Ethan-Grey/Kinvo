@@ -20,6 +20,7 @@ const MESSAGES: Record<string, string> = {
   too_many_open_invites: 'You have 10 unused invites. Revoke one before creating another.',
   invalid_note: 'Keep the note under 80 characters.',
   invalid_display_name: 'Your name must be between 1 and 80 characters.',
+  invalid_setting: 'That setting couldn\'t be saved. Please try again.',
   invite_not_found: 'This invite link isn’t valid. Check you copied the whole link.',
   invite_revoked: 'This invite was cancelled. Ask for a new link.',
   invite_used: 'This invite has already been used. Ask for a new link.',

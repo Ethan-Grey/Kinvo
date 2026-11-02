@@ -42,7 +42,8 @@ export function appLink(appUrl: string, linkPath: string): string {
 export function buildEmail(input: NotificationEmailInput, appUrl: string): EmailMessage {
   const firstName = input.displayName.trim().split(/\s+/)[0] || 'there'
   const link = appLink(appUrl, input.linkPath)
-  const settingsNote = 'You get these emails because you use Kinvo.'
+  const accountLink = appLink(appUrl, '/account')
+  const settingsNote = 'You get these emails because you use Kinvo. To stop them, switch off "Email me" in Account.'
 
   const text = [
     `Kia ora ${firstName},`,
@@ -53,6 +54,7 @@ export function buildEmail(input: NotificationEmailInput, appUrl: string): Email
     `Open Kinvo: ${link}`,
     '',
     settingsNote,
+    accountLink,
   ]
     .filter((line, i, all) => !(line === '' && all[i - 1] === ''))
     .join('\n')
@@ -65,7 +67,7 @@ export function buildEmail(input: NotificationEmailInput, appUrl: string): Email
       <h1 style="margin:0 0 8px;font-size:20px;line-height:1.3;">${escapeHtml(input.title)}</h1>
       ${input.body ? `<p style="margin:0 0 24px;line-height:1.5;">${escapeHtml(input.body)}</p>` : ''}
       <a href="${escapeHtml(link)}" style="display:inline-block;background:${BUTTON};color:#ffffff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:12px;">Open Kinvo</a>
-      <p style="margin:32px 0 0;font-size:12px;color:${MUTED};">${settingsNote}</p>
+      <p style="margin:32px 0 0;font-size:12px;color:${MUTED};">You get these emails because you use Kinvo. To stop them, switch off &quot;Email me&quot; in <a href="${escapeHtml(accountLink)}" style="color:${MUTED};">Account</a>.</p>
     </div>
   </body>
 </html>`

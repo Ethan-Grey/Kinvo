@@ -31,6 +31,7 @@ One row per signed-in user, created automatically on sign-up from `auth.users`.
 | display_name | text | 1–80 characters, from the Google name or email prefix |
 | email | text | Copied from auth for notifications |
 | can_lend | boolean | Lender access, granted manually (ADR-0008) |
+| email_notifications | boolean | Default true. Off skips notification emails; the in-app list is unaffected |
 
 ### `lender_invites` (implemented)
 Single-use, 7-day links (ADR-0008).
@@ -155,7 +156,7 @@ The in-app list and the email outbox in one (ADR-0013). Rows are written only by
 | link_path | text | In-app path, e.g. `/loans/<id>` |
 | dedupe_key | text | UNIQUE. `event:<audit id>:<recipient>`, `due_tomorrow:<instalment>`, `overdue:<instalment>:<days late>:<recipient>`, … |
 | created_at, read_at | timestamptz | `read_at` is set by `mark_notifications_read()` |
-| email_status | text | `pending`, `sending`, `sent`, `failed` |
+| email_status | text | `pending`, `sending`, `sent`, `failed`, `skipped` (recipient has emails off) |
 | email_attempts, email_sent_at, email_last_error | | Retry bookkeeping for the sender |
 
 ## Derived views
@@ -211,6 +212,8 @@ Functions raise errors whose message is a stable key (`invite_expired`, `lender_
 | `dispute_repayment(repayment, reason)` | The lender | Marks a claim as not received |
 | `reverse_repayment(repayment, reason)` | The lender | Undoes a confirmed payment; may reopen a completed loan |
 | `forgive_remaining(loan, note?)` | The lender, active loan | Writes off the balance; returns the amount |
+| `set_email_notifications(enabled)` | Any user | Switches your notification emails on or off |
+| `export_my_data()` | Any user | Everything you can see, as one JSON document. Runs under your own RLS, so it can't reveal more than the app does |
 | `mark_notifications_read(ids?)` | Any user | Marks your notifications read (all of them when no ids are given) |
 | `claim_notification_emails(limit)` | Server only (`service_role`) | Hands the email sender a batch of pending emails, locked so no two runs send the same one |
 | `finish_notification_email(id, ok, error?)` | Server only (`service_role`) | Marks an email sent, or returns it to the queue (failed after 5 attempts) |
