@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { formatDate } from '../../domain/dates'
+import { formatCents } from '../../domain/money'
 import { acceptInvite, previewInvite } from '../../data/invites'
 import { messageFor } from '../../data/errors'
 import { useAsync } from '../../shared/useAsync'
@@ -20,8 +22,13 @@ export function AcceptInvitePage() {
     setAccepting(true)
     setError(null)
     try {
-      await acceptInvite(token)
-      navigate('/', { replace: true, state: { joined: true } })
+      const accepted = await acceptInvite(token)
+      if (accepted.existingDebtLoanId) {
+        // Straight to the debt so they can confirm it.
+        navigate(`/loans/${accepted.existingDebtLoanId}`, { replace: true })
+      } else {
+        navigate('/', { replace: true, state: { joined: true } })
+      }
     } catch (err) {
       setError((err as Error).message)
       setAccepting(false)
@@ -31,7 +38,7 @@ export function AcceptInvitePage() {
   if (preview.status === 'loading') return <Spinner label="Checking your invite…" />
   if (preview.status === 'error') return <Notice tone="error">{preview.error.message}</Notice>
 
-  const { status, lenderName } = preview.data
+  const { status, lenderName, existingDebt } = preview.data
 
   if (status !== 'valid') {
     const code = status === 'own_invite' ? 'invite_own' : status === 'not_found' ? 'invite_not_found' : `invite_${status}`
@@ -52,6 +59,14 @@ export function AcceptInvitePage() {
         Accepting lets you request loans from {lenderName} and see the loans between you. {lenderName}{' '}
         will see your name and email. Nobody else can see your records.
       </p>
+      {existingDebt && (
+        <Notice>
+          {lenderName} has recorded that you already owe them <strong>{formatCents(existingDebt.amountCents)}</strong>
+          {existingDebt.reason ? ` for ${existingDebt.reason}` : ''}, lent around {formatDate(existingDebt.lentOn)}.
+          After joining you’ll see their proposed repayment plan, and you can confirm it, suggest changes, or say
+          it isn’t right.
+        </Notice>
+      )}
       {error && <Notice tone="error">{error}</Notice>}
       <Button onClick={handleAccept} busy={accepting} className="w-full">
         Accept invite

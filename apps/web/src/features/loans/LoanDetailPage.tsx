@@ -43,9 +43,18 @@ export function LoanDetailPage() {
       <header className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {data.role === 'lender' ? `Loan to ${otherName}` : `Loan from ${otherName}`}
+            {data.kind === 'existing_debt'
+              ? data.role === 'lender'
+                ? `${otherName}’s existing debt`
+                : `Existing debt to ${otherName}`
+              : data.role === 'lender'
+                ? `Loan to ${otherName}`
+                : `Loan from ${otherName}`}
           </h1>
           {data.reason && <p className="text-sm text-ink-muted">For: {data.reason}</p>}
+          {data.originallyLentOn && (
+            <p className="text-sm text-ink-muted">Originally lent {formatDate(data.originallyLentOn)}, before Kinvo</p>
+          )}
         </div>
         <Badge tone={badge.tone}>{badge.label}</Badge>
       </header>
@@ -55,6 +64,7 @@ export function LoanDetailPage() {
           <h2 className="mb-4 font-semibold">Suggest different terms</h2>
           <TermsForm
             initial={{ ...data.currentTerms, message: '' }}
+            variant={data.kind}
             submitLabel={`Send to ${otherName}`}
             messageLabel={`Message to ${otherName} (optional)`}
             onCancel={() => setCountering(false)}
