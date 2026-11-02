@@ -45,6 +45,8 @@ const KINDS: Record<string, { icon: ReactNode; tone: Tone }> = {
   due_today: { icon: <ClockIcon />, tone: 'attention' },
   overdue: { icon: <AlertIcon />, tone: 'danger' },
   borrower_overdue: { icon: <AlertIcon />, tone: 'danger' },
+  loan_rescheduled: { icon: <ClockIcon />, tone: 'attention' },
+  custom_reminder: { icon: <BellIcon />, tone: 'soft' },
 }
 
 const FALLBACK = { icon: <BellIcon />, tone: 'soft' as Tone }

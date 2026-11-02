@@ -318,6 +318,25 @@ export async function removeLoan(loanId: string, reason: string): Promise<void> 
 }
 
 /**
+ * Lender only, on an active loan: replace the repayment schedule. Takes effect
+ * straight away and the borrower is told. The total must stay the same.
+ */
+export async function rescheduleLoan(
+  loanId: string,
+  expectedTermsId: string,
+  instalments: Instalment[],
+  note: string,
+): Promise<void> {
+  const { error } = await supabase().rpc('reschedule_loan', {
+    p_loan_id: loanId,
+    p_expected_terms_id: expectedTermsId,
+    p_instalments: instalments.map((i) => ({ due_on: i.dueOn, amount_cents: i.amountCents })),
+    p_note: note.trim() || null,
+  })
+  if (error) throw toAppError(error)
+}
+
+/**
  * The charge a borrower's proposal must carry: the lender's latest rate
  * applied to the new amount (0 if the lender hasn't proposed a charge).
  * Mirrors private.required_borrower_charge in the database.

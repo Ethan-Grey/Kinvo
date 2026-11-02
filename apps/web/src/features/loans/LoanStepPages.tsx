@@ -17,7 +17,7 @@ import { TermsSummary } from './TermsSummary'
  * the money was sent, record a payment. The loan page itself just shows
  * where things stand and links here.
  */
-function LoanStep({
+export function LoanStep({
   title,
   children,
 }: {

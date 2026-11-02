@@ -200,6 +200,40 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      reminder_settings: {
+        Row: {
+          relationship_id: string
+          send_hour: number
+          day_before: boolean
+          on_the_day: boolean
+          when_overdue: boolean
+          overdue_every_days: number
+          updated_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      custom_reminders: {
+        Row: {
+          id: string
+          relationship_id: string
+          loan_id: string | null
+          created_by: string
+          message: string
+          first_on: string
+          send_hour: number
+          repeat: ReminderRepeat
+          sent_count: number
+          next_at: string | null
+          last_sent_at: string | null
+          cancelled_at: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       term_acceptances: {
         Row: {
           id: string
@@ -215,6 +249,36 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      reschedule_loan: {
+        Args: { p_loan_id: string; p_expected_terms_id: string; p_instalments: Json; p_note?: string | null }
+        Returns: string
+      }
+      save_reminder_settings: {
+        Args: {
+          p_relationship_id: string
+          p_send_hour: number
+          p_day_before: boolean
+          p_on_the_day: boolean
+          p_when_overdue: boolean
+          p_overdue_every_days: number
+        }
+        Returns: undefined
+      }
+      create_custom_reminder: {
+        Args: {
+          p_relationship_id: string
+          p_message: string
+          p_first_on: string
+          p_send_hour: number
+          p_repeat?: ReminderRepeat
+          p_loan_id?: string | null
+        }
+        Returns: string
+      }
+      cancel_custom_reminder: {
+        Args: { p_reminder_id: string }
+        Returns: undefined
+      }
       save_push_subscription: {
         Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string | null }
         Returns: undefined
@@ -423,6 +487,7 @@ export interface Database {
       repayment_status: RepaymentStatus
       loan_status: LoanStatus
       payment_method: PaymentMethod
+      reminder_repeat: ReminderRepeat
     }
     CompositeTypes: Record<never, never>
   }
@@ -443,6 +508,7 @@ export type LoanStatus =
 export type LoanKind = 'new' | 'existing_debt'
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'
 export type RepaymentStatus = 'claimed' | 'confirmed' | 'disputed' | 'reversed'
+export type ReminderRepeat = 'never' | 'daily' | 'weekly' | 'fortnightly' | 'monthly'
 export type InstalmentStatus = 'paid' | 'due' | 'overdue'
 
 export type InviteStatus = 'valid' | 'not_found' | 'revoked' | 'used' | 'expired' | 'own_invite'
