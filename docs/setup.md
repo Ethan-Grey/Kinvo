@@ -60,3 +60,31 @@ Lender access is granted manually (ADR-0008). After signing in once, run this in
 ```sql
 update public.profiles set can_lend = true where email = 'you@example.com';
 ```
+
+## 6. Notification emails
+
+Kinvo emails people about loan events and due dates (ADR-0013). The database queues them; an Edge Function sends them through Gmail every 5 minutes. Until this is set up, notifications still appear in the app and simply wait to be emailed.
+
+1. **Apply the migration** (`npx supabase db push`, or paste `20261102160000_notifications.sql` into the SQL Editor). It turns on the `pg_cron` and `pg_net` extensions itself and creates the schedules. Check under **Integrations → Cron** that `kinvo-queue-reminders` and `kinvo-send-emails` are listed.
+2. **Deploy the function:**
+   ```bash
+   npx supabase functions deploy send-notifications
+   ```
+   `supabase/config.toml` turns off JWT checks for this function, because it's called by the database and checks its own secret instead.
+3. **Make a shared secret.** Any long random string, for example from `openssl rand -hex 32`. It's only used between the database and the function.
+4. **Edge Functions → Secrets:** add these yourself (never paste them into a chat, an issue or a commit):
+   - `GMAIL_USER`: the Gmail address emails come from
+   - `GMAIL_APP_PASSWORD`: an app password for that account (a new one, separate from the one used for sign-in emails, is fine)
+   - `APP_URL`: `https://kinvo-rust.vercel.app`
+   - `CRON_SECRET`: the shared secret from step 3
+5. **Tell the database where to send.** In the **SQL Editor**, replacing the two placeholders:
+   ```sql
+   select vault.create_secret('https://<your-project-ref>.supabase.co/functions/v1/send-notifications', 'kinvo_send_url');
+   select vault.create_secret('<the shared secret from step 3>', 'kinvo_send_key');
+   ```
+6. **Check it works.** Do something that notifies the other person (for example record a payment), wait up to 5 minutes, and look for the email. To see the queue:
+   ```sql
+   select kind, title, email_status, email_attempts, email_last_error
+   from public.notifications order by created_at desc limit 20;
+   ```
+   `failed` rows (after 5 attempts) show the last error. A wrong app password shows up as an authentication error.

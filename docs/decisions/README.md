@@ -16,5 +16,6 @@ An ADR records one significant decision: the context, what was decided, and the 
 | [0010](0010-derived-allocation-and-repayment-rules.md) | Derive payment allocation by replay; repayment rules | Accepted |
 | [0011](0011-borrower-track-record.md) | Borrower track record: definitions and visibility | Accepted |
 | [0012](0012-existing-debts.md) | Existing debts are attached to invites and confirmed by the borrower | Accepted |
+| [0013](0013-notifications.md) | Notifications are written by the database and emailed from an outbox | Accepted |
 
 New ADRs copy [`template.md`](template.md).
