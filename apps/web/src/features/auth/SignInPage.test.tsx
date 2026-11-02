@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppError } from '../../data/errors'
 import { SignInPage } from './SignInPage'
+import { expectNoAxeViolations } from '../../test/axe'
 
 const sendSignInCode = vi.fn()
 const verifySignInCode = vi.fn()
@@ -95,5 +96,10 @@ describe('SignInPage', () => {
     authState.session = { user: { id: 'x' } }
     renderAt('/sign-in?next=%2Fanywhere')
     expect(screen.getByText('destination page')).toBeTruthy()
+  })
+
+  it('has no accessibility problems', async () => {
+    const { container } = renderAt('/sign-in')
+    await expectNoAxeViolations(container)
   })
 })

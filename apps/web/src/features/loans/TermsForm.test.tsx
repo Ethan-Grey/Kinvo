@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDays, todayInNZ } from '../../domain/dates'
 import { toCents } from '../../domain/money'
 import { TermsForm } from './TermsForm'
+import { expectNoAxeViolations } from '../../test/axe'
 
 afterEach(cleanup)
 
@@ -100,5 +101,10 @@ describe('TermsForm', () => {
     await fillAmounts('50', '0')
     fireEvent.submit(screen.getByRole('button', { name: /send request/i }).closest('form') as HTMLFormElement)
     expect(await screen.findByText(/terms changed while you were looking/i)).toBeTruthy()
+  })
+
+  it('has no accessibility problems', async () => {
+    renderForm()
+    await expectNoAxeViolations(document.body)
   })
 })

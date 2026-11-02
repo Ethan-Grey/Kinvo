@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Profile } from '../../data/database.types'
 import { exportFileName } from '../../data/account'
 import { AccountPage } from './AccountPage'
+import { expectNoAxeViolations } from '../../test/axe'
 
 const api = vi.hoisted(() => ({
   getMyProfile: vi.fn(),
@@ -79,5 +80,11 @@ describe('AccountPage', () => {
   it('names the download by NZ date', () => {
     // 11:30pm UTC on 1 Nov is already 2 Nov in New Zealand.
     expect(exportFileName(new Date('2026-11-01T23:30:00Z'))).toBe('kinvo-data-2026-11-02.json')
+  })
+
+  it('has no accessibility problems', async () => {
+    const { container } = renderPage()
+    await screen.findByLabelText('Name')
+    await expectNoAxeViolations(container)
   })
 })
