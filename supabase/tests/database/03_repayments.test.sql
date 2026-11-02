@@ -27,9 +27,9 @@ insert into public.lending_relationships (id, lender_id, borrower_id) values (
 select set_config('test.today', ((now() at time zone 'Pacific/Auckland')::date)::text, true);
 select set_config('test.tomorrow', ((now() at time zone 'Pacific/Auckland')::date + 1)::text, true);
 
--- Bob requests, Lena accepts and sends the money.
+-- Lena offers (only the lender sets a charge), Bob accepts, Lena sends the money.
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select set_config('test.loan', public.create_loan(
   '00000000-0000-4000-8000-0000000000e1', 20000, 10000,
   jsonb_build_array(
@@ -37,10 +37,11 @@ select set_config('test.loan', public.create_loan(
     jsonb_build_object('due_on', (current_setting('test.tomorrow')::date + 7)::text, 'amount_cents', 15000)
   ))::text, true);
 
-select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select public.accept_terms(l.id, t.id, t.terms_hash)
 from public.loans l join public.loan_terms t on t.id = l.current_terms_id
 where l.id = current_setting('test.loan')::uuid;
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 
 -- Repaying before the loan is funded isn't possible.
 select throws_ok(
@@ -266,7 +267,7 @@ select throws_ok(
 );
 select is(
   (select string_agg(event_type, ',' order by id) from public.audit_events
-   where loan_id = current_setting('test.loan')::uuid and event_type not like 'loan_requested'
+   where loan_id = current_setting('test.loan')::uuid and event_type not in ('loan_requested', 'loan_offered')
      and event_type not like 'terms_%' and event_type <> 'funds_confirmed'),
   'repayment_claimed,repayment_confirmed,repayment_recorded,repayment_recorded,repayment_claimed,repayment_disputed,repayment_reversed,repayment_recorded,loan_completed,repayment_reversed,loan_reopened,loan_written_off',
   'every payment event is in the audit trail'
