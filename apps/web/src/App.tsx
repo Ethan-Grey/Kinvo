@@ -1,4 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
+import { AccountPage } from './features/account/AccountPage'
 import { AuthCallbackPage } from './features/auth/AuthCallbackPage'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { EmailConfirmPage } from './features/auth/EmailConfirmPage'
@@ -36,6 +37,7 @@ const router = createBrowserRouter([
               { path: 'loans/new', element: <NewLoanPage /> },
               { path: 'people', element: <PeoplePage /> },
               { path: 'notifications', element: <NotificationsPage /> },
+              { path: 'account', element: <AccountPage /> },
               { path: 'loans/:id', element: <LoanDetailPage /> },
               { path: 'people/:relationshipId', element: <PersonPage /> },
             ],

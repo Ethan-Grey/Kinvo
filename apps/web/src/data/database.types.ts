@@ -17,6 +17,7 @@ export interface Database {
           email: string
           can_lend: boolean
           created_at: string
+          email_notifications: boolean
         }
         Insert: never
         Update: never
@@ -185,7 +186,7 @@ export interface Database {
           dedupe_key: string
           created_at: string
           read_at: string | null
-          email_status: 'pending' | 'sending' | 'sent' | 'failed'
+          email_status: 'pending' | 'sending' | 'sent' | 'failed' | 'skipped'
           email_attempts: number
           email_sent_at: string | null
           email_last_error: string | null
@@ -209,6 +210,14 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      set_email_notifications: {
+        Args: { p_enabled: boolean }
+        Returns: undefined
+      }
+      export_my_data: {
+        Args: Record<string, never>
+        Returns: Json
+      }
       mark_notifications_read: {
         Args: { p_ids?: string[] | null }
         Returns: undefined
