@@ -71,7 +71,7 @@ Every pull request runs type checks, lint, tests and a production build in GitHu
 - [x] **M4 — Repayments:** recording, allocation, borrower payment claims
 - [x] **M5 — Dashboards:** lender and borrower views, borrower history
 - [x] **M6 — Notifications:** in-app list and email (events, due-date reminders, overdue notices). PWA push is still to come.
-- [ ] **M7 — Hardening:** security review, accessibility, release v1.0.0
+- [x] **M7 — Hardening:** security review, accessibility, account settings, release v1.0.0
 
 ## Legal note
 
