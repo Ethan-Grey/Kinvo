@@ -18,5 +18,6 @@ An ADR records one significant decision: the context, what was decided, and the 
 | [0012](0012-existing-debts.md) | Existing debts are attached to invites and confirmed by the borrower | Accepted |
 | [0013](0013-notifications.md) | Notifications are written by the database and emailed from an outbox | Accepted |
 | [0014](0014-live-updates.md) | Live updates through Realtime on the notifications table | Accepted |
+| [0015](0015-removing-loans-and-who-sets-the-charge.md) | Lenders can remove loans; only lenders set the charge | Accepted |
 
 New ADRs copy [`template.md`](template.md).

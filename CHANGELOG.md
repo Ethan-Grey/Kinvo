@@ -6,8 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Lenders can remove a loan that shouldn't be there, such as a test or a mistake (ADR-0015). It disappears from lists, totals, track records, reminders and alerts for both people, and the audit log keeps a note.
+- "Clear all" on Alerts.
+
 ### Changed
 
+- Only the lender sets a charge (ADR-0015). Borrowers' requests have none. Once the lender proposes one, the borrower can change the amount or plan, and the charge follows the lender's rate.
 - One question per step:
   - Asking for, offering or changing a loan goes through short steps: who, how much, any charge, how it's paid back, then check and send.
   - Recording a payment asks how much, then how and when.

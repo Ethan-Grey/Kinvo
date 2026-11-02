@@ -30,7 +30,7 @@ A single account can be a lender to some people and a borrower to others. Roles 
 
 | ID | Requirement | Priority |
 |---|---|---|
-| LN-01 | A borrower can request a loan: amount, reason, and a proposed repayment schedule (one or more dated instalments). | Must |
+| LN-01 | A borrower can request a loan: amount, reason, and a proposed repayment schedule (one or more dated instalments). A request has no charge; only the lender sets one, and later borrower changes keep the lender's rate (ADR-0015). | Must |
 | LN-02 | A lender can create an offer directly, without a prior request. | Should |
 | LN-03 | The lender can approve, reject, or counter-offer. A counter-offer can change the amount, charge, schedule and conditions. | Must |
 | LN-04 | Every proposal is stored as a new, immutable terms version. Earlier versions are never edited. | Must |
@@ -39,6 +39,7 @@ A single account can be a lender to some people and a borrower to others. Roles 
 | LN-07 | After both parties accept, the loan is *agreed* but not active. It becomes *active* only when the lender confirms the funds were sent. | Must |
 | LN-08 | Once active, terms can only change through a new version both parties accept (for example, an extension). | Should |
 | LN-09 | The lender can write off all or part of an outstanding balance. This is recorded as an event, not a deleted debt. | Should |
+| LN-10 | The lender can remove a loan entered by mistake or for testing. It drops out of every list and total for both people; the audit log keeps a note (ADR-0015). | Should |
 
 ## Agreements (AG)
 

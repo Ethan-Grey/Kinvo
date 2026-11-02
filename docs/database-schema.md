@@ -214,6 +214,8 @@ Functions raise errors whose message is a stable key (`invite_expired`, `lender_
 | `forgive_remaining(loan, note?)` | The lender, active loan | Writes off the balance; returns the amount |
 | `set_email_notifications(enabled)` | Any user | Switches your notification emails on or off |
 | `export_my_data()` | Any user | Everything you can see, as one JSON document. Runs under your own RLS, so it can't reveal more than the app does |
+| `remove_loan(loan, reason?)` | The lender, any status | Hides the loan everywhere (status `removed`), deletes its alerts, logs `loan_removed` (ADR-0015) |
+| `clear_notifications(ids?)` | Any user | Deletes your own alerts (all of them when no ids are given) |
 | `mark_notifications_read(ids?)` | Any user | Marks your notifications read (all of them when no ids are given) |
 | `claim_notification_emails(limit)` | Server only (`service_role`) | Hands the email sender a batch of pending emails, locked so no two runs send the same one |
 | `finish_notification_email(id, ok, error?)` | Server only (`service_role`) | Marks an email sent, or returns it to the queue (failed after 5 attempts) |

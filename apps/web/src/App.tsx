@@ -8,7 +8,13 @@ import { SignInPage } from './features/auth/SignInPage'
 import { AcceptInvitePage } from './features/invites/AcceptInvitePage'
 import { HomePage } from './features/dashboard/HomePage'
 import { LoanDetailPage } from './features/loans/LoanDetailPage'
-import { AcceptLoanPage, ChangeTermsPage, FundsSentPage, RecordPaymentPage } from './features/loans/LoanStepPages'
+import {
+  AcceptLoanPage,
+  ChangeTermsPage,
+  FundsSentPage,
+  RecordPaymentPage,
+  RemoveLoanPage,
+} from './features/loans/LoanStepPages'
 import { LoansPage } from './features/loans/LoansPage'
 import { NewLoanPage } from './features/loans/NewLoanPage'
 import { NotificationsPage } from './features/notifications/NotificationsPage'
@@ -44,6 +50,7 @@ const router = createBrowserRouter([
               { path: 'loans/:id/change', element: <ChangeTermsPage /> },
               { path: 'loans/:id/sent', element: <FundsSentPage /> },
               { path: 'loans/:id/pay', element: <RecordPaymentPage /> },
+              { path: 'loans/:id/remove', element: <RemoveLoanPage /> },
               { path: 'people/:relationshipId', element: <PersonPage /> },
             ],
           },

@@ -132,6 +132,26 @@ describe('TermsForm', () => {
     expect(await screen.findByText(/terms changed while you were looking/i)).toBeTruthy()
   })
 
+  it('skips the charge for borrowers and uses the lender’s rate', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(
+      <TermsForm
+        submitLabel="Send"
+        fixedCharge={(principal) => toCents(Math.round(principal * 0.1))}
+        onSubmit={onSubmit}
+      />,
+    )
+    expect(screen.getByText('Step 1 of 3')).toBeTruthy()
+    await userEvent.type(screen.getByLabelText(/amount to borrow/i), '300')
+    await next()
+    expect(screen.getByRole('heading', { name: 'How will it be paid back?' })).toBeTruthy()
+    expect(screen.getByText('$330.00 in total.')).toBeTruthy()
+    await next()
+    expect(screen.getByText(/only they can change it/i)).toBeTruthy()
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ principalCents: 30000, chargeCents: 3000 }))
+  })
+
   it('has no accessibility problems on any step', async () => {
     renderForm()
     await userEvent.type(screen.getByLabelText(/amount to borrow/i), '100')

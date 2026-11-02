@@ -45,6 +45,12 @@ interface TermsFormProps {
    * owed now, no charge (ADR-0012).
    */
   variant?: 'new' | 'existing_debt'
+  /**
+   * For borrowers: the charge is the lender's to set (ADR-0015). Given the
+   * amount, returns the charge the proposal must carry, and the charge step
+   * is skipped. Omit for lenders, who choose the charge themselves.
+   */
+  fixedCharge?: (principalCents: Cents) => Cents
   /** Extra fields for the review step, e.g. "What's it for?". */
   reviewExtras?: ReactNode
   /** Back from the first step, e.g. to choose a different person. */
@@ -71,6 +77,7 @@ function rowsFrom(instalments: readonly Instalment[]): Row[] {
 export function TermsForm({
   initial,
   perspective = 'borrower',
+  fixedCharge,
   submitLabel,
   messageLabel,
   variant = 'new',
@@ -80,7 +87,8 @@ export function TermsForm({
 }: TermsFormProps) {
   const isExistingDebt = variant === 'existing_debt'
   const today = todayInNZ()
-  const steps: Step[] = isExistingDebt ? ['amount', 'plan', 'review'] : ['amount', 'charge', 'plan', 'review']
+  const choosesCharge = !isExistingDebt && !fixedCharge
+  const steps: Step[] = choosesCharge ? ['amount', 'charge', 'plan', 'review'] : ['amount', 'plan', 'review']
   const [stepIndex, setStepIndex] = useState(0)
   const step = steps[stepIndex] ?? 'amount'
 
@@ -98,9 +106,9 @@ export function TermsForm({
   const [errors, setErrors] = useState<string[]>([])
 
   const principal = parseDollars(principalText)
-  const charge = parseDollars(isExistingDebt ? '0' : chargeText || '0')
   const principalCents = principal.ok ? principal.cents : ZERO
-  const chargeCents = charge.ok ? charge.cents : ZERO
+  const charge = parseDollars(choosesCharge ? chargeText || '0' : '0')
+  const chargeCents = fixedCharge ? fixedCharge(principalCents) : charge.ok ? charge.cents : ZERO
   const totalCents = toCents(principalCents + chargeCents)
 
   // The automatic schedule, recalculated whenever its inputs change.
@@ -295,6 +303,13 @@ export function TermsForm({
           next={{ label: submitLabel, submit: true, busy: submitting }}
         >
           <TotalCard principalCents={principalCents} chargeCents={chargeCents} hideBreakdown={isExistingDebt} />
+          {fixedCharge && (
+            <p className="text-sm text-ink-muted">
+              {chargeCents > 0
+                ? 'The charge is the lender’s, at the same rate they proposed. Only they can change it.'
+                : 'No charge. If the lender wants one, they’ll add it when they reply, and you can accept or ask for changes.'}
+            </p>
+          )}
           <SchedulePreview rows={rows} />
           {reviewExtras}
           {messageLabel && (

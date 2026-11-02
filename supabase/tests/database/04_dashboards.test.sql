@@ -49,12 +49,13 @@ grant execute on all functions in schema pg_temp to authenticated;
 
 set local role authenticated;
 
--- Loan A: Bob requests, Lena accepts and funds.
-select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
+-- Loan A: Lena offers with a charge (only lenders set one), Bob accepts, Lena funds.
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select set_config('test.loan_a', public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 10000,
   pg_temp.sched(current_setting('test.d1'), current_setting('test.d2')))::text, true);
-select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select pg_temp.accept(current_setting('test.loan_a')::uuid);
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select public.confirm_funds_sent(current_setting('test.loan_a')::uuid, current_setting('test.today')::date, 'bank_transfer');
 
 -- Move loan A into the past: sent 40 days ago, due 30 and 10 days ago.
