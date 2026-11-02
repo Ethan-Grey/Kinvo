@@ -142,20 +142,21 @@ Append-only audit log for every state change (NF-03). No client role has `INSERT
 
 `loan_id` (FK → loans, nullable) links events to a loan; both parties can see a loan's events.
 
-### `notifications`
-Outbox for emails and pushes. Rows are inserted by functions and sent by the scheduled job.
+### `notifications` (implemented)
+The in-app list and the email outbox in one (ADR-0013). Rows are written only by the database: a trigger on `audit_events` and the hourly reminder job.
 
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid | PK |
 | recipient_id | uuid | FK → profiles |
-| kind | text | e.g. `instalment_due_tomorrow` |
+| kind | text | e.g. `loan_requested`, `payment_claimed`, `due_tomorrow`, `overdue`, `borrower_overdue` |
 | loan_id | uuid | FK → loans, nullable |
-| channel | text | `email`, `push` |
-| send_after | timestamptz | |
-| sent_at | timestamptz | |
-
-`UNIQUE (recipient_id, kind, loan_id, send_after)` stops duplicate reminders.
+| title, body | text | Final wording, used by both the app and the email |
+| link_path | text | In-app path, e.g. `/loans/<id>` |
+| dedupe_key | text | UNIQUE. `event:<audit id>:<recipient>`, `due_tomorrow:<instalment>`, `overdue:<instalment>:<days late>:<recipient>`, … |
+| created_at, read_at | timestamptz | `read_at` is set by `mark_notifications_read()` |
+| email_status | text | `pending`, `sending`, `sent`, `failed` |
+| email_attempts, email_sent_at, email_last_error | | Retry bookkeeping for the sender |
 
 ## Derived views
 
@@ -183,7 +184,7 @@ Internally, `private.replay_payments(loan)` reports how each confirmed payment w
 | lending_relationships, loans, loan_terms, instalments, term_acceptances, repayments | Lender or borrower of the relationship | None. Functions only. |
 | audit_events | Your own events, and events in your relationships | None. Functions only. |
 | lender_invites | The lender who created it | None. Functions only. |
-| notifications | The recipient | None |
+| notifications | The recipient | None. `mark_notifications_read()` only |
 
 ## Functions (implemented)
 
@@ -210,3 +211,8 @@ Functions raise errors whose message is a stable key (`invite_expired`, `lender_
 | `dispute_repayment(repayment, reason)` | The lender | Marks a claim as not received |
 | `reverse_repayment(repayment, reason)` | The lender | Undoes a confirmed payment; may reopen a completed loan |
 | `forgive_remaining(loan, note?)` | The lender, active loan | Writes off the balance; returns the amount |
+| `mark_notifications_read(ids?)` | Any user | Marks your notifications read (all of them when no ids are given) |
+| `claim_notification_emails(limit)` | Server only (`service_role`) | Hands the email sender a batch of pending emails, locked so no two runs send the same one |
+| `finish_notification_email(id, ok, error?)` | Server only (`service_role`) | Marks an email sent, or returns it to the queue (failed after 5 attempts) |
+
+Scheduled (pg_cron): `private.queue_reminders()` hourly at :05, and `private.trigger_email_sender()` every 5 minutes, which calls the `send-notifications` Edge Function.

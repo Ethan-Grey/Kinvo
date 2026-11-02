@@ -9,6 +9,7 @@ import { HomePage } from './features/dashboard/HomePage'
 import { LoanDetailPage } from './features/loans/LoanDetailPage'
 import { LoansPage } from './features/loans/LoansPage'
 import { NewLoanPage } from './features/loans/NewLoanPage'
+import { NotificationsPage } from './features/notifications/NotificationsPage'
 import { PeoplePage } from './features/people/PeoplePage'
 import { PersonPage } from './features/people/PersonPage'
 import { AppLayout } from './features/shell/AppLayout'
@@ -34,6 +35,7 @@ const router = createBrowserRouter([
               { path: 'loans', element: <LoansPage /> },
               { path: 'loans/new', element: <NewLoanPage /> },
               { path: 'people', element: <PeoplePage /> },
+              { path: 'notifications', element: <NotificationsPage /> },
               { path: 'loans/:id', element: <LoanDetailPage /> },
               { path: 'people/:relationshipId', element: <PersonPage /> },
             ],

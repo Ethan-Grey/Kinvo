@@ -87,10 +87,11 @@ A single account can be a lender to some people and a borrower to others. Roles 
 | ID | Requirement | Priority |
 |---|---|---|
 | NT-01 | Email notifications for: new request, counter-offer, rejection, agreement accepted, funds confirmed, payment claimed, payment confirmed. | Must |
-| NT-02 | Borrower reminders the day before and the day of each instalment, at a fixed NZ morning time. | Must |
-| NT-03 | Overdue notices to both parties. | Must |
-| NT-04 | PWA push notifications as an additional channel. | Should |
-| NT-05 | Users can choose which notifications they receive. | Should |
+| NT-02 | Borrower reminders the day before and the day of each instalment, at 9am NZ time. | Must |
+| NT-03 | Overdue notices to both parties the day after a missed instalment, then weekly while it stays unpaid. | Must |
+| NT-06 | An in-app notification list with an unread count. | Must |
+| NT-04 | PWA push notifications as an additional channel. (Not yet built; the outbox is ready for a second sender.) | Should |
+| NT-05 | Users can choose which notifications they receive. (Not yet built.) | Should |
 
 ## Non-functional (NF)
 

@@ -68,3 +68,25 @@ jobs:
 
       - name: Row Level Security and function tests (pgTAP)
         run: npx supabase test db
+
+  functions:
+    name: Edge Function checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase/functions
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # Deno runs through npx so no extra setup action (or GitHub API call) is needed.
+      - name: Type check
+        run: npx --yes deno@2 check send-notifications/index.ts _shared/*.ts
+
+      - name: Unit tests
+        run: npx --yes deno@2 test _shared/

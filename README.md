@@ -12,7 +12,7 @@ A private lending ledger for families. Kinvo records who borrowed what, on which
 - **Digital agreements.** Before a loan starts, the borrower sees the full terms (amount, charge, total, every due date) and explicitly accepts them. The exact terms accepted are stored and can't be edited afterwards.
 - **Repayment tracking.** Partial, early and full payments. Balances are always *calculated* from the payment history, never typed in.
 - **Borrower history.** On-time rate, days late, and totals, visible to the lender and to the borrower themselves.
-- **Reminders.** Notifications before and on each due date.
+- **Reminders.** Emails and in-app notifications the day before and on each due date, and when a payment is missed.
 
 ## Tech stack
 
@@ -70,7 +70,7 @@ Every pull request runs type checks, lint, tests and a production build in GitHu
 - [x] **M3 — Loans:** requests, counter-offers, versioned terms, agreement acceptance
 - [x] **M4 — Repayments:** recording, allocation, borrower payment claims
 - [x] **M5 — Dashboards:** lender and borrower views, borrower history
-- [ ] **M6 — Notifications:** email reminders, then PWA push
+- [x] **M6 — Notifications:** in-app list and email (events, due-date reminders, overdue notices). PWA push is still to come.
 - [ ] **M7 — Hardening:** security review, accessibility, release v1.0.0
 
 ## Legal note

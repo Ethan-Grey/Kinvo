@@ -8,6 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Notifications (ADR-0013). A bell in the header with an unread count, and a list of everything that needs you, each linking to its loan.
+- Emails for every loan and payment event the other person needs to know about, sent through Gmail by a new `send-notifications` Edge Function from a retrying outbox.
+- Reminders at 9am NZ: to the borrower the day before and on the day a payment is due, and to both people the day after a missed payment, then weekly. 32 more pgTAP tests, Deno tests for the email builder, and a CI job for the Edge Function.
 - Existing debts: when inviting someone, a lender can record money they already owe from before Kinvo, with a repayment plan. The borrower sees it before joining and must confirm it; once confirmed it's active straight away (ADR-0012). 20 more pgTAP tests.
 - Bottom tab bar: Home, Loans and People.
 - Home dashboard: a "Needs you" panel (proposals to answer, money to send, payments to confirm or disputed), lending figures (owed to you, overdue, total lent, charges received this tax year), borrowing figures (what you owe, next payment) and upcoming payments across all loans.
