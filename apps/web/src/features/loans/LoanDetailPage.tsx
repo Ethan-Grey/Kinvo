@@ -4,7 +4,6 @@ import { formatCents } from '../../domain/money'
 import { getLoan, isAwaitingUser, type LoanDetail, type TermsVersion } from '../../data/loans'
 import { useAsync } from '../../shared/useAsync'
 import { Badge, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
-import { ReceiptLink } from '../repayments/ReceiptField'
 import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
 import { useAuth } from '../auth/useAuth'
 import { methodLabel, statusBadge } from './labels'
@@ -72,8 +71,7 @@ export function LoanDetailPage() {
             <p className="text-sm text-ink-muted">
               {data.lenderName} sent {formatCents(data.currentTerms.principalCents)} by{' '}
               {methodLabel(data.fundsMethod).toLowerCase()} on {formatDate(data.fundsSentOn)}
-              {data.fundsReference ? ` (ref ${data.fundsReference})` : ''}.{' '}
-              {data.fundsReceiptPath && <ReceiptLink path={data.fundsReceiptPath} />}
+              {data.fundsReference ? ` (ref ${data.fundsReference})` : ''}.
             </p>
           )}
 
