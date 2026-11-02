@@ -41,7 +41,7 @@ export function Button({
       aria-busy={busy || undefined}
       className={
         'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium ' +
-        'transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ' +
+        'transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink ' +
         'disabled:cursor-not-allowed disabled:opacity-60 ' +
         `${BUTTON_STYLES[variant]} ${className}`
       }
@@ -91,7 +91,7 @@ export function TextField({ label, hint, className = '', ...rest }: TextFieldPro
         aria-describedby={hintId}
         className={
           'mt-1.5 block min-h-11 w-full rounded-xl border border-line bg-surface px-3 text-base ' +
-          'placeholder:text-ink-muted/70 focus:border-brand focus:outline-2 focus:outline-brand/20'
+          'placeholder:text-ink-muted/70 focus:border-brand-ink focus:outline-2 focus:outline-brand/20'
         }
         {...rest}
       />
@@ -106,7 +106,7 @@ export function TextField({ label, hint, className = '', ...rest }: TextFieldPro
 
 const FIELD_CLASS =
   'mt-1.5 block w-full rounded-xl border border-line bg-surface px-3 text-base ' +
-  'placeholder:text-ink-muted/70 focus:border-brand focus:outline-2 focus:outline-brand/20'
+  'placeholder:text-ink-muted/70 focus:border-brand-ink focus:outline-2 focus:outline-brand/20'
 
 interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string
@@ -158,9 +158,9 @@ type BadgeTone = 'neutral' | 'brand' | 'positive' | 'warning' | 'danger'
 
 const BADGE_STYLES: Record<BadgeTone, string> = {
   neutral: 'bg-canvas text-ink-muted border border-line',
-  brand: 'bg-brand-soft text-brand',
+  brand: 'bg-brand-soft text-ink',
   positive: 'bg-positive/10 text-positive',
-  warning: 'bg-warning/10 text-warning',
+  warning: 'bg-attention text-on-brand',
   danger: 'bg-danger/10 text-danger',
 }
 
@@ -194,7 +194,7 @@ export function Notice({ tone = 'info', children }: { tone?: NoticeTone; childre
 /** Full-screen centred loading state. */
 export function FullPageSpinner({ label = 'Loading…' }: { label?: string }) {
   return (
-    <div className="flex min-h-svh items-center justify-center text-brand">
+    <div className="flex min-h-svh items-center justify-center text-brand-ink">
       <Spinner label={label} />
     </div>
   )

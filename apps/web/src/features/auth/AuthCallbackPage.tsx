@@ -19,7 +19,7 @@ export function AuthCallbackPage() {
       <main className="mx-auto flex min-h-svh max-w-sm flex-col justify-center px-4">
         <Card className="space-y-4">
           <Notice tone="error">Sign-in didn’t complete: {providerError}</Notice>
-          <Link to={`/sign-in?next=${encodeURIComponent(next)}`} className="text-sm font-medium text-brand underline">
+          <Link to={`/sign-in?next=${encodeURIComponent(next)}`} className="text-sm font-medium text-brand-ink underline">
             Try again
           </Link>
         </Card>

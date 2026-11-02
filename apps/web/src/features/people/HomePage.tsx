@@ -95,7 +95,7 @@ function Avatar({ name }: { name: string }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-9 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand"
+      className="flex size-9 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand-ink"
     >
       {initials || '?'}
     </span>

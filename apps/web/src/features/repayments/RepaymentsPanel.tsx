@@ -123,7 +123,7 @@ function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail
       </div>
       <div className="flex items-baseline justify-between">
         <span className="font-medium">{loan.status === 'written_off' ? 'Forgiven' : 'Still owed'}</span>
-        <span className="text-2xl font-semibold tabular-nums text-brand">
+        <span className="text-2xl font-semibold tabular-nums text-brand-ink">
           {formatCents(loan.status === 'written_off' ? balance.writtenOffCents : balance.outstandingCents)}
         </span>
       </div>

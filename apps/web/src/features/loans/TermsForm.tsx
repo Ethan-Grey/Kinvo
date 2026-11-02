@@ -137,7 +137,7 @@ export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCanc
 
       <div className="flex items-baseline justify-between rounded-xl bg-brand-soft px-4 py-3">
         <span className="text-sm">Total to repay</span>
-        <span className="text-lg font-semibold tabular-nums text-brand">{formatCents(totalCents)}</span>
+        <span className="text-lg font-semibold tabular-nums text-brand-ink">{formatCents(totalCents)}</span>
       </div>
 
       <fieldset className="min-w-0 space-y-3">

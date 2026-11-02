@@ -41,7 +41,7 @@ export function RouteErrorScreen() {
   if (isRouteErrorResponse(error) && error.status === 404) {
     return (
       <ErrorLayout title="Page not found">
-        <a href="/" className="text-sm font-medium text-brand underline">
+        <a href="/" className="text-sm font-medium text-brand-ink underline">
           Go home
         </a>
       </ErrorLayout>

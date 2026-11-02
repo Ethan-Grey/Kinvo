@@ -40,7 +40,7 @@ export function EmailConfirmPage() {
       <Card className="space-y-4">
         <Notice tone="error">{status.message}</Notice>
         <p className="text-sm text-ink-muted">If you entered the code from the email instead, you may already be signed in.</p>
-        <Link to="/" className="text-sm font-medium text-brand underline">
+        <Link to="/" className="text-sm font-medium text-brand-ink underline">
           Continue to Kinvo
         </Link>
       </Card>

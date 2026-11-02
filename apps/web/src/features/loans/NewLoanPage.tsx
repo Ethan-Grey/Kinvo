@@ -37,7 +37,7 @@ export function NewLoanPage() {
       <Card className="space-y-3">
         <h1 className="text-xl font-semibold">No one to lend with yet</h1>
         <p className="text-sm text-ink-muted">You need to be connected through an invite link first.</p>
-        <Link to="/" className="text-sm font-medium text-brand underline">
+        <Link to="/" className="text-sm font-medium text-brand-ink underline">
           Back home
         </Link>
       </Card>

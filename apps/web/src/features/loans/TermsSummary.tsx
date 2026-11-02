@@ -46,7 +46,7 @@ function Line({ label, value, strong = false }: { label: string; value: string; 
   return (
     <div className="flex justify-between gap-4">
       <dt className={strong ? 'font-medium' : 'text-ink-muted'}>{label}</dt>
-      <dd className={strong ? 'text-lg font-semibold text-brand' : ''}>{value}</dd>
+      <dd className={strong ? 'text-lg font-semibold text-brand-ink' : ''}>{value}</dd>
     </div>
   )
 }
