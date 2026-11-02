@@ -11,7 +11,7 @@ export default defineConfig({
     VitePWA({
       // Update the installed app automatically when a new version is deployed.
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'theme-init.js'],
       manifest: {
         name: 'Kinvo',
         short_name: 'Kinvo',
