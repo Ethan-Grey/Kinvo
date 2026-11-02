@@ -216,7 +216,7 @@ export function TermsForm({ initial, submitLabel, messageLabel, onSubmit, onCanc
           </Button>
         )}
 
-        <p className={`text-sm tabular-nums ${scheduleTotal === totalCents ? 'text-ink-muted' : 'text-warning'}`}>
+        <p className={`text-sm tabular-nums ${scheduleTotal === totalCents ? 'text-ink-muted' : 'text-danger'}`}>
           Payments add up to {formatCents(scheduleTotal)} of {formatCents(totalCents)}.
         </p>
       </fieldset>
