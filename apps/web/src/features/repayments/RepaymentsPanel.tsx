@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { formatDate, formatShortDate } from '../../domain/dates'
-import { formatCents, toCents } from '../../domain/money'
+import { formatCents, toCents, type Cents } from '../../domain/money'
 import type { LoanDetail } from '../../data/loans'
 import {
   confirmRepayment,
@@ -17,10 +17,11 @@ import {
 } from '../../data/repayments'
 import { useAsync } from '../../shared/useAsync'
 import { RingAvatar } from '../../shared/Avatar'
-import { CheckIcon, PaymentIcon } from '../../shared/icons'
+import { CheckIcon, ChevronIcon, DocumentIcon, PaymentIcon } from '../../shared/icons'
 import { Badge, Button, Card, Notice, Skeleton, TextField } from '../../shared/ui'
 import { methodLabel } from '../loans/labels'
-import { ReceiptThumb } from './ReceiptViewer'
+import { ReceiptButton } from './ReceiptViewer'
+import { allocatePayments } from '../../domain/allocation'
 
 interface PanelProps {
   loan: LoanDetail
@@ -102,7 +103,7 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
         <ScheduleProgress progress={progress} />
       </Card>
 
-      <ProofOfPayment loan={loan} repayments={repayments} />
+      <ProofOfPayment loan={loan} repayments={repayments} progress={progress} />
 
       {settled.length > 0 && (
         <details className="group rounded-3xl border border-line bg-surface p-5">
@@ -249,85 +250,199 @@ function ScheduleProgress({ progress }: { progress: InstalmentProgress[] }) {
 
 function PaymentLine({ repayment }: { repayment: Repayment }) {
   return (
-    <div className="flex min-w-0 items-start gap-3">
+    <div className="min-w-0">
+      <p className="font-display text-lg font-semibold tabular-nums">{formatCents(repayment.amountCents)}</p>
+      <p className="text-sm text-ink-muted">
+        {methodLabel(repayment.method)} on {formatShortDate(repayment.receivedOn)}
+        {repayment.reference ? `, ref ${repayment.reference}` : ''}
+      </p>
+      {repayment.notes && <p className="text-sm text-ink-muted">“{repayment.notes}”</p>}
       {repayment.receiptPath && (
-        <ReceiptThumb
+        <ReceiptButton
           path={repayment.receiptPath}
           label={`receipt for ${formatCents(repayment.amountCents)} on ${formatShortDate(repayment.receivedOn)}`}
-          className="size-14"
-        />
+          className="mt-1 inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-brand-ink hover:underline"
+        >
+          <DocumentIcon className="size-4" />
+          View receipt
+        </ReceiptButton>
       )}
-      <div className="min-w-0">
-        <p className="font-display text-lg font-semibold tabular-nums">{formatCents(repayment.amountCents)}</p>
-        <p className="text-sm text-ink-muted">
-          {methodLabel(repayment.method)} on {formatShortDate(repayment.receivedOn)}
-          {repayment.reference ? `, ref ${repayment.reference}` : ''}
-        </p>
-        {repayment.notes && <p className="text-sm text-ink-muted">“{repayment.notes}”</p>}
-      </div>
     </div>
   )
 }
 
 /**
- * Every receipt on the loan in one place, for both people: the money the
- * lender sent, then each payment back. Tap one to see it full size or save it.
+ * Proof that money moved, for both people, in two parts: the money the lender
+ * sent, and the payments back grouped by the instalment they paid off. Only
+ * dates and amounts are listed; a receipt image loads when it's tapped, so a
+ * loan with many payments stays quick to open.
  */
-function ProofOfPayment({ loan, repayments }: { loan: LoanDetail; repayments: Repayment[] }) {
-  const items = [
-    loan.fundsSentOn && {
-      key: 'funds',
-      title: `${loan.lenderName.split(' ')[0]} sent`,
-      amountCents: loan.currentTerms.principalCents,
-      date: loan.fundsSentOn,
-      path: loan.fundsReceiptPath,
-      cash: loan.fundsMethod === 'cash',
-      note: null as string | null,
-    },
-    ...repayments
-      .filter((r) => r.status !== 'reversed')
-      .slice()
-      .reverse()
-      .map((r) => ({
-        key: r.id,
-        title: r.submittedBy === loan.lenderId ? 'Recorded by lender' : `${loan.borrowerName.split(' ')[0]} paid`,
-        amountCents: r.amountCents,
-        date: r.receivedOn,
-        path: r.receiptPath,
-        cash: r.method === 'cash',
-        note: r.status === 'claimed' ? 'Waiting to be confirmed' : r.status === 'disputed' ? 'Disputed' : null,
-      })),
-  ].filter((item): item is Exclude<typeof item, '' | null | undefined> => Boolean(item))
-
-  if (items.length === 0) return null
+function ProofOfPayment({
+  loan,
+  repayments,
+  progress,
+}: {
+  loan: LoanDetail
+  repayments: Repayment[]
+  progress: InstalmentProgress[]
+}) {
+  const lenderFirst = loan.lenderName.split(' ')[0]
+  const borrowerFirst = loan.borrowerName.split(' ')[0]
+  const waiting = repayments.filter((r) => r.status === 'claimed' || r.status === 'disputed')
+  const byInstalment = allocatePayments(
+    progress.map((p) => ({ sequence: p.sequence, amountCents: p.amountCents })),
+    repayments.filter((r) => r.status === 'confirmed'),
+  )
 
   return (
-    <Card>
-      <h2 className="text-lg font-semibold">Proof of payment</h2>
-      <p className="text-sm text-ink-muted">Receipts for money sent and paid back. Both of you can see them.</p>
-      <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
-        {items.map((item) => (
-          <li key={item.key} className="min-w-0">
-            {item.path ? (
-              <ReceiptThumb
-                path={item.path}
-                label={`receipt: ${item.title.toLowerCase()} ${formatCents(item.amountCents)} on ${formatShortDate(item.date)}`}
-                className="aspect-[3/4] w-full"
-              />
-            ) : (
-              <div className="flex aspect-[3/4] w-full items-center justify-center rounded-2xl border border-dashed border-line p-3 text-center text-sm text-ink-muted">
-                {item.cash ? 'Cash, no receipt' : 'No receipt (added before receipts were required)'}
-              </div>
-            )}
-            <p className="mt-1.5 truncate text-sm font-semibold tabular-nums">
-              {formatCents(item.amountCents)}{' '}
-              <span className="font-normal text-ink-muted">{formatShortDate(item.date)}</span>
-            </p>
-            <p className="truncate text-xs text-ink-muted">{item.note ?? item.title}</p>
-          </li>
-        ))}
-      </ul>
+    <Card className="space-y-5">
+      <div>
+        <h2 className="text-lg font-semibold">Proof of payment</h2>
+        <p className="text-sm text-ink-muted">Tap a payment to see its receipt. Both of you can see these.</p>
+      </div>
+
+      {loan.fundsSentOn && (
+        <section>
+          <h3 className="font-sans text-sm font-semibold text-ink-muted">Money sent by {lenderFirst}</h3>
+          <ul className="mt-2">
+            <ProofRow
+              path={loan.fundsReceiptPath}
+              date={loan.fundsSentOn}
+              amountCents={loan.currentTerms.principalCents}
+              detail={loan.fundsMethod ? methodLabel(loan.fundsMethod) : null}
+              cash={loan.fundsMethod === 'cash'}
+            />
+          </ul>
+        </section>
+      )}
+
+      <section className="space-y-2">
+        <h3 className="font-sans text-sm font-semibold text-ink-muted">Payments back from {borrowerFirst}</h3>
+
+        {waiting.length > 0 && (
+          <div className="rounded-2xl border border-attention p-3">
+            <p className="text-sm font-semibold">Waiting to be confirmed</p>
+            <ul className="mt-1">
+              {waiting.map((r) => (
+                <ProofRow
+                  key={r.id}
+                  path={r.receiptPath}
+                  date={r.receivedOn}
+                  amountCents={r.amountCents}
+                  detail={r.status === 'disputed' ? 'Disputed' : methodLabel(r.method)}
+                  cash={r.method === 'cash'}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <ul className="space-y-2">
+          {progress.map((instalment) => {
+            const paid = byInstalment.get(instalment.sequence) ?? []
+            const receipts = paid.filter((a) => a.payment.receiptPath).length
+            return (
+              <li key={instalment.sequence}>
+                <details className="group rounded-2xl border border-line">
+                  <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-3 py-2">
+                    <ChevronIcon className="size-4 shrink-0 text-ink-muted transition-transform group-open:rotate-90" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold">Payment {instalment.sequence}</span>
+                      <span className="block text-sm text-ink-muted">
+                        Due {formatShortDate(instalment.dueOn)}
+                        {paid.length > 0 ? `, ${paid.length} payment${paid.length === 1 ? '' : 's'}` : ''}
+                        {receipts > 0 ? `, ${receipts} receipt${receipts === 1 ? '' : 's'}` : ''}
+                      </span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-1">
+                      <span className="font-semibold tabular-nums">{formatCents(instalment.amountCents)}</span>
+                      <Badge
+                        tone={
+                          instalment.status === 'paid'
+                            ? 'positive'
+                            : instalment.status === 'overdue'
+                              ? 'danger'
+                              : 'neutral'
+                        }
+                      >
+                        {instalment.status === 'paid' ? 'Paid' : instalment.status === 'overdue' ? 'Overdue' : 'Due'}
+                      </Badge>
+                    </span>
+                  </summary>
+                  <div className="border-t border-line px-3 pb-2">
+                    {paid.length === 0 ? (
+                      <p className="py-3 text-sm text-ink-muted">Nothing paid towards this yet.</p>
+                    ) : (
+                      <ul>
+                        {paid.map(({ payment, appliedCents }) => (
+                          <ProofRow
+                            key={payment.id}
+                            path={payment.receiptPath}
+                            date={payment.receivedOn}
+                            amountCents={appliedCents}
+                            detail={
+                              appliedCents < payment.amountCents
+                                ? `Part of ${formatCents(payment.amountCents)} paid`
+                                : methodLabel(payment.method)
+                            }
+                            cash={payment.method === 'cash'}
+                          />
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </details>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
     </Card>
+  )
+}
+
+/** One movement of money: date and amount, opening its receipt when tapped. */
+function ProofRow({
+  path,
+  date,
+  amountCents,
+  detail,
+  cash,
+}: {
+  path: string | null
+  date: string
+  amountCents: Cents
+  detail: string | null
+  cash: boolean
+}) {
+  const text = (
+    <>
+      <span className="min-w-0 flex-1 text-left">
+        <span className="block font-medium">{formatShortDate(date)}</span>{' '}
+        <span className="block text-sm text-ink-muted">
+          {[detail, path ? null : cash ? 'no receipt (cash)' : 'no receipt'].filter(Boolean).join(', ')}
+        </span>
+      </span>{' '}
+      <span className="font-semibold tabular-nums">{formatCents(amountCents)}</span>
+    </>
+  )
+  return (
+    <li className="border-b border-line last:border-b-0">
+      {path ? (
+        <ReceiptButton
+          path={path}
+          label={`receipt for ${formatCents(amountCents)} on ${formatShortDate(date)}`}
+          useLabel={false}
+          className="flex min-h-14 w-full items-center gap-3 py-2 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-brand-ink"
+        >
+          <span className="sr-only">View receipt: </span>
+          {text}
+          <DocumentIcon className="size-5 shrink-0 text-brand-ink" />
+        </ReceiptButton>
+      ) : (
+        <div className="flex min-h-14 items-center gap-3 py-2">{text}</div>
+      )}
+    </li>
   )
 }
 

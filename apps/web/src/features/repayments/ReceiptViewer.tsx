@@ -1,11 +1,10 @@
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { receiptObjectUrl } from '../../data/images'
-import { CloseIcon, DocumentIcon, DownloadIcon } from '../../shared/icons'
-import { Notice, Skeleton, Spinner } from '../../shared/ui'
+import { CloseIcon, DownloadIcon } from '../../shared/icons'
+import { Notice, Spinner } from '../../shared/ui'
 
 /**
- * Receipts are fetched once per screen and shared between the thumbnail and
- * the full-screen view. They're private files, downloaded with the viewer's
+ * Receipts are fetched when opened and kept for the rest of the visit. They're private files, downloaded with the viewer's
  * own permissions (storage RLS: only the lender and borrower can read them).
  */
 const cache = new Map<string, Promise<string>>()
@@ -37,38 +36,37 @@ function useReceipt(path: string, enabled = true) {
 }
 
 /**
- * A small preview of a receipt. Tapping it opens the receipt full screen,
- * with a button to save it to the phone.
+ * Anything tappable that opens a receipt full screen (with Save). The image
+ * is only downloaded when it's opened, so long lists of payments stay fast.
  */
-export function ReceiptThumb({
+export function ReceiptButton({
   path,
   label,
-  className = 'size-16',
+  className = '',
+  useLabel = true,
+  children,
 }: {
   path: string
+  /** What the receipt is, e.g. "receipt for $50.00 on Mon, 2 Nov". */
   label: string
   className?: string
+  /**
+   * Name the button "View <label>". Turn off when the button's own text
+   * already says what it is (so spoken and visible names match).
+   */
+  useLabel?: boolean
+  children: ReactNode
 }) {
-  const receipt = useReceipt(path)
   const dialogRef = useRef<HTMLDialogElement>(null)
-
   return (
     <>
       <button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        aria-label={`View ${label}`}
-        className={`relative shrink-0 overflow-hidden rounded-2xl border border-line bg-ring-track transition hover:border-brand-ink active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-brand-ink ${className}`}
+        aria-label={useLabel ? `View ${label}` : undefined}
+        className={className}
       >
-        {receipt?.url ? (
-          <img src={receipt.url} alt="" className="size-full object-cover" />
-        ) : receipt?.error ? (
-          <span className="flex size-full items-center justify-center text-ink-muted">
-            <DocumentIcon />
-          </span>
-        ) : (
-          <Skeleton className="size-full rounded-none" />
-        )}
+        {children}
       </button>
       <ReceiptDialog dialogRef={dialogRef} path={path} label={label} />
     </>
