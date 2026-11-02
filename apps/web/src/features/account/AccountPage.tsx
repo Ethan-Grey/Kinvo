@@ -9,6 +9,7 @@ import { ThemeToggle } from '../../shared/ThemeToggle'
 import { useAsync } from '../../shared/useAsync'
 import { Button, Card, IconBubble, Notice, PageSkeleton, TextField } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
+import { PhoneNotificationsCard } from './PhoneNotifications'
 import { ProfilePhoto } from './ProfilePhoto'
 
 /** Your name, email switch, theme, data download and sign out. */
@@ -35,6 +36,7 @@ export function AccountPage() {
         <p className="text-sm text-ink-muted">{profile.data.email}</p>
       </section>
       <DetailsCard profile={profile.data} />
+      <PhoneNotificationsCard />
       <EmailCard profile={profile.data} />
       <Card>
         <div className="flex items-center gap-3">

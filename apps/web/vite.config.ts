@@ -11,7 +11,9 @@ export default defineConfig({
     VitePWA({
       // Update the installed app automatically when a new version is deployed.
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'theme-init.js'],
+      // Adds phone notification handling to the generated service worker.
+      workbox: { importScripts: ['push-sw.js'] },
+      includeAssets: ['favicon.svg', 'apple-touch-icon.png', 'theme-init.js', 'push-sw.js'],
       manifest: {
         name: 'Kinvo',
         short_name: 'Kinvo',

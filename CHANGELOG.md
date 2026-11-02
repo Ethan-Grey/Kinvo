@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Phone notifications (ADR-0017): loan requests, payments and due dates pop up like a message, even with Kinvo closed. Turn them on per device in Account, or from the one-off card on Home. On iPhone, Kinvo needs to be on the Home Screen (iOS 16.4+). The app icon shows the unread count.
+- Notifications and emails now go out the moment something happens, instead of within 5 minutes.
 - Receipts (ADR-0016): every payment, and the lender sending the loan, needs a photo of the receipt or bank statement. Choose a photo, or paste an image copied from your banking app. Both people can view it. Images are re-encoded on the phone, which strips hidden data, and stored privately.
 - Profile photos, visible only to you and the people you lend to or borrow from.
 - New members confirm their real name (and can add a photo) before using the app.
