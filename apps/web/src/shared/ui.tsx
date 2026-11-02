@@ -14,10 +14,10 @@ import { useId } from 'react'
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 const BUTTON_STYLES: Record<ButtonVariant, string> = {
-  primary: 'bg-brand text-on-brand hover:bg-brand/90',
-  secondary: 'border border-line bg-surface text-ink hover:bg-canvas',
-  ghost: 'text-ink-muted hover:bg-brand-soft hover:text-ink',
-  danger: 'border border-line bg-surface text-danger hover:bg-danger/5',
+  primary: 'bg-brand text-on-brand hover:opacity-90',
+  secondary: 'border border-line bg-surface text-ink hover:border-brand-ink',
+  ghost: 'text-ink-muted hover:text-ink',
+  danger: 'border border-line bg-surface text-danger hover:border-danger',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -157,11 +157,11 @@ export function Select({ label, options, className = '', ...rest }: SelectProps)
 type BadgeTone = 'neutral' | 'brand' | 'positive' | 'warning' | 'danger'
 
 const BADGE_STYLES: Record<BadgeTone, string> = {
-  neutral: 'bg-canvas text-ink-muted border border-line',
-  brand: 'bg-brand-soft text-ink',
-  positive: 'bg-positive/10 text-positive',
-  warning: 'bg-attention text-on-brand',
-  danger: 'bg-danger/10 text-danger',
+  neutral: 'border border-line text-ink-muted',
+  brand: 'bg-brand-soft text-on-brand-soft',
+  positive: 'bg-positive text-on-positive',
+  warning: 'bg-attention text-on-attention',
+  danger: 'bg-danger text-on-danger',
 }
 
 export function Badge({ tone = 'neutral', children }: { tone?: BadgeTone; children: ReactNode }) {
@@ -175,9 +175,9 @@ export function Badge({ tone = 'neutral', children }: { tone?: BadgeTone; childr
 type NoticeTone = 'info' | 'success' | 'error'
 
 const NOTICE_STYLES: Record<NoticeTone, string> = {
-  info: 'bg-brand-soft text-ink',
-  success: 'bg-positive/10 text-positive',
-  error: 'bg-danger/10 text-danger',
+  info: 'bg-brand-soft text-on-brand-soft',
+  success: 'border border-positive text-positive',
+  error: 'border border-danger text-danger',
 }
 
 export function Notice({ tone = 'info', children }: { tone?: NoticeTone; children: ReactNode }) {

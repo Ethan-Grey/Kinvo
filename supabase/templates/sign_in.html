@@ -6,13 +6,13 @@
   receive links opened in Safari). The link verifies with a token hash, so it
   also works when opened in a different browser from the one that asked for it.
 -->
-<div style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 420px; margin: 0 auto; padding: 24px; color: #0a0903;">
+<div style="font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; max-width: 420px; margin: 0 auto; padding: 24px; color: #2c0735;">
   <h2 style="margin: 0 0 8px; font-size: 20px;">Your Kinvo sign-in code</h2>
-  <p style="margin: 0 0 20px; color: #6b6250;">Enter this code in Kinvo to sign in. It expires in 1 hour.</p>
-  <p style="margin: 0 0 24px; font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #a84600;">{{ .Token }}</p>
+  <p style="margin: 0 0 20px; color: #5c5c5c;">Enter this code in Kinvo to sign in. It expires in 1 hour.</p>
+  <p style="margin: 0 0 24px; font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #4e148c;">{{ .Token }}</p>
   <p style="margin: 0 0 24px;">
     Or
-    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" style="color: #a84600; font-weight: 600;">sign in with this link</a>.
+    <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" style="color: #4e148c; font-weight: 600;">sign in with this link</a>.
   </p>
-  <p style="margin: 0; font-size: 12px; color: #6b6250;">If you didn't ask to sign in to Kinvo, you can ignore this email.</p>
+  <p style="margin: 0; font-size: 12px; color: #5c5c5c;">If you didn't ask to sign in to Kinvo, you can ignore this email.</p>
 </div>

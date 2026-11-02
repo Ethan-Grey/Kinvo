@@ -19,7 +19,7 @@ export function AppLayout() {
 
   return (
     <div className="min-h-svh">
-      <header className="sticky top-0 z-10 border-b border-line bg-surface/90 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b border-line bg-surface">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
           <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
             <Logo className="size-7" />
@@ -48,7 +48,7 @@ function TabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]"
     >
       <div className="mx-auto grid max-w-2xl grid-cols-3">
         <Tab to="/" end label="Home" icon={<HomeIcon />} />
