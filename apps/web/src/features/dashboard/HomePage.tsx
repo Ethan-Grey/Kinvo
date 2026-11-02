@@ -1,15 +1,32 @@
+import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
-import { formatDate } from '../../domain/dates'
-import { formatCents } from '../../domain/money'
-import { getDashboardSummary, listUpcomingInstalments, type DashboardSummary, type UpcomingInstalment } from '../../data/dashboard'
+import { formatShortDate } from '../../domain/dates'
+import { formatCents, toCents, type Cents } from '../../domain/money'
+import {
+  getDashboardSummary,
+  listUpcomingInstalments,
+  type DashboardSummary,
+  type UpcomingInstalment,
+} from '../../data/dashboard'
+import { listLoans, type LoanSummary } from '../../data/loans'
 import { getMyProfile, listPeople } from '../../data/people'
+import { RingAvatar } from '../../shared/Avatar'
+import { AlertIcon, CheckIcon, DocumentIcon, InviteIcon, PaymentIcon, SendIcon } from '../../shared/icons'
+import { ProgressRing } from '../../shared/ProgressRing'
 import { useAsync } from '../../shared/useAsync'
-import { Badge, Card, Notice, Spinner, Stat } from '../../shared/ui'
+import { Card, EmptyState, IconBubble, Notice, PageSkeleton, SectionHeader } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 
+const todayLabel = new Intl.DateTimeFormat('en-NZ', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+  timeZone: 'Pacific/Auckland',
+})
+
 /**
- * Home tab: what needs doing, then money lent and borrowed (DB-01, DB-02).
- * Sections appear only for the roles the user actually has.
+ * Home tab: the balance that matters most to this person, anything waiting on
+ * them, the people they lend to or borrow from, and what's due next (DB-01, DB-02).
  */
 export function HomePage() {
   const { session } = useAuth()
@@ -18,48 +35,70 @@ export function HomePage() {
   const justJoined = (location.state as { joined?: boolean } | null)?.joined === true
 
   const [data] = useAsync(async () => {
-    const [profile, people, summary, upcoming] = await Promise.all([
+    const [profile, people, summary, upcoming, loans] = await Promise.all([
       getMyProfile(userId),
       listPeople(userId),
       getDashboardSummary(),
       listUpcomingInstalments(6),
+      listLoans(userId),
     ])
-    return { profile, people, summary, upcoming }
+    return { profile, people, summary, upcoming, loans }
   }, userId)
 
-  if (data.status === 'loading') return <Spinner label="Loading…" />
+  if (data.status === 'loading') return <PageSkeleton label="Loading your home screen" />
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
 
-  const { profile, people, summary, upcoming } = data.data
-  const isLender = profile.can_lend
+  const { profile, people, summary, upcoming, loans } = data.data
+  const isLender = profile.can_lend && (people.borrowers.length > 0 || summary.lending.activeCount > 0)
   const isBorrower = people.lenders.length > 0 || summary.borrowing.activeCount > 0
-  const hasNoOne = people.lenders.length === 0 && people.borrowers.length === 0
+  const firstName = profile.display_name.split(' ')[0]
+  // Lenders see who owes them; people who only borrow see who they owe.
+  const circle = peopleWithBalances(loans).filter((p) => p.role === (isLender ? 'lender' : 'borrower'))
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-semibold tracking-tight">Kia ora, {profile.display_name.split(' ')[0]}</h1>
+    <div className="space-y-7">
+      <header>
+        <p className="text-sm text-ink-muted">{todayLabel.format(new Date())}</p>
+        <h1 className="text-[1.75rem] leading-tight font-semibold">Kia ora, {firstName}</h1>
+      </header>
 
-      {justJoined && <Notice tone="success">You’re connected. You can now request a loan from the Loans tab.</Notice>}
+      {justJoined && <Notice tone="success">You’re connected. Tap + to ask for a loan.</Notice>}
+
+      {isLender ? (
+        <LendingHero summary={summary} loans={loans} />
+      ) : isBorrower ? (
+        <BorrowingHero summary={summary} loans={loans} />
+      ) : null}
 
       <NeedsYou summary={summary} />
 
-      {isLender && <LendingCard summary={summary} />}
-      {isBorrower && <BorrowingCard summary={summary} />}
+      {isLender && isBorrower && <BorrowingStrip summary={summary} />}
 
-      {upcoming.length > 0 && <UpcomingCard upcoming={upcoming} />}
+      {circle.length > 0 && <PeopleStrip people={circle} isLender={isLender} />}
 
-      {hasNoOne && (
-        <Card className="space-y-2">
-          <h2 className="font-semibold">Get started</h2>
-          <p className="text-sm text-ink-muted">
-            {isLender
-              ? 'Invite someone from the People tab to start lending.'
-              : 'Ask the person lending to you for an invite link.'}
-          </p>
-          {isLender && (
-            <Link to="/people" className="text-sm font-medium text-brand-ink underline">
-              Go to People
-            </Link>
+      {upcoming.length > 0 && <ComingUp upcoming={upcoming} />}
+
+      {!isLender && !isBorrower && (
+        <Card>
+          {profile.can_lend ? (
+            <EmptyState
+              icon={<InviteIcon className="size-6" />}
+              title="Invite your first borrower"
+              action={
+                <Link
+                  to="/people#invite"
+                  className="inline-flex min-h-12 items-center rounded-2xl bg-brand px-5 font-semibold text-on-brand"
+                >
+                  Create an invite link
+                </Link>
+              }
+            >
+              Send them a link. Once they join, you can offer a loan or record money they already owe.
+            </EmptyState>
+          ) : (
+            <EmptyState icon={<InviteIcon className="size-6" />} title="Waiting for an invite">
+              Ask the person lending to you to send you a Kinvo invite link, then open it on this device.
+            </EmptyState>
           )}
         </Card>
       )}
@@ -67,97 +106,296 @@ export function HomePage() {
   )
 }
 
-function NeedsYou({ summary }: { summary: DashboardSummary }) {
-  const { repliesNeeded, fundsToSend, claimsToConfirm, claimsDisputed } = summary.actions
-  const items = [
-    repliesNeeded > 0 && `${repliesNeeded} loan proposal${repliesNeeded === 1 ? '' : 's'} to answer`,
-    fundsToSend > 0 && `${fundsToSend} agreed loan${fundsToSend === 1 ? '' : 's'} to send money for`,
-    claimsToConfirm > 0 && `${claimsToConfirm} payment${claimsToConfirm === 1 ? '' : 's'} to confirm`,
-    claimsDisputed > 0 && `${claimsDisputed} payment${claimsDisputed === 1 ? '' : 's'} disputed by your lender`,
-  ].filter((item): item is string => typeof item === 'string')
+/** Share of the total that's been repaid across a set of loans, 0–1. */
+function repaidShare(loans: LoanSummary[]): number {
+  let paid = 0
+  let total = 0
+  for (const loan of loans) {
+    if (!loan.balance) continue
+    paid += loan.balance.paidCents
+    total += loan.balance.totalCents
+  }
+  return total === 0 ? 0 : paid / total
+}
 
-  if (items.length === 0) return null
-
+function HeroFrame({
+  label,
+  amount,
+  ring,
+  children,
+}: {
+  label: string
+  amount: Cents
+  ring: number
+  children: ReactNode
+}) {
+  const percent = Math.round(ring * 100)
   return (
-    <Link to="/loans" className="block rounded-2xl bg-attention p-4 text-on-attention hover:opacity-90">
-      <p className="text-sm font-semibold">Needs you</p>
-      <ul className="mt-1 space-y-0.5 text-sm">
-        {items.map((item) => (
-          <li key={item}>• {item}</li>
-        ))}
-      </ul>
+    <section className="relative overflow-hidden rounded-3xl bg-brand p-5 text-on-brand">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h2 className="font-sans text-sm font-medium text-on-brand-muted">{label}</h2>
+          <p className="mt-1 font-display text-[2.75rem] leading-none font-semibold tabular-nums">
+            {formatCents(amount)}
+          </p>
+        </div>
+        <div className="relative shrink-0" role="img" aria-label={`${percent}% repaid so far`}>
+          <ProgressRing value={ring} size={76} stroke={7} tone="on-brand" track="stroke-white/25" />
+          <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
+            <span className="font-display text-lg font-semibold tabular-nums">{percent}%</span>
+            <span className="text-[10px] text-on-brand-muted">repaid</span>
+          </span>
+        </div>
+      </div>
+      <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-white/20 pt-4 text-sm">{children}</dl>
+    </section>
+  )
+}
+
+function HeroFigure({ label, value, alert = false }: { label: string; value: string; alert?: boolean }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-on-brand-muted">{label}</dt>
+      <dd className="mt-0.5 flex items-center gap-1.5 font-semibold tabular-nums">
+        {alert && <AlertIcon className="size-4" />}
+        {value}
+      </dd>
+    </div>
+  )
+}
+
+function LendingHero({ summary, loans }: { summary: DashboardSummary; loans: LoanSummary[] }) {
+  const l = summary.lending
+  const lending = loans.filter((loan) => loan.role === 'lender' && loan.status === 'active')
+  return (
+    <HeroFrame label="Owed to you" amount={l.owedCents} ring={repaidShare(lending)}>
+      <HeroFigure
+        label="Overdue"
+        value={l.overdueCount > 0 ? formatCents(l.overdueCents) : 'Nothing'}
+        alert={l.overdueCount > 0}
+      />
+      <HeroFigure label="Active loans" value={String(l.activeCount)} />
+      <HeroFigure label="Lent in total" value={formatCents(l.totalLentCents)} />
+      <HeroFigure label="Charges this tax year" value={formatCents(l.chargesReceivedCents)} />
+    </HeroFrame>
+  )
+}
+
+function BorrowingHero({ summary, loans }: { summary: DashboardSummary; loans: LoanSummary[] }) {
+  const b = summary.borrowing
+  const borrowing = loans.filter((loan) => loan.role === 'borrower' && loan.status === 'active')
+  return (
+    <HeroFrame label="You owe" amount={b.owedCents} ring={repaidShare(borrowing)}>
+      <HeroFigure
+        label="Next payment"
+        value={b.nextDueOn && b.nextDueCents !== null ? formatCents(b.nextDueCents) : 'Nothing due'}
+      />
+      <HeroFigure label="Due" value={b.nextDueOn ? formatShortDate(b.nextDueOn) : '—'} />
+      {b.overdueCount > 0 && <HeroFigure label="Overdue" value={formatCents(b.overdueCents)} alert />}
+    </HeroFrame>
+  )
+}
+
+/** For people who both lend and borrow: their borrowing, one line under the lending hero. */
+function BorrowingStrip({ summary }: { summary: DashboardSummary }) {
+  const b = summary.borrowing
+  return (
+    <Link
+      to="/loans?show=borrowing"
+      className="flex items-center gap-3 rounded-3xl border border-line p-4 transition hover:border-brand-ink active:scale-[0.99]"
+    >
+      <IconBubble tone="soft">
+        <PaymentIcon />
+      </IconBubble>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm text-ink-muted">You owe</p>
+        <p className="font-display text-xl font-semibold tabular-nums">{formatCents(b.owedCents)}</p>
+      </div>
+      {b.nextDueOn && b.nextDueCents !== null && (
+        <p className="text-right text-sm">
+          <span className="block font-semibold tabular-nums">{formatCents(b.nextDueCents)}</span>
+          <span className="text-ink-muted">due {formatShortDate(b.nextDueOn)}</span>
+        </p>
+      )}
     </Link>
   )
 }
 
-function LendingCard({ summary }: { summary: DashboardSummary }) {
-  const l = summary.lending
-  return (
-    <Card className="space-y-4">
-      <h2 className="font-semibold">Lending</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <Stat label="Owed to you" value={formatCents(l.owedCents)} tone="brand" hint={`${l.activeCount} active loan${l.activeCount === 1 ? '' : 's'}`} />
-        <Stat
-          label="Overdue"
-          value={formatCents(l.overdueCents)}
-          tone={l.overdueCount > 0 ? 'danger' : 'default'}
-          hint={l.overdueCount > 0 ? `${l.overdueCount} payment${l.overdueCount === 1 ? '' : 's'}` : 'Nothing overdue'}
-        />
-        <Stat label="Total lent" value={formatCents(l.totalLentCents)} hint="All time" />
-        <Stat
-          label="Charges received"
-          value={formatCents(l.chargesReceivedCents)}
-          hint={`Since ${formatDate(l.taxYearStart)} (tax year)`}
-        />
-      </div>
-    </Card>
-  )
-}
+function NeedsYou({ summary }: { summary: DashboardSummary }) {
+  const { repliesNeeded, fundsToSend, claimsToConfirm, claimsDisputed } = summary.actions
+  const tasks = [
+    {
+      count: repliesNeeded,
+      one: 'proposal to answer',
+      many: 'proposals to answer',
+      icon: <DocumentIcon />,
+      tone: 'attention' as const,
+      to: '/loans?show=waiting',
+    },
+    {
+      count: fundsToSend,
+      one: 'loan to send money for',
+      many: 'loans to send money for',
+      icon: <SendIcon />,
+      tone: 'attention' as const,
+      to: '/loans?show=waiting',
+    },
+    {
+      count: claimsToConfirm,
+      one: 'payment to confirm',
+      many: 'payments to confirm',
+      icon: <CheckIcon />,
+      tone: 'attention' as const,
+      to: '/loans?show=lending',
+    },
+    {
+      count: claimsDisputed,
+      one: 'payment disputed',
+      many: 'payments disputed',
+      icon: <AlertIcon />,
+      tone: 'danger' as const,
+      to: '/loans?show=borrowing',
+    },
+  ].filter((t) => t.count > 0)
 
-function BorrowingCard({ summary }: { summary: DashboardSummary }) {
-  const b = summary.borrowing
-  return (
-    <Card className="space-y-4">
-      <h2 className="font-semibold">Borrowing</h2>
-      <div className="grid grid-cols-2 gap-4">
-        <Stat label="You owe" value={formatCents(b.owedCents)} tone="brand" hint={`${b.activeCount} active loan${b.activeCount === 1 ? '' : 's'}`} />
-        {b.nextDueOn && b.nextDueCents !== null ? (
-          <Stat label="Next payment" value={formatCents(b.nextDueCents)} hint={`Due ${formatDate(b.nextDueOn)}`} />
-        ) : (
-          <Stat label="Next payment" value="—" hint="Nothing due" />
-        )}
-      </div>
-      {b.overdueCount > 0 && (
-        <Notice tone="error">
-          {formatCents(b.overdueCents)} is overdue. Pay what you can and tap “I’ve paid” on the loan.
-        </Notice>
-      )}
-    </Card>
-  )
-}
+  if (tasks.length === 0) return null
 
-function UpcomingCard({ upcoming }: { upcoming: UpcomingInstalment[] }) {
   return (
-    <Card>
-      <h2 className="font-semibold">Coming up</h2>
-      <ul className="mt-2 divide-y divide-line">
-        {upcoming.map((item) => (
-          <li key={`${item.loanId}-${item.sequence}`}>
-            <Link to={`/loans/${item.loanId}`} className="flex items-center justify-between gap-3 py-2.5 hover:opacity-80">
-              <div>
-                <p className="text-sm font-medium">
-                  {item.role === 'lender' ? `${item.otherPersonName} pays you` : `You pay ${item.otherPersonName}`}
-                </p>
-                <p className="text-xs text-ink-muted">{formatDate(item.dueOn)}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold tabular-nums">{formatCents(item.remainingCents)}</span>
-                {item.status === 'overdue' && <Badge tone="danger">Overdue</Badge>}
-              </div>
+    <section className="space-y-3">
+      <SectionHeader title="Needs you" />
+      <ul className="grid grid-cols-2 gap-3">
+        {tasks.map((task) => (
+          <li key={task.one}>
+            <Link
+              to={task.to}
+              className="flex h-full flex-col gap-3 rounded-3xl border border-line p-4 transition hover:border-brand-ink active:scale-[0.98]"
+            >
+              <IconBubble tone={task.tone}>{task.icon}</IconBubble>
+              <span>
+                <span className="block font-display text-2xl leading-none font-semibold tabular-nums">
+                  {task.count}
+                </span>{' '}
+                <span className="mt-1 block text-sm text-ink-muted">{task.count === 1 ? task.one : task.many}</span>
+              </span>
             </Link>
           </li>
         ))}
       </ul>
-    </Card>
+    </section>
+  )
+}
+
+interface PersonBalance {
+  relationshipId: string
+  name: string
+  role: 'lender' | 'borrower'
+  outstandingCents: Cents
+  progress: number
+  overdue: boolean
+}
+
+/** Groups active loans by person, so each person appears once with one ring. */
+function peopleWithBalances(loans: LoanSummary[]): PersonBalance[] {
+  const byPerson = new Map<string, { loans: LoanSummary[]; first: LoanSummary }>()
+  for (const loan of loans) {
+    if (loan.status !== 'active' || !loan.balance) continue
+    const entry = byPerson.get(loan.relationshipId)
+    if (entry) entry.loans.push(loan)
+    else byPerson.set(loan.relationshipId, { loans: [loan], first: loan })
+  }
+  return [...byPerson.values()]
+    .map(({ loans: group, first }) => ({
+      relationshipId: first.relationshipId,
+      name: first.otherPersonName,
+      role: first.role,
+      outstandingCents: toCents(group.reduce((sum, l) => sum + (l.balance?.outstandingCents ?? 0), 0)),
+      progress: repaidShare(group),
+      overdue: group.some((l) => (l.balance?.overdueCount ?? 0) > 0),
+    }))
+    .sort((a, b) => Number(b.overdue) - Number(a.overdue) || b.outstandingCents - a.outstandingCents)
+}
+
+function PeopleStrip({ people, isLender }: { people: PersonBalance[]; isLender: boolean }) {
+  return (
+    <section className="space-y-3">
+      <SectionHeader
+        title={isLender ? 'Who owes you' : 'Who you owe'}
+        link={{ to: '/people', label: 'See everyone' }}
+      />
+      <ul className="relative -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        {people.map((person) => (
+          <li key={person.relationshipId} className="shrink-0">
+            <Link
+              to={`/people/${person.relationshipId}`}
+              className="flex w-28 flex-col items-center rounded-3xl border border-line px-2 py-4 text-center transition hover:border-brand-ink active:scale-[0.98]"
+            >
+              <RingAvatar name={person.name} progress={person.progress} overdue={person.overdue} size="lg" />
+              <span className="mt-2 w-full truncate text-sm font-semibold">{person.name.split(' ')[0]}</span>
+              <span
+                className={`text-sm tabular-nums ${person.overdue ? 'font-semibold text-danger' : 'text-ink-muted'}`}
+              >
+                {formatCents(person.outstandingCents)}
+              </span>
+              <span className="sr-only">
+                {person.role === 'borrower' ? 'owes you' : 'you owe'}, {Math.round(person.progress * 100)}% repaid
+                {person.overdue ? ', overdue' : ''}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+const dayName = new Intl.DateTimeFormat('en-NZ', { weekday: 'short', timeZone: 'UTC' })
+
+function DateTile({ iso, overdue }: { iso: string; overdue: boolean }) {
+  const date = new Date(`${iso}T00:00:00Z`)
+  return (
+    <span
+      aria-hidden="true"
+      className={
+        'flex size-12 shrink-0 flex-col items-center justify-center rounded-2xl leading-none ' +
+        (overdue ? 'bg-danger text-on-danger' : 'bg-brand-soft text-on-brand-soft')
+      }
+    >
+      <span className="text-[10px] font-semibold">{dayName.format(date)}</span>
+      <span className="mt-0.5 font-display text-lg font-semibold">{date.getUTCDate()}</span>
+    </span>
+  )
+}
+
+function ComingUp({ upcoming }: { upcoming: UpcomingInstalment[] }) {
+  return (
+    <section className="space-y-3">
+      <SectionHeader title="Coming up" link={{ to: '/loans', label: 'All loans' }} />
+      <ul className="space-y-2">
+        {upcoming.map((item) => {
+          const overdue = item.status === 'overdue'
+          return (
+            <li key={`${item.loanId}-${item.sequence}`}>
+              <Link
+                to={`/loans/${item.loanId}`}
+                className="flex items-center gap-3 rounded-2xl p-2 transition hover:bg-brand-soft/30 active:scale-[0.99]"
+              >
+                <DateTile iso={item.dueOn} overdue={overdue} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">
+                    {item.role === 'lender' ? `${item.otherPersonName} pays you` : `You pay ${item.otherPersonName}`}
+                  </p>
+                  <p className={`text-sm ${overdue ? 'font-medium text-danger' : 'text-ink-muted'}`}>
+                    {overdue ? `Overdue since ${formatShortDate(item.dueOn)}` : formatShortDate(item.dueOn)}
+                  </p>
+                </div>
+                <span className="font-display text-lg font-semibold tabular-nums">
+                  {formatCents(item.remainingCents)}
+                </span>
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }

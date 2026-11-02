@@ -6,7 +6,7 @@ export function pageTitle(pathname: string): string {
     ['/loans', 'Loans'],
     ['/people/', 'Person'],
     ['/people', 'People'],
-    ['/notifications', 'Notifications'],
+    ['/notifications', 'Alerts'],
     ['/account', 'Account'],
     ['/invite/', 'Invite'],
   ]

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { todayInNZ } from '../../domain/dates'
 import { toCents } from '../../domain/money'
@@ -47,8 +48,24 @@ const balance: LoanBalance = {
 }
 
 const progress: InstalmentProgress[] = [
-  { sequence: 1, dueOn: '2026-10-13', amountCents: toCents(15000), paidCents: toCents(15000), remainingCents: toCents(0), paidOn: '2026-10-12', status: 'paid' },
-  { sequence: 2, dueOn: '2026-10-20', amountCents: toCents(15000), paidCents: toCents(0), remainingCents: toCents(15000), paidOn: null, status: 'overdue' },
+  {
+    sequence: 1,
+    dueOn: '2026-10-13',
+    amountCents: toCents(15000),
+    paidCents: toCents(15000),
+    remainingCents: toCents(0),
+    paidOn: '2026-10-12',
+    status: 'paid',
+  },
+  {
+    sequence: 2,
+    dueOn: '2026-10-20',
+    amountCents: toCents(15000),
+    paidCents: toCents(0),
+    remainingCents: toCents(15000),
+    paidOn: null,
+    status: 'overdue',
+  },
 ]
 
 const claim: Repayment = {
@@ -66,7 +83,11 @@ const claim: Repayment = {
 }
 
 function renderPanel(role: 'lender' | 'borrower' = 'lender') {
-  return render(<RepaymentsPanel loan={{ ...loan, role }} userId={role === 'lender' ? 'lena' : 'bob'} onLoanChanged={vi.fn()} />)
+  return render(
+    <MemoryRouter>
+      <RepaymentsPanel loan={{ ...loan, role }} userId={role === 'lender' ? 'lena' : 'bob'} onLoanChanged={vi.fn()} />
+    </MemoryRouter>,
+  )
 }
 
 describe('RepaymentsPanel', () => {

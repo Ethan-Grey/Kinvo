@@ -3,9 +3,15 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppNotification } from '../../data/notifications'
-import { NotificationBell } from './NotificationBell'
 import { NotificationsPage } from './NotificationsPage'
 import { UnreadCountProvider } from './UnreadCountProvider'
+import { useUnreadCount } from './useUnreadCount'
+
+/** Stands in for the tab bar badge, which reads the same count. */
+function CountProbe() {
+  const { count } = useUnreadCount()
+  return <p>Unread: {count ?? '…'}</p>
+}
 import { expectNoAxeViolations } from '../../test/axe'
 
 const api = vi.hoisted(() => ({
@@ -34,7 +40,7 @@ function renderWithBell() {
   return render(
     <MemoryRouter initialEntries={['/notifications']}>
       <UnreadCountProvider>
-        <NotificationBell />
+        <CountProbe />
         <NotificationsPage />
       </UnreadCountProvider>
     </MemoryRouter>,
@@ -60,21 +66,21 @@ describe('notifications', () => {
     expect(screen.getByText('just now')).toBeTruthy()
 
     await waitFor(() => expect(api.markRead).toHaveBeenCalledWith())
-    await waitFor(() => expect(screen.getByRole('link', { name: 'Notifications' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('Unread: 0')).toBeTruthy())
   })
 
-  it('shows the unread count on the bell', async () => {
+  it('keeps the unread count for the tab bar', async () => {
     api.listNotifications.mockReturnValue(new Promise(() => {}))
     api.countUnread.mockResolvedValue(3)
     renderWithBell()
-    expect(await screen.findByRole('link', { name: 'Notifications, 3 unread' })).toBeTruthy()
+    expect(await screen.findByText('Unread: 3')).toBeTruthy()
   })
 
   it('explains what will appear when there is nothing yet', async () => {
     api.listNotifications.mockResolvedValue([])
     api.countUnread.mockResolvedValue(0)
     renderWithBell()
-    expect(await screen.findByText(/Nothing yet/)).toBeTruthy()
+    expect(await screen.findByText(/all caught up/)).toBeTruthy()
     expect(api.markRead).not.toHaveBeenCalled()
   })
 

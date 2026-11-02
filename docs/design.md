@@ -33,3 +33,31 @@ Combinations that fail, and are never used: Frozen Lake or Periwinkle on white (
 ## Tokens
 
 Defined once in `apps/web/src/index.css` and switched by `data-theme` on `<html>`. Components use only token classes (`bg-brand`, `text-on-brand`, `text-ink-muted`, …), never raw hex values. Each fill token has a matching `on-*` text token, so text on a coloured fill always uses a pair that's been checked.
+
+## Type
+
+- **Bricolage Grotesque** (variable, self-hosted from `@fontsource-variable/bricolage-grotesque`) for headings and money amounts. Its slightly quirky shapes keep a finance app feeling like a family one.
+- The phone's own UI font (`system-ui`) for everything else, so reading text looks native and loads instantly.
+- Amounts in lists use tabular figures so columns line up.
+
+## The repayment ring
+
+Kinvo's signature element is a ring around each person's avatar that fills as their loans are repaid. It turns red when a payment is overdue. The same ring appears on Home, in the loan list, on People, on a person's page and at the top of each loan, so "how much is paid back" reads the same everywhere. It fills in once when a screen opens. This is the only motion that plays without a tap, and it's switched off for people who prefer reduced motion.
+
+## Layout
+
+- **No top bar.** Each screen starts with its own title (`PageHeader`) and, on detail screens, a back link.
+- **Bottom tab bar:** Home, Loans, a raised **+**, Alerts and Account. The + opens a sheet with only the actions that make sense for the person: ask to borrow, offer a loan, record a payment (choosing the loan if there's more than one) and invite someone.
+- **One bold surface per screen.** The solid Violet Twilight card is used for the main figure: what's owed on Home, and the total to repay when proposing a loan. Everything else uses outlined cards on the white or black page.
+- **Corner radius follows hierarchy:** 24px for cards, 16px for fields, rows and buttons, and full pills for chips and badges.
+
+## Patterns
+
+| Pattern | Where | Why |
+|---|---|---|
+| Quick-pick chips | Charge (No charge, 10%, 25%, 50%), payment amount (next payment, all of it) | The common answer is one tap instead of typing |
+| Segmented pills | Loan filters, payment method, how often | Every option is visible, unlike a dropdown |
+| Timeline | Loan schedule | Shows at a glance which payments are done |
+| Date tiles | Coming up on Home | The day stands out more than a date string |
+| Empty states | Loans, Alerts, People | Say what will appear and what to do next |
+| Skeletons | Every screen while loading | The layout doesn't jump when data arrives |

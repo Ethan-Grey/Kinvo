@@ -3,9 +3,12 @@ import { exportFileName, exportMyData, setDisplayName, setEmailNotifications } f
 import { signOut } from '../../data/auth'
 import type { Profile } from '../../data/database.types'
 import { getMyProfile } from '../../data/people'
+import { Link } from 'react-router'
+import { Avatar } from '../../shared/Avatar'
+import { ChevronIcon, DownloadIcon, MailIcon, PaletteIcon, PeopleIcon, SignOutIcon } from '../../shared/icons'
 import { ThemeToggle } from '../../shared/ThemeToggle'
 import { useAsync } from '../../shared/useAsync'
-import { Button, Card, Notice, Spinner, TextField } from '../../shared/ui'
+import { Button, Card, IconBubble, Notice, PageSkeleton, TextField } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 
 /** Your name, email switch, theme, data download and sign out. */
@@ -14,20 +17,41 @@ export function AccountPage() {
   const userId = session?.user.id ?? ''
   const [profile] = useAsync(() => getMyProfile(userId), userId)
 
-  if (profile.status === 'loading') return <Spinner label="Loading…" />
+  if (profile.status === 'loading') return <PageSkeleton label="Loading your account" />
   if (profile.status === 'error') return <Notice tone="error">{profile.error.message}</Notice>
 
   return (
     <div className="space-y-5">
-      <h1 className="text-2xl font-semibold tracking-tight">Account</h1>
+      <h1 className="sr-only">Account</h1>
+      <section className="flex flex-col items-center pt-2 text-center">
+        <Avatar name={profile.data.display_name} size="xl" />
+        <p className="mt-3 font-display text-2xl font-semibold">{profile.data.display_name}</p>
+        <p className="text-sm text-ink-muted">{profile.data.email}</p>
+      </section>
       <DetailsCard profile={profile.data} />
       <EmailCard profile={profile.data} />
       <Card>
-        <h2 className="font-semibold">Appearance</h2>
-        <div className="mt-3">
+        <div className="flex items-center gap-3">
+          <IconBubble>
+            <PaletteIcon />
+          </IconBubble>
+          <h2 className="flex-1 text-lg font-semibold">Appearance</h2>
           <ThemeToggle />
         </div>
       </Card>
+      <Link
+        to="/people"
+        className="flex items-center gap-3 rounded-3xl border border-line p-5 transition hover:border-brand-ink active:scale-[0.99]"
+      >
+        <IconBubble>
+          <PeopleIcon />
+        </IconBubble>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg font-semibold">People and invites</span>
+          <span className="block text-sm text-ink-muted">Who you lend to and borrow from</span>
+        </span>
+        <ChevronIcon className="size-5 text-ink-muted" />
+      </Link>
       <DataCard />
       <SignOutButton />
     </div>
@@ -60,7 +84,7 @@ function DetailsCard({ profile }: { profile: Profile }) {
 
   return (
     <Card>
-      <h2 className="font-semibold">Your details</h2>
+      <h2 className="text-lg font-semibold">Your details</h2>
       <form onSubmit={handleSubmit} className="mt-3 space-y-3">
         <TextField
           label="Name"
@@ -71,10 +95,6 @@ function DetailsCard({ profile }: { profile: Profile }) {
           autoComplete="name"
           onChange={(e) => setName(e.target.value)}
         />
-        <p className="text-sm">
-          <span className="text-ink-muted">Email: </span>
-          {profile.email}
-        </p>
         {message && <Notice tone={message.tone}>{message.text}</Notice>}
         <Button type="submit" variant="secondary" busy={saving} disabled={unchanged}>
           Save name
@@ -104,21 +124,33 @@ function EmailCard({ profile }: { profile: Profile }) {
 
   return (
     <Card>
-      <h2 className="font-semibold">Notifications</h2>
-      <label className="mt-3 flex items-start gap-3 text-sm">
+      <label className="flex cursor-pointer items-center gap-3">
+        <IconBubble>
+          <MailIcon />
+        </IconBubble>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg font-semibold">Email me</span>
+          <span className="block text-sm text-ink-muted">
+            Loan updates, payments and due-date reminders. Alerts in the app always stay on.
+          </span>
+        </span>
         <input
           type="checkbox"
+          role="switch"
           checked={enabled}
           disabled={saving}
           onChange={(e) => handleChange(e.target.checked)}
-          className="mt-0.5 size-5 shrink-0 accent-brand"
+          className="peer sr-only"
         />
-        <span>
-          <span className="font-medium">Email me</span>
-          <span className="block text-ink-muted">
-            Loan updates, payments and due-date reminders. Notifications in the app always stay on.
-          </span>
-        </span>
+        <span
+          aria-hidden="true"
+          className={
+            'relative h-7 w-12 shrink-0 rounded-full bg-ring-track transition-colors peer-checked:bg-brand ' +
+            'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-ink ' +
+            'peer-disabled:opacity-60 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full ' +
+            'after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5'
+          }
+        />
       </label>
       {error && (
         <div className="mt-3">
@@ -153,17 +185,24 @@ function DataCard() {
 
   return (
     <Card>
-      <h2 className="font-semibold">Your data</h2>
-      <p className="mt-1 text-sm text-ink-muted">
-        A copy of everything Kinvo holds that involves you: your loans, agreements, payments and activity, as a JSON
-        file.
-      </p>
+      <div className="flex items-start gap-3">
+        <IconBubble>
+          <DownloadIcon />
+        </IconBubble>
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold">Your data</h2>
+          <p className="text-sm text-ink-muted">
+            A copy of everything Kinvo holds that involves you: loans, agreements, payments and activity, as a JSON
+            file.
+          </p>
+        </div>
+      </div>
       {error && (
         <div className="mt-3">
           <Notice tone="error">{error}</Notice>
         </div>
       )}
-      <Button variant="secondary" className="mt-3" busy={downloading} onClick={handleDownload}>
+      <Button variant="secondary" className="mt-4 w-full" busy={downloading} onClick={handleDownload}>
         Download my data
       </Button>
     </Card>
@@ -183,7 +222,8 @@ function SignOutButton() {
   }
 
   return (
-    <Button variant="secondary" className="w-full" busy={signingOut} onClick={handleSignOut}>
+    <Button variant="danger" className="w-full" busy={signingOut} onClick={handleSignOut}>
+      {!signingOut && <SignOutIcon className="size-5" />}
       Sign out
     </Button>
   )

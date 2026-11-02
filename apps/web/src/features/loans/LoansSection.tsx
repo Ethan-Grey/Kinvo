@@ -1,76 +1,82 @@
 import { Link } from 'react-router'
-import { formatDate } from '../../domain/dates'
+import { formatShortDate } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
-import { listLoans, type LoanSummary } from '../../data/loans'
-import { useAsync } from '../../shared/useAsync'
-import { Badge, Card, Notice, Spinner } from '../../shared/ui'
-import { statusBadge } from './labels'
+import type { LoanSummary } from '../../data/loans'
+import { RingAvatar } from '../../shared/Avatar'
+import { ChevronIcon } from '../../shared/icons'
+import { Badge } from '../../shared/ui'
+import { OPEN_STATUSES, statusBadge } from './labels'
 
-const OPEN = new Set(['negotiating', 'agreed', 'active'])
-
-/** Home-screen list of loans, with anything waiting on the user first. */
-export function LoansSection({ userId, canStartLoan }: { userId: string; canStartLoan: boolean }) {
-  const [loans] = useAsync(() => listLoans(userId), userId)
-
-  return (
-    <Card>
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold">All loans</h2>
-        {canStartLoan && (
-          <Link
-            to="/loans/new"
-            className="inline-flex min-h-9 items-center rounded-xl bg-brand px-3 text-sm font-medium text-on-brand hover:opacity-90"
-          >
-            New loan
-          </Link>
-        )}
-      </div>
-
-      {loans.status === 'loading' && <Spinner label="Loading loans…" />}
-      {loans.status === 'error' && <Notice tone="error">{loans.error.message}</Notice>}
-      {loans.status === 'success' && <LoanList loans={loans.data} />}
-    </Card>
-  )
-}
-
-/** Open loans (anything waiting on you first), then closed ones folded away. */
-export function LoanList({ loans }: { loans: LoanSummary[] }) {
-  if (loans.length === 0) {
-    return <p className="mt-2 text-sm text-ink-muted">No loans yet.</p>
-  }
-
-  const open = loans.filter((l) => OPEN.has(l.status)).sort((a, b) => Number(b.awaitingMe) - Number(a.awaitingMe))
-  const closed = loans.filter((l) => !OPEN.has(l.status))
+/**
+ * Loans as tappable rows: the other person in their repayment ring, what's
+ * owed, and the status. Anything waiting on you comes first.
+ */
+export function LoanList({ loans, showClosed = true }: { loans: LoanSummary[]; showClosed?: boolean }) {
+  const open = loans
+    .filter((l) => OPEN_STATUSES.has(l.status))
+    .sort((a, b) => Number(b.awaitingMe) - Number(a.awaitingMe) || Number(isOverdue(b)) - Number(isOverdue(a)))
+  const closed = loans.filter((l) => !OPEN_STATUSES.has(l.status))
 
   return (
-    <div className="mt-3 space-y-4">
+    <div className="space-y-4">
       {open.length > 0 && <Rows loans={open} />}
-      {closed.length > 0 && (
-        <details>
-          <summary className="cursor-pointer text-sm text-ink-muted">Closed ({closed.length})</summary>
-          <Rows loans={closed} />
+      {showClosed && closed.length > 0 && (
+        <details className="group">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-ink-muted hover:text-ink">
+            <ChevronIcon className="size-4 transition-transform group-open:rotate-90" />
+            Closed loans ({closed.length})
+          </summary>
+          <div className="mt-2">
+            <Rows loans={closed} />
+          </div>
         </details>
       )}
     </div>
   )
 }
 
-function Rows({ loans }: { loans: LoanSummary[] }) {
+function isOverdue(loan: LoanSummary): boolean {
+  return loan.status === 'active' && (loan.balance?.overdueCount ?? 0) > 0
+}
+
+export function Rows({ loans }: { loans: LoanSummary[] }) {
   return (
-    <ul className="divide-y divide-line">
+    <ul className="space-y-2">
       {loans.map((loan) => {
-        const overdue = loan.status === 'active' && (loan.balance?.overdueCount ?? 0) > 0
-        const badge = overdue ? { label: 'Overdue', tone: 'danger' as const } : statusBadge(loan.status, loan.role, loan.awaitingMe)
+        const overdue = isOverdue(loan)
+        const badge = overdue
+          ? { label: 'Overdue', tone: 'danger' as const }
+          : statusBadge(loan.status, loan.role, loan.awaitingMe)
+        const balance = loan.balance
+        const progress = balance && balance.totalCents > 0 ? balance.paidCents / balance.totalCents : null
+        const amount =
+          loan.status === 'active' && balance
+            ? balance.outstandingCents
+            : loan.status === 'written_off' && balance
+              ? balance.writtenOffCents
+              : loan.totalCents
         return (
           <li key={loan.id}>
-            <Link to={`/loans/${loan.id}`} className="flex items-center justify-between gap-3 py-3 hover:opacity-80">
-              <div>
-                <p className="font-medium">
+            <Link
+              to={`/loans/${loan.id}`}
+              className={
+                'flex items-center gap-3 rounded-3xl border p-3 pr-4 transition hover:border-brand-ink active:scale-[0.99] ' +
+                (loan.awaitingMe ? 'border-attention' : 'border-line')
+              }
+            >
+              <RingAvatar name={loan.otherPersonName} progress={progress} overdue={overdue} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">
                   {loan.role === 'lender' ? `To ${loan.otherPersonName}` : `From ${loan.otherPersonName}`}
                 </p>
-                <p className="text-xs text-ink-muted tabular-nums">{summaryLine(loan)}</p>
+                <p className="truncate text-sm text-ink-muted tabular-nums">{summaryLine(loan)}</p>
               </div>
-              <Badge tone={badge.tone}>{badge.label}</Badge>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className="font-display text-lg leading-none font-semibold tabular-nums">
+                  {formatCents(amount)}
+                </span>
+                <Badge tone={badge.tone}>{badge.label}</Badge>
+              </div>
             </Link>
           </li>
         )
@@ -79,15 +85,19 @@ function Rows({ loans }: { loans: LoanSummary[] }) {
   )
 }
 
-/** One line of figures: owed and next due for funded loans, the terms otherwise. */
+/** One short line under the name; the big number on the right is what's owed (or the total). */
 function summaryLine(loan: LoanSummary): string {
   const balance = loan.balance
   if (loan.status === 'active' && balance) {
-    const next = balance.nextDueOn ? ` · next due ${formatDate(balance.nextDueOn)}` : ''
-    return `${formatCents(balance.outstandingCents)} owed of ${formatCents(balance.totalCents)}${next}`
+    if (balance.overdueCount > 0 && balance.nextDueOn) return `Overdue since ${formatShortDate(balance.nextDueOn)}`
+    return balance.nextDueOn
+      ? `Next payment ${formatShortDate(balance.nextDueOn)}`
+      : `${formatCents(balance.outstandingCents)} left of ${formatCents(balance.totalCents)}`
   }
-  if (loan.status === 'completed') return `${formatCents(loan.totalCents)} repaid`
-  if (loan.status === 'written_off' && balance) return `${formatCents(balance.writtenOffCents)} forgiven`
-  const first = loan.firstDueOn ? ` · first due ${formatDate(loan.firstDueOn)}` : ''
-  return `${formatCents(loan.principalCents)} · repay ${formatCents(loan.totalCents)}${first}`
+  if (loan.status === 'completed') return 'Repaid in full'
+  if (loan.status === 'written_off') return 'Forgiven'
+  if (loan.kind === 'existing_debt') return 'Existing debt'
+  return loan.firstDueOn
+    ? `First payment ${formatShortDate(loan.firstDueOn)}`
+    : `Borrow ${formatCents(loan.principalCents)}`
 }
