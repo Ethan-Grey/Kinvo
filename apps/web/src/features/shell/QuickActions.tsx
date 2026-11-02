@@ -118,7 +118,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
         <ul className="mt-3 space-y-2">
           {active.map((loan) => (
             <li key={loan.id}>
-              <LoanChoice loan={loan} onChoose={() => go(`/loans/${loan.id}?pay=1`)} />
+              <LoanChoice loan={loan} onChoose={() => go(`/loans/${loan.id}/pay`)} />
             </li>
           ))}
         </ul>
@@ -160,7 +160,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
           icon={<PaymentIcon />}
           title="Record a payment"
           detail={only ? `For ${nameFor(only)}` : `Choose from ${active.length} active loans`}
-          onClick={() => (only ? go(`/loans/${only.id}?pay=1`) : setChoosingLoan(true))}
+          onClick={() => (only ? go(`/loans/${only.id}/pay`) : setChoosingLoan(true))}
         />
       )}
       {profile.can_lend && (

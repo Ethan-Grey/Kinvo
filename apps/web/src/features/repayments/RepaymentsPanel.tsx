@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link } from 'react-router'
 import { formatDate, formatShortDate } from '../../domain/dates'
 import { formatCents, toCents } from '../../domain/money'
 import type { LoanDetail } from '../../data/loans'
@@ -17,10 +17,9 @@ import {
 } from '../../data/repayments'
 import { useAsync } from '../../shared/useAsync'
 import { RingAvatar } from '../../shared/Avatar'
-import { CheckIcon } from '../../shared/icons'
+import { CheckIcon, PaymentIcon } from '../../shared/icons'
 import { Badge, Button, Card, Notice, Skeleton, TextField } from '../../shared/ui'
 import { methodLabel } from '../loans/labels'
-import { PaymentForm } from './PaymentForm'
 
 interface PanelProps {
   loan: LoanDetail
@@ -39,8 +38,6 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
     ])
     return { balance, progress, repayments }
   }, `${loan.id}:${loan.status}`)
-  const [params] = useSearchParams()
-  const payNow = params.get('pay') === '1'
 
   if (data.status === 'loading') {
     return (
@@ -59,7 +56,6 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
   const isActive = loan.status === 'active'
   const pending = repayments.filter((r) => r.status === 'claimed' || r.status === 'disputed')
   const settled = repayments.filter((r) => r.status === 'confirmed' || r.status === 'reversed')
-  const nextUnpaid = progress.find((p) => p.status !== 'paid')
 
   function changed() {
     reload()
@@ -69,11 +65,6 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
   return (
     <div className="space-y-5">
       <BalanceCard balance={balance} loan={loan} />
-
-      <Card>
-        <h2 className="text-lg font-semibold">Schedule</h2>
-        <ScheduleProgress progress={progress} />
-      </Card>
 
       {pending.length > 0 && (
         <Card className="space-y-3">
@@ -93,23 +84,29 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
       )}
 
       {isActive && balance.outstandingCents > 0 && (
-        <Card>
-          <PaymentForm
-            loanId={loan.id}
-            isLender={isLender}
-            lenderName={loan.lenderName}
-            outstandingCents={balance.outstandingCents}
-            suggestedCents={toCents(Math.min(nextUnpaid?.remainingCents ?? 0, balance.outstandingCents))}
-            earliestDate={loan.fundsSentOn ?? '2000-01-01'}
-            autoFocus={payNow}
-            onRecorded={changed}
-          />
-        </Card>
+        <Link
+          to={`/loans/${loan.id}/pay`}
+          className={
+            'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand px-5 font-semibold text-on-brand ' +
+            'shadow-[0_6px_16px_-6px_rgb(97_61_193/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
+          }
+        >
+          <PaymentIcon className="size-5" />
+          {isLender ? 'Record a payment' : 'I’ve paid'}
+        </Link>
       )}
 
+      <Card>
+        <h2 className="text-lg font-semibold">Schedule</h2>
+        <ScheduleProgress progress={progress} />
+      </Card>
+
       {settled.length > 0 && (
-        <Card>
-          <h2 className="text-lg font-semibold">Payments</h2>
+        <details className="group rounded-3xl border border-line bg-surface p-5">
+          <summary className="flex cursor-pointer list-none items-center justify-between font-display text-lg font-semibold">
+            Payment history
+            <span className="font-sans text-sm font-normal text-ink-muted">{settled.length}</span>
+          </summary>
           <ul className="mt-2 divide-y divide-line">
             {settled.map((repayment) => (
               <SettledPayment
@@ -131,7 +128,7 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
               />
             ))}
           </ul>
-        </Card>
+        </details>
       )}
 
       {isLender && isActive && balance.outstandingCents > 0 && (

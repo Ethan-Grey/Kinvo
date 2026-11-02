@@ -3,7 +3,9 @@ import { NavLink, Outlet, useLocation } from 'react-router'
 import { BellIcon, HomeIcon, LoansIcon, UserIcon } from '../../shared/icons'
 import { UnreadCountProvider } from '../notifications/UnreadCountProvider'
 import { useUnreadCount } from '../notifications/useUnreadCount'
+import { LiveUpdates } from './LiveUpdates'
 import { pageTitle } from './pageTitle'
+import { PullToRefresh } from './PullToRefresh'
 import { QuickActionsButton } from './QuickActions'
 
 /**
@@ -15,28 +17,31 @@ export function AppLayout() {
   useScrollToTopOnNavigate()
 
   return (
-    <UnreadCountProvider>
-      <div className="min-h-svh">
-        {/* First thing keyboard and screen reader users reach (WCAG 2.4.1). */}
-        <a
-          href="#main"
-          className="sr-only z-30 rounded-xl bg-surface px-4 py-2 font-medium focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:outline-2 focus:outline-brand-ink"
-        >
-          Skip to content
-        </a>
+    <LiveUpdates>
+      <UnreadCountProvider>
+        <PullToRefresh />
+        <div className="min-h-svh">
+          {/* First thing keyboard and screen reader users reach (WCAG 2.4.1). */}
+          <a
+            href="#main"
+            className="sr-only z-30 rounded-xl bg-surface px-4 py-2 font-medium focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:outline-2 focus:outline-brand-ink"
+          >
+            Skip to content
+          </a>
 
-        {/* Bottom padding keeps content clear of the tab bar and the iPhone home bar. */}
-        <main
-          id="main"
-          tabIndex={-1}
-          className="mx-auto max-w-2xl px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] outline-none"
-        >
-          <Outlet />
-        </main>
+          {/* Bottom padding keeps content clear of the tab bar and the iPhone home bar. */}
+          <main
+            id="main"
+            tabIndex={-1}
+            className="mx-auto max-w-2xl px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] outline-none"
+          >
+            <Outlet />
+          </main>
 
-        <TabBar />
-      </div>
-    </UnreadCountProvider>
+          <TabBar />
+        </div>
+      </UnreadCountProvider>
+    </LiveUpdates>
   )
 }
 
