@@ -50,3 +50,9 @@ Deno.test('hasSharedSecret only accepts the exact bearer secret', () => {
   assert.equal(hasSharedSecret(null, 's3cret'), false)
   assert.equal(hasSharedSecret('Bearer ', ''), false)
 })
+
+Deno.test('explains how to stop the emails', () => {
+  const email = buildEmail({ displayName: 'Bob', title: 'Hi', body: '', linkPath: '/' }, APP)
+  assert.ok(email.text.includes('https://kinvo.example/account'))
+  assert.ok(email.html.includes('href="https://kinvo.example/account"'))
+})
