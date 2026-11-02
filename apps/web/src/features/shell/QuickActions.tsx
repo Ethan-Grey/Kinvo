@@ -228,7 +228,12 @@ function LoanChoice({ loan, onChoose }: { loan: LoanSummary; onChoose: () => voi
       onClick={onChoose}
       className="flex w-full items-center gap-3 rounded-2xl border border-line p-3 text-left hover:border-brand-ink focus-visible:outline-2 focus-visible:outline-brand-ink"
     >
-      <RingAvatar name={loan.otherPersonName} progress={progress} overdue={(balance?.overdueCount ?? 0) > 0} />
+      <RingAvatar
+        name={loan.otherPersonName}
+        photo={loan.otherPersonPhoto}
+        progress={progress}
+        overdue={(balance?.overdueCount ?? 0) > 0}
+      />
       <span className="min-w-0 flex-1">
         <span className="block font-semibold">
           {loan.role === 'lender' ? `${loan.otherPersonName} pays you` : `You pay ${loan.otherPersonName}`}

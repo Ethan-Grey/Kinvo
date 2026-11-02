@@ -6,6 +6,7 @@ export interface Connection {
   relationshipId: string
   personId: string
   personName: string
+  personPhoto: string | null
   since: string
 }
 
@@ -28,8 +29,8 @@ export async function listPeople(userId: string): Promise<People> {
     .from('lending_relationships')
     .select(
       `id, created_at, lender_id, borrower_id,
-       lender:profiles!lending_relationships_lender_id_fkey ( display_name ),
-       borrower:profiles!lending_relationships_borrower_id_fkey ( display_name )`,
+       lender:profiles!lending_relationships_lender_id_fkey ( display_name, avatar_path ),
+       borrower:profiles!lending_relationships_borrower_id_fkey ( display_name, avatar_path )`,
     )
     .is('ended_at', null)
     .order('created_at')
@@ -42,6 +43,7 @@ export async function listPeople(userId: string): Promise<People> {
         relationshipId: row.id,
         personId: row.lender_id,
         personName: row.lender.display_name,
+        personPhoto: row.lender.avatar_path,
         since: row.created_at,
       })
     } else {
@@ -49,6 +51,7 @@ export async function listPeople(userId: string): Promise<People> {
         relationshipId: row.id,
         personId: row.borrower_id,
         personName: row.borrower.display_name,
+        personPhoto: row.borrower.avatar_path,
         since: row.created_at,
       })
     }

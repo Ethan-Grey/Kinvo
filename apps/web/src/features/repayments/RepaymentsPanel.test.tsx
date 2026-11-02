@@ -80,6 +80,7 @@ const claim: Repayment = {
   createdAt: new Date().toISOString(),
   disputeReason: null,
   reversalReason: null,
+  receiptPath: 'loan-1/receipt.jpg',
 }
 
 function renderPanel(role: 'lender' | 'borrower' = 'lender') {

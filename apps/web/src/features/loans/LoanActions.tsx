@@ -6,6 +6,7 @@ import type { PaymentMethod } from '../../data/database.types'
 import { acceptTerms, confirmFundsSent, rejectTerms, withdrawLoan, type LoanDetail } from '../../data/loans'
 import { CheckIcon, DocumentIcon, SendIcon } from '../../shared/icons'
 import { Button, Notice, Segmented, TextField } from '../../shared/ui'
+import { ReceiptField } from '../repayments/ReceiptField'
 import { PAYMENT_METHODS } from './labels'
 
 const primaryLink =
@@ -206,15 +207,20 @@ export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () =
   const [sentOn, setSentOn] = useState(today)
   const [method, setMethod] = useState<PaymentMethod>('bank_transfer')
   const [reference, setReference] = useState('')
+  const [receiptPath, setReceiptPath] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (!receiptPath) {
+      setError('Add a photo of the bank transfer or receipt.')
+      return
+    }
     setBusy(true)
     setError(null)
     try {
-      await confirmFundsSent(loan.id, sentOn, method, reference)
+      await confirmFundsSent(loan.id, sentOn, method, reference, receiptPath)
       onSent()
     } catch (err) {
       setError((err as Error).message)
@@ -243,6 +249,10 @@ export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () =
         onChange={(e) => setReference(e.target.value)}
         placeholder="e.g. bank transfer reference"
       />
+      <div>
+        <p className="mb-1.5 text-sm font-medium">Receipt</p>
+        <ReceiptField loanId={loan.id} onChange={setReceiptPath} />
+      </div>
       {error && <Notice tone="error">{error}</Notice>}
       <Button type="submit" className="w-full" busy={busy}>
         Confirm money sent

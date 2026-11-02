@@ -114,7 +114,7 @@ function PersonRow({ person, loans, record }: { person: Connection; loans: LoanS
         to={`/people/${person.relationshipId}`}
         className="flex items-center gap-3 rounded-3xl border border-line p-3 pr-4 transition hover:border-brand-ink active:scale-[0.99]"
       >
-        <RingAvatar name={person.personName} progress={progress} overdue={overdue} />
+        <RingAvatar name={person.personName} photo={person.personPhoto} progress={progress} overdue={overdue} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{person.personName}</p>
           <p className="truncate text-sm text-ink-muted">

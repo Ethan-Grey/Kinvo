@@ -5,6 +5,8 @@
  * RingAvatar adds Kinvo's signature element: a ring around the person showing
  * how much of what they owe has been repaid.
  */
+import { useEffect, useState } from 'react'
+import { avatarUrl } from '../data/images'
 import { ProgressRing } from './ProgressRing'
 
 const SWATCHES = [
@@ -41,9 +43,35 @@ function swatchFor(name: string): string {
   return SWATCHES[hash % SWATCHES.length] ?? 'bg-brand-soft text-on-brand-soft'
 }
 
-/** Initials in a circle. Decorative: the name is always shown beside it. */
-export function Avatar({ name, size = 'md' }: { name: string; size?: AvatarSize }) {
+/** The URL of a profile photo, once downloaded (null while loading or if there's none). */
+function usePhoto(path: string | null | undefined): string | null {
+  const [loaded, setLoaded] = useState<{ path: string; url: string } | null>(null)
+  useEffect(() => {
+    if (!path) return
+    let cancelled = false
+    avatarUrl(path).then(
+      (url) => {
+        if (!cancelled) setLoaded({ path, url })
+      },
+      () => {},
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [path])
+  return path && loaded?.path === path ? loaded.url : null
+}
+
+/**
+ * The person's photo if they've added one, otherwise their initials on a
+ * palette colour. Decorative: the name is always shown beside it.
+ */
+export function Avatar({ name, size = 'md', photo }: { name: string; size?: AvatarSize; photo?: string | null }) {
   const s = SIZES[size]
+  const url = usePhoto(photo)
+  if (url) {
+    return <img src={url} alt="" aria-hidden="true" className={`shrink-0 rounded-full object-cover ${s.box}`} />
+  }
   return (
     <span
       aria-hidden="true"
@@ -63,11 +91,13 @@ export function RingAvatar({
   progress,
   overdue = false,
   size = 'md',
+  photo,
 }: {
   name: string
   progress: number | null
   overdue?: boolean
   size?: AvatarSize
+  photo?: string | null
 }) {
   const s = SIZES[size]
   const outer = s.px + 10
@@ -86,7 +116,7 @@ export function RingAvatar({
           className="absolute inset-0"
         />
       )}
-      <Avatar name={name} size={size} />
+      <Avatar name={name} size={size} photo={photo} />
     </span>
   )
 }

@@ -18,6 +18,8 @@ export interface Database {
           can_lend: boolean
           created_at: string
           email_notifications: boolean
+          name_confirmed: boolean
+          avatar_path: string | null
         }
         Insert: never
         Update: never
@@ -99,6 +101,7 @@ export interface Database {
           funds_reference: string | null
           written_off_cents: number | null
           removed_reason: string | null
+          funds_receipt_path: string | null
           kind: LoanKind
           originally_lent_on: string | null
           closed_at: string | null
@@ -170,6 +173,7 @@ export interface Database {
           dispute_reason: string | null
           reversed_at: string | null
           reversal_reason: string | null
+          receipt_path: string | null
         }
         Insert: never
         Update: never
@@ -211,6 +215,10 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      set_avatar: {
+        Args: { p_path: string | null }
+        Returns: undefined
+      }
       remove_loan: {
         Args: { p_loan_id: string; p_reason?: string | null }
         Returns: undefined
@@ -283,7 +291,13 @@ export interface Database {
         Returns: undefined
       }
       confirm_funds_sent: {
-        Args: { p_loan_id: string; p_sent_on: string; p_method: PaymentMethod; p_reference?: string | null }
+        Args: {
+          p_loan_id: string
+          p_sent_on: string
+          p_method: PaymentMethod
+          p_reference?: string | null
+          p_receipt_path?: string | null
+        }
         Returns: undefined
       }
       get_instalment_progress: {
@@ -322,6 +336,7 @@ export interface Database {
           p_method: PaymentMethod
           p_reference?: string | null
           p_notes?: string | null
+          p_receipt_path?: string | null
         }
         Returns: string
       }
