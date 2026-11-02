@@ -119,7 +119,7 @@ function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail
         <span className="text-sm font-medium tabular-nums">{percent}%</span>
       </div>
       <div className="h-2.5 overflow-hidden rounded-full bg-brand-soft" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="Repaid">
-        <div className="h-full rounded-full bg-brand transition-[width]" style={{ width: `${percent}%` }} />
+        <div className="h-full rounded-full bg-brand-ink transition-[width]" style={{ width: `${percent}%` }} />
       </div>
       <div className="flex items-baseline justify-between">
         <span className="font-medium">{loan.status === 'written_off' ? 'Forgiven' : 'Still owed'}</span>

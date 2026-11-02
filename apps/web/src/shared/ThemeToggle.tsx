@@ -12,7 +12,7 @@ export function ThemeToggle() {
   const { preference, setPreference } = useTheme()
 
   return (
-    <div role="radiogroup" aria-label="Colour theme" className="inline-flex rounded-xl border border-line bg-canvas p-0.5">
+    <div role="radiogroup" aria-label="Colour theme" className="inline-flex rounded-xl border border-line p-0.5">
       {OPTIONS.map((option) => {
         const selected = option.value === preference
         return (
@@ -27,7 +27,7 @@ export function ThemeToggle() {
             className={
               'flex size-8 items-center justify-center rounded-lg transition-colors ' +
               'focus-visible:outline-2 focus-visible:outline-brand-ink ' +
-              (selected ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink')
+              (selected ? 'bg-brand text-on-brand' : 'text-ink-muted hover:text-ink')
             }
           >
             {option.icon}

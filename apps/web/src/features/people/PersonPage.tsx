@@ -58,7 +58,7 @@ export function PersonPage() {
           <h2 className="font-semibold">Loans</h2>
           <Link
             to={`/loans/new?with=${relationshipId}`}
-            className="inline-flex min-h-9 items-center rounded-xl bg-brand px-3 text-sm font-medium text-on-brand hover:bg-brand/90"
+            className="inline-flex min-h-9 items-center rounded-xl bg-brand px-3 text-sm font-medium text-on-brand hover:opacity-90"
           >
             {iLend ? 'Offer a loan' : 'Ask for a loan'}
           </Link>

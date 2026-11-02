@@ -79,7 +79,7 @@ function NeedsYou({ summary }: { summary: DashboardSummary }) {
   if (items.length === 0) return null
 
   return (
-    <Link to="/loans" className="block rounded-2xl bg-attention p-4 text-on-brand hover:opacity-90">
+    <Link to="/loans" className="block rounded-2xl bg-attention p-4 text-on-attention hover:opacity-90">
       <p className="text-sm font-semibold">Needs you</p>
       <ul className="mt-1 space-y-0.5 text-sm">
         {items.map((item) => (

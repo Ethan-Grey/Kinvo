@@ -118,7 +118,7 @@ function ProposalHeader({ terms, loan, userId }: { terms: TermsVersion; loan: Lo
         Version {terms.version} · proposed by {proposer} · {timestamp.format(new Date(terms.createdAt))}
       </p>
       {terms.message && (
-        <blockquote className="rounded-xl bg-canvas px-3 py-2 text-sm">
+        <blockquote className="rounded-xl border border-line px-3 py-2 text-sm">
           <span className="font-medium">{proposer}:</span> {terms.message}
         </blockquote>
       )}

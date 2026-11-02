@@ -13,61 +13,70 @@
   --color-brand-ink: var(--kv-brand-ink);
   --color-on-brand: var(--kv-on-brand);
   --color-brand-soft: var(--kv-brand-soft);
+  --color-on-brand-soft: var(--kv-on-brand-soft);
   --color-attention: var(--kv-attention);
+  --color-on-attention: var(--kv-on-attention);
   --color-canvas: var(--kv-canvas);
   --color-surface: var(--kv-surface);
   --color-ink: var(--kv-ink);
   --color-ink-muted: var(--kv-ink-muted);
   --color-line: var(--kv-line);
   --color-positive: var(--kv-positive);
-  --color-warning: var(--kv-warning);
+  --color-on-positive: var(--kv-on-positive);
   --color-danger: var(--kv-danger);
+  --color-on-danger: var(--kv-on-danger);
 
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 /*
  * Kinvo palette (docs/design.md):
- *   Pitch Black #0A0903 · Red #FF0000 · Princeton Orange #FF8200
- *   Amber Gold #FFC100 · Vanilla Custard #FFEAAE
+ *   Frozen Lake #97DFFC · Soft Periwinkle #858AE3 · Violet Twilight #613DC1
+ *   Indigo #4E148C · Dark Amethyst #2C0735
  *
- * Fills (buttons, progress, badges) use the palette directly. Text on light
- * backgrounds uses darker shades of the same hues, because orange, amber and
- * pure red on white are below the WCAG 4.5:1 contrast needed for small text.
+ * Backgrounds are pure white (light) or pure black (dark), with no tints.
+ * Every text/background pair below meets WCAG AA (4.5:1); ratios in the doc.
+ * Red and green aren't in the palette but stay for overdue and paid, since
+ * people read those colours as "problem" and "done".
  */
 :root {
   color-scheme: light;
-  --kv-brand: #ff8200; /* Princeton Orange: primary fills */
-  --kv-brand-ink: #a84600; /* orange text, 5.9:1 on white */
-  --kv-on-brand: #0a0903; /* Pitch Black on orange, 8:1 */
-  --kv-brand-soft: #ffeaae; /* Vanilla Custard */
-  --kv-attention: #ffc100; /* Amber Gold: "needs you" highlights */
-  --kv-canvas: #fff8e5;
+  --kv-canvas: #ffffff;
   --kv-surface: #ffffff;
-  --kv-ink: #0a0903;
-  --kv-ink-muted: #6b6250;
-  --kv-line: #f0e2bc;
-  --kv-positive: #2e7d32;
-  --kv-warning: #8a5c00;
-  --kv-danger: #c40000; /* Red, darkened for text on white */
+  --kv-line: #e4e4e7;
+  --kv-ink: #2c0735; /* Dark Amethyst, 17.7:1 */
+  --kv-ink-muted: #5c5c5c;
+  --kv-brand: #613dc1; /* Violet Twilight: buttons */
+  --kv-on-brand: #ffffff; /* 7.1:1 */
+  --kv-brand-ink: #4e148c; /* Indigo: accent text, 11.7:1 */
+  --kv-brand-soft: #97dffc; /* Frozen Lake: info panels, progress track */
+  --kv-on-brand-soft: #2c0735; /* 12:1 */
+  --kv-attention: #858ae3; /* Soft Periwinkle: "needs you" */
+  --kv-on-attention: #2c0735; /* 5.7:1 */
+  --kv-positive: #1b7f3b;
+  --kv-on-positive: #ffffff;
+  --kv-danger: #c40000;
+  --kv-on-danger: #ffffff;
 }
 
-/* Dark: Pitch Black surfaces, custard text, the palette's brights for accents. */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --kv-brand: #ff8200;
-  --kv-brand-ink: #ffc100; /* Amber Gold text, 12:1 */
-  --kv-on-brand: #0a0903;
-  --kv-brand-soft: #2a1c05;
-  --kv-attention: #ffc100;
-  --kv-canvas: #0a0903;
-  --kv-surface: #17140a;
-  --kv-ink: #ffeaae; /* Vanilla Custard text, 15:1 */
-  --kv-ink-muted: #c9b98a;
-  --kv-line: #2e2914;
-  --kv-positive: #5fd394;
-  --kv-warning: #ffc100;
-  --kv-danger: #ff4d3d; /* Red, lifted slightly to stay readable on dark tints */
+  --kv-canvas: #000000;
+  --kv-surface: #000000;
+  --kv-line: #2a2a2a;
+  --kv-ink: #ffffff;
+  --kv-ink-muted: #a3a3a3;
+  --kv-brand: #613dc1; /* Violet Twilight with white text, 7.1:1 */
+  --kv-on-brand: #ffffff;
+  --kv-brand-ink: #97dffc; /* Frozen Lake: accent text, 14.3:1 */
+  --kv-brand-soft: #4e148c; /* Indigo */
+  --kv-on-brand-soft: #ffffff; /* 11.7:1 */
+  --kv-attention: #858ae3; /* Soft Periwinkle */
+  --kv-on-attention: #000000; /* 6.7:1 */
+  --kv-positive: #4ade80;
+  --kv-on-positive: #000000;
+  --kv-danger: #ff6b6b;
+  --kv-on-danger: #000000;
 }
 
 @layer base {

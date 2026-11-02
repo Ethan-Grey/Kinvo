@@ -14,7 +14,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Lenders can stop lending to someone from their person page; history is kept.
 - Payment allocation refactored into a single replay that also reports how each payment was split; 22 more pgTAP tests.
 
-- Kinvo colour palette (Pitch Black, Red, Princeton Orange, Amber Gold, Vanilla Custard) across both themes, with a matching app icon. Text uses darker shades where the brights fall below WCAG contrast.
+- Kinvo colour palette (Frozen Lake, Soft Periwinkle, Violet Twilight, Indigo, Dark Amethyst) on pure white or pure black backgrounds with no tints, a matching app icon, and every text/background pair checked against WCAG AA (docs/design.md).
 - Repayments: lenders record payments directly; borrowers tap "I've paid" and the lender confirms or disputes it.
 - Balances, progress bar and per-instalment status (paid, due, overdue from the day after the due date), calculated by replaying confirmed payments (ADR-0010).
 - Corrections by reversal with a reason, never by editing or deleting; loans complete automatically and reopen if a reversal leaves money owed.
