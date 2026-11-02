@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Automatic Supabase deploys: merging a change to migrations or Edge Functions applies it to the live project (docs/setup.md, section 7).
 - Notifications (ADR-0013). A bell in the header with an unread count, and a list of everything that needs you, each linking to its loan.
 - Emails for every loan and payment event the other person needs to know about, sent through Gmail by a new `send-notifications` Edge Function from a retrying outbox.
 - Reminders at 9am NZ: to the borrower the day before and on the day a payment is due, and to both people the day after a missed payment, then weekly. 32 more pgTAP tests, Deno tests for the email builder, and a CI job for the Edge Function.
