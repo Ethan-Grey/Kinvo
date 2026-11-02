@@ -215,6 +215,14 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      save_push_subscription: {
+        Args: { p_endpoint: string; p_p256dh: string; p_auth: string; p_user_agent?: string | null }
+        Returns: undefined
+      }
+      delete_push_subscription: {
+        Args: { p_endpoint: string }
+        Returns: undefined
+      }
       set_avatar: {
         Args: { p_path: string | null }
         Returns: undefined

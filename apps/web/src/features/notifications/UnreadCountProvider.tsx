@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { countUnread } from '../../data/notifications'
+import { setAppBadge } from '../../data/push'
 import { useRefresh } from '../../shared/refresh'
 import { UnreadCountContext } from './useUnreadCount'
 
@@ -20,7 +21,9 @@ export function UnreadCountProvider({ children }: { children: ReactNode }) {
     // A failed count just leaves the last known number; it isn't worth an error screen.
     countUnread().then(
       (n) => {
-        if (!cancelled) setCount(n)
+        if (cancelled) return
+        setCount(n)
+        setAppBadge(n)
       },
       () => {},
     )

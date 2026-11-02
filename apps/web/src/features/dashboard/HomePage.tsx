@@ -15,6 +15,7 @@ import { AlertIcon, CheckIcon, DocumentIcon, InviteIcon, PaymentIcon, SendIcon }
 import { ProgressRing } from '../../shared/ProgressRing'
 import { useAsync } from '../../shared/useAsync'
 import { Card, EmptyState, IconBubble, Notice, PageSkeleton, SectionHeader } from '../../shared/ui'
+import { PushNudge } from '../account/PushNudge'
 import { useAuth } from '../auth/useAuth'
 
 const todayLabel = new Intl.DateTimeFormat('en-NZ', {
@@ -71,6 +72,8 @@ export function HomePage() {
       ) : null}
 
       <NeedsYou summary={summary} />
+
+      {(isLender || isBorrower) && <PushNudge />}
 
       {isLender && isBorrower && <BorrowingStrip summary={summary} loans={loans} />}
 
