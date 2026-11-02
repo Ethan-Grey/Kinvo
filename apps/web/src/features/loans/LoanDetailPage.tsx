@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { formatDate } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
 import { counterOffer, getLoan, isAwaitingUser, type LoanDetail, type TermsVersion } from '../../data/loans'
 import { useAsync } from '../../shared/useAsync'
-import { Badge, Card, Notice, Spinner } from '../../shared/ui'
+import { Badge, Card, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
 import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
 import { useAuth } from '../auth/useAuth'
 import { methodLabel, statusBadge } from './labels'
@@ -26,42 +26,45 @@ export function LoanDetailPage() {
   const [loan, reload] = useAsync(() => getLoan(id, userId), `${id}:${userId}`)
   const [countering, setCountering] = useState(false)
 
-  if (loan.status === 'loading') return <Spinner label="Loading loan…" />
+  if (loan.status === 'loading') return <PageSkeleton label="Loading loan" />
   if (loan.status === 'error') return <Notice tone="error">{loan.error.message}</Notice>
 
   const data = loan.data
-  const badge = statusBadge(data.status, data.role, isAwaitingUser(data.status, data.role, data.currentTerms.proposedBy, userId))
+  const badge = statusBadge(
+    data.status,
+    data.role,
+    isAwaitingUser(data.status, data.role, data.currentTerms.proposedBy, userId),
+  )
   const otherName = data.role === 'lender' ? data.borrowerName : data.lenderName
   const funded = data.status === 'active' || data.status === 'completed' || data.status === 'written_off'
 
   return (
     <div className="space-y-5">
-      <Link to="/loans" className="text-sm text-ink-muted hover:text-ink">
-        ← Loans
-      </Link>
-
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {data.kind === 'existing_debt'
-              ? data.role === 'lender'
-                ? `${otherName}’s existing debt`
-                : `Existing debt to ${otherName}`
-              : data.role === 'lender'
-                ? `Loan to ${otherName}`
-                : `Loan from ${otherName}`}
-          </h1>
-          {data.reason && <p className="text-sm text-ink-muted">For: {data.reason}</p>}
-          {data.originallyLentOn && (
-            <p className="text-sm text-ink-muted">Originally lent {formatDate(data.originallyLentOn)}, before Kinvo</p>
-          )}
-        </div>
-        <Badge tone={badge.tone}>{badge.label}</Badge>
-      </header>
+      <PageHeader
+        back={{ to: '/loans', label: 'Loans' }}
+        title={
+          data.kind === 'existing_debt'
+            ? data.role === 'lender'
+              ? `${otherName}’s existing debt`
+              : `Existing debt to ${otherName}`
+            : data.role === 'lender'
+              ? `Loan to ${otherName}`
+              : `Loan from ${otherName}`
+        }
+        subtitle={
+          (data.reason || data.originallyLentOn) && (
+            <>
+              {data.reason && <p>For {data.reason}</p>}
+              {data.originallyLentOn && <p>Originally lent {formatDate(data.originallyLentOn)}, before Kinvo</p>}
+            </>
+          )
+        }
+        action={<Badge tone={badge.tone}>{badge.label}</Badge>}
+      />
 
       {countering ? (
         <Card>
-          <h2 className="mb-4 font-semibold">Suggest different terms</h2>
+          <h2 className="mb-4 text-lg font-semibold">Suggest different terms</h2>
           <TermsForm
             initial={{ ...data.currentTerms, message: '' }}
             variant={data.kind}
@@ -87,8 +90,8 @@ export function LoanDetailPage() {
             </p>
           )}
 
-          <details className="rounded-2xl border border-line bg-surface p-5">
-            <summary className="cursor-pointer font-semibold">Loan agreement</summary>
+          <details className="rounded-3xl border border-line bg-surface p-5">
+            <summary className="cursor-pointer font-display text-lg font-semibold">Loan agreement</summary>
             <div className="mt-4 space-y-5">
               <ProposalHeader terms={data.currentTerms} loan={data} userId={userId} />
               <TermsSummary terms={data.currentTerms} lenderName={data.lenderName} borrowerName={data.borrowerName} />
@@ -124,11 +127,11 @@ function ProposalHeader({ terms, loan, userId }: { terms: TermsVersion; loan: Lo
   const proposer = nameOf(loan, userId, terms.proposedBy)
   return (
     <div className="space-y-2">
-      <p className="text-xs uppercase tracking-wide text-ink-muted">
-        Version {terms.version} · proposed by {proposer} · {timestamp.format(new Date(terms.createdAt))}
+      <p className="text-sm text-ink-muted">
+        Version {terms.version}, proposed by {proposer} on {timestamp.format(new Date(terms.createdAt))}
       </p>
       {terms.message && (
-        <blockquote className="rounded-xl border border-line px-3 py-2 text-sm">
+        <blockquote className="rounded-2xl rounded-tl-sm bg-brand-soft px-4 py-3 text-sm text-on-brand-soft">
           <span className="font-medium">{proposer}:</span> {terms.message}
         </blockquote>
       )}
@@ -148,15 +151,17 @@ function ProposalHeader({ terms, loan, userId }: { terms: TermsVersion; loan: Lo
 
 function History({ loan, userId }: { loan: LoanDetail; userId: string }) {
   return (
-    <details className="rounded-2xl border border-line bg-surface p-5">
-      <summary className="cursor-pointer font-semibold">Earlier proposals ({loan.history.length - 1})</summary>
+    <details className="rounded-3xl border border-line bg-surface p-5">
+      <summary className="cursor-pointer font-display text-lg font-semibold">
+        Earlier proposals ({loan.history.length - 1})
+      </summary>
       <ol className="mt-4 space-y-4">
         {loan.history
           .filter((t) => t.id !== loan.currentTerms.id)
           .map((terms) => (
             <li key={terms.id} className="space-y-1 border-t border-line pt-3 text-sm">
-              <p className="text-xs uppercase tracking-wide text-ink-muted">
-                Version {terms.version} · {nameOf(loan, userId, terms.proposedBy)} ·{' '}
+              <p className="text-sm text-ink-muted">
+                Version {terms.version} from {nameOf(loan, userId, terms.proposedBy)},{' '}
                 {timestamp.format(new Date(terms.createdAt))}
               </p>
               <p>

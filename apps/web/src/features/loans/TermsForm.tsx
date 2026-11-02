@@ -10,7 +10,8 @@ import {
   type Instalment,
 } from '../../domain/schedule'
 import type { TermsInput } from '../../data/loans'
-import { Button, Notice, Select, TextArea, TextField } from '../../shared/ui'
+import { CloseIcon, PlusIcon } from '../../shared/icons'
+import { Button, Notice, Segmented, Select, TextArea, TextField } from '../../shared/ui'
 import { describeProblem } from './labels'
 
 /** A schedule row as typed: the amount stays text until submitted. */
@@ -24,6 +25,9 @@ const FREQUENCIES: { value: Frequency; label: string }[] = [
   { value: 'fortnightly', label: 'Fortnightly' },
   { value: 'monthly', label: 'Monthly' },
 ]
+
+/** One-tap charges, as a share of the amount borrowed. */
+const CHARGE_PRESETS = [0, 10, 25, 50] as const
 
 const COUNT_OPTIONS = Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) }))
 
@@ -98,7 +102,11 @@ export function TermsForm({ initial, submitLabel, messageLabel, variant = 'new',
   const scheduleTotal = sumCents(instalments.map((i) => i.amountCents))
 
   const fieldErrors = [
-    !principal.ok || principalCents === 0 ? (isExistingDebt ? 'Enter the amount they owe.' : 'Enter the amount to borrow.') : null,
+    !principal.ok || principalCents === 0
+      ? isExistingDebt
+        ? 'Enter the amount they owe.'
+        : 'Enter the amount to borrow.'
+      : null,
     !charge.ok ? 'Enter the charge in dollars, or 0.' : null,
   ].filter((e): e is string => e !== null)
 
@@ -135,44 +143,77 @@ export function TermsForm({ initial, submitLabel, messageLabel, variant = 'new',
           placeholder="200"
         />
         {!isExistingDebt && (
-        <TextField
-          label="One-off charge ($)"
-          inputMode="decimal"
-          value={chargeText}
-          onChange={(e) => setChargeText(e.target.value)}
-          placeholder="0"
-          hint={principal.ok && charge.ok && principalCents > 0 ? `${chargePercent(principalCents, chargeCents)} of the amount borrowed` : undefined}
-        />
+          <TextField
+            label="One-off charge ($)"
+            inputMode="decimal"
+            value={chargeText}
+            onChange={(e) => setChargeText(e.target.value)}
+            placeholder="0"
+            hint={
+              principal.ok && charge.ok && principalCents > 0
+                ? `${chargePercent(principalCents, chargeCents)} of the amount borrowed`
+                : undefined
+            }
+          />
         )}
       </div>
 
+      {!isExistingDebt && principal.ok && principalCents > 0 && (
+        <div className="-mt-2 flex flex-wrap gap-2" role="group" aria-label="Quick charge">
+          {CHARGE_PRESETS.map((percent) => {
+            const presetCents = toCents(Math.round((principalCents * percent) / 100))
+            const active = charge.ok && chargeCents === presetCents
+            return (
+              <button
+                key={percent}
+                type="button"
+                aria-pressed={active}
+                onClick={() => setChargeText(centsToText(presetCents))}
+                className={
+                  'min-h-9 rounded-full px-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-brand-ink ' +
+                  (active ? 'bg-brand text-on-brand' : 'border border-line hover:border-brand-ink')
+                }
+              >
+                {percent === 0 ? 'No charge' : `${percent}%`}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       {!isExistingDebt && (
-        <div className="flex items-baseline justify-between rounded-xl bg-brand-soft px-4 py-3 text-on-brand-soft">
-          <span className="text-sm">Total to repay</span>
-          <span className="text-lg font-semibold tabular-nums">{formatCents(totalCents)}</span>
+        <div className="rounded-3xl bg-brand px-5 py-4 text-on-brand">
+          <p className="text-sm text-on-brand-muted">Total to repay</p>
+          <p className="font-display text-4xl leading-tight font-semibold tabular-nums">{formatCents(totalCents)}</p>
+          <p className="text-sm text-on-brand-muted tabular-nums">
+            {formatCents(principalCents)} borrowed + {formatCents(chargeCents)} charge
+          </p>
         </div>
       )}
 
       <fieldset className="min-w-0 space-y-3">
-        <legend className="text-sm font-semibold">Repayments</legend>
+        <legend className="font-display text-lg font-semibold">Repayment plan</legend>
 
         {manualRows === null ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            <Select label="Payments" options={COUNT_OPTIONS} value={count} onChange={(e) => setCount(e.target.value)} />
-            <Select
-              label="How often"
-              options={FREQUENCIES}
-              value={frequency}
-              onChange={(e) => setFrequency(e.target.value as Frequency)}
-            />
-            <TextField
-              label="First due"
-              type="date"
-              min={today}
-              value={firstDueOn}
-              onChange={(e) => setFirstDueOn(e.target.value)}
-              className="col-span-2 sm:col-span-1"
-            />
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <Select
+                label="Payments"
+                options={COUNT_OPTIONS}
+                value={count}
+                onChange={(e) => setCount(e.target.value)}
+              />
+              <TextField
+                label="First due"
+                type="date"
+                min={today}
+                value={firstDueOn}
+                onChange={(e) => setFirstDueOn(e.target.value)}
+              />
+            </div>
+            {count !== '1' && (
+              <Segmented label="How often" options={FREQUENCIES} value={frequency} onChange={setFrequency} />
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-between text-sm text-ink-muted">
@@ -186,7 +227,12 @@ export function TermsForm({ initial, submitLabel, messageLabel, variant = 'new',
         <ol className="space-y-2">
           {rows.map((row, index) => (
             <li key={index} className="flex items-end gap-2">
-              <span className="mb-3 w-6 text-sm text-ink-muted tabular-nums">{index + 1}.</span>
+              <span
+                aria-hidden="true"
+                className="mb-2 flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-on-brand-soft tabular-nums"
+              >
+                {index + 1}
+              </span>
               <TextField
                 label="Due"
                 type="date"
@@ -208,7 +254,7 @@ export function TermsForm({ initial, submitLabel, messageLabel, variant = 'new',
                   aria-label={`Remove payment ${index + 1}`}
                   onClick={() => setManualRows(rows.filter((_, i) => i !== index))}
                 >
-                  ✕
+                  <CloseIcon className="size-4" />
                 </Button>
               )}
             </li>
@@ -219,12 +265,10 @@ export function TermsForm({ initial, submitLabel, messageLabel, variant = 'new',
           <Button
             variant="secondary"
             onClick={() =>
-              setManualRows([
-                ...rows,
-                { dueOn: addDays((rows.at(-1)?.dueOn as IsoDate) || today, 7), amountText: '' },
-              ])
+              setManualRows([...rows, { dueOn: addDays((rows.at(-1)?.dueOn as IsoDate) || today, 7), amountText: '' }])
             }
           >
+            <PlusIcon className="size-4" />
             Add a payment
           </Button>
         )}
@@ -234,20 +278,29 @@ export function TermsForm({ initial, submitLabel, messageLabel, variant = 'new',
         </p>
       </fieldset>
 
-      <TextArea
-        label="If a payment is late (optional)"
-        maxLength={1000}
-        value={lateTerms}
-        onChange={(e) => setLateTerms(e.target.value)}
-        placeholder="e.g. Let me know before the due date and we’ll sort out a new date."
-        hint="Plain words both of you agree to. Kinvo never adds late fees automatically."
-      />
-      <TextArea
-        label="Other conditions (optional)"
-        maxLength={2000}
-        value={conditions}
-        onChange={(e) => setConditions(e.target.value)}
-      />
+      <details
+        open={Boolean(initial?.lateTerms || initial?.conditions)}
+        className="group space-y-4 rounded-2xl border border-line p-4"
+      >
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 font-semibold">
+          Late payments and other conditions
+          <span className="text-sm font-normal text-ink-muted group-open:hidden">Optional</span>
+        </summary>
+        <TextArea
+          label="If a payment is late (optional)"
+          maxLength={1000}
+          value={lateTerms}
+          onChange={(e) => setLateTerms(e.target.value)}
+          placeholder="e.g. Let me know before the due date and we’ll sort out a new date."
+          hint="Plain words both of you agree to. Kinvo never adds late fees automatically."
+        />
+        <TextArea
+          label="Other conditions (optional)"
+          maxLength={2000}
+          value={conditions}
+          onChange={(e) => setConditions(e.target.value)}
+        />
+      </details>
       {messageLabel && (
         <TextArea
           label={messageLabel}

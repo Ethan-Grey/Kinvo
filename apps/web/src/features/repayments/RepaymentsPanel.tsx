@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { formatDate } from '../../domain/dates'
+import { useSearchParams } from 'react-router'
+import { formatDate, formatShortDate } from '../../domain/dates'
 import { formatCents, toCents } from '../../domain/money'
 import type { LoanDetail } from '../../data/loans'
 import {
@@ -15,7 +16,9 @@ import {
   type Repayment,
 } from '../../data/repayments'
 import { useAsync } from '../../shared/useAsync'
-import { Badge, Button, Card, Notice, Spinner, TextField } from '../../shared/ui'
+import { RingAvatar } from '../../shared/Avatar'
+import { CheckIcon } from '../../shared/icons'
+import { Badge, Button, Card, Notice, Skeleton, TextField } from '../../shared/ui'
 import { methodLabel } from '../loans/labels'
 import { PaymentForm } from './PaymentForm'
 
@@ -36,8 +39,17 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
     ])
     return { balance, progress, repayments }
   }, `${loan.id}:${loan.status}`)
+  const [params] = useSearchParams()
+  const payNow = params.get('pay') === '1'
 
-  if (data.status === 'loading') return <Spinner label="Loading payments…" />
+  if (data.status === 'loading') {
+    return (
+      <div role="status" aria-label="Loading payments" className="space-y-5">
+        <Skeleton className="h-44 rounded-3xl" />
+        <Skeleton className="h-32 rounded-3xl" />
+      </div>
+    )
+  }
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
 
   const { balance, progress, repayments } = data.data
@@ -59,15 +71,23 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
       <BalanceCard balance={balance} loan={loan} />
 
       <Card>
-        <h2 className="font-semibold">Schedule</h2>
+        <h2 className="text-lg font-semibold">Schedule</h2>
         <ScheduleProgress progress={progress} />
       </Card>
 
       {pending.length > 0 && (
         <Card className="space-y-3">
-          <h2 className="font-semibold">{isLender ? 'Waiting for you to confirm' : 'Waiting for confirmation'}</h2>
+          <h2 className="text-lg font-semibold">
+            {isLender ? 'Waiting for you to confirm' : 'Waiting for confirmation'}
+          </h2>
           {pending.map((repayment) => (
-            <PendingClaim key={repayment.id} repayment={repayment} isLender={isLender} isActive={isActive} onChanged={changed} />
+            <PendingClaim
+              key={repayment.id}
+              repayment={repayment}
+              isLender={isLender}
+              isActive={isActive}
+              onChanged={changed}
+            />
           ))}
         </Card>
       )}
@@ -81,6 +101,7 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
             outstandingCents={balance.outstandingCents}
             suggestedCents={toCents(Math.min(nextUnpaid?.remainingCents ?? 0, balance.outstandingCents))}
             earliestDate={loan.fundsSentOn ?? '2000-01-01'}
+            autoFocus={payNow}
             onRecorded={changed}
           />
         </Card>
@@ -88,14 +109,24 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
 
       {settled.length > 0 && (
         <Card>
-          <h2 className="font-semibold">Payments</h2>
+          <h2 className="text-lg font-semibold">Payments</h2>
           <ul className="mt-2 divide-y divide-line">
             {settled.map((repayment) => (
               <SettledPayment
                 key={repayment.id}
                 repayment={repayment}
-                canReverse={isLender && (loan.status === 'active' || loan.status === 'completed') && repayment.status === 'confirmed'}
-                submittedByLabel={repayment.submittedBy === userId ? 'you' : repayment.submittedBy === loan.lenderId ? loan.lenderName : loan.borrowerName}
+                canReverse={
+                  isLender &&
+                  (loan.status === 'active' || loan.status === 'completed') &&
+                  repayment.status === 'confirmed'
+                }
+                submittedByLabel={
+                  repayment.submittedBy === userId
+                    ? 'you'
+                    : repayment.submittedBy === loan.lenderId
+                      ? loan.lenderName
+                      : loan.borrowerName
+                }
                 onChanged={changed}
               />
             ))}
@@ -104,82 +135,121 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
       )}
 
       {isLender && isActive && balance.outstandingCents > 0 && (
-        <ForgiveButton loanId={loan.id} outstandingCents={balance.outstandingCents} borrowerName={loan.borrowerName} onChanged={changed} />
+        <ForgiveButton
+          loanId={loan.id}
+          outstandingCents={balance.outstandingCents}
+          borrowerName={loan.borrowerName}
+          onChanged={changed}
+        />
       )}
     </div>
   )
 }
 
 function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail }) {
-  const percent = balance.totalCents === 0 ? 0 : Math.round((balance.paidCents / balance.totalCents) * 100)
+  const share = balance.totalCents === 0 ? 0 : balance.paidCents / balance.totalCents
+  const percent = Math.round(share * 100)
+  const otherName = loan.role === 'lender' ? loan.borrowerName : loan.lenderName
+  const writtenOff = loan.status === 'written_off'
   return (
-    <Card className="space-y-3">
-      <div className="flex items-baseline justify-between">
-        <span className="text-sm text-ink-muted">Paid {formatCents(balance.paidCents)} of {formatCents(balance.totalCents)}</span>
-        <span className="text-sm font-medium tabular-nums">{percent}%</span>
+    <Card className="space-y-4">
+      <div className="flex items-center gap-4">
+        <RingAvatar name={otherName} progress={share} overdue={balance.overdueCount > 0} size="xl" />
+        <div className="min-w-0">
+          <p className="text-sm text-ink-muted">{writtenOff ? 'Forgiven' : 'Still owed'}</p>
+          <p className="font-display text-[2.5rem] leading-none font-semibold tabular-nums text-brand-ink">
+            {formatCents(writtenOff ? balance.writtenOffCents : balance.outstandingCents)}
+          </p>
+          <p className="mt-1 text-sm text-ink-muted tabular-nums">
+            Paid {formatCents(balance.paidCents)} of {formatCents(balance.totalCents)}
+          </p>
+        </div>
       </div>
-      <div className="h-2.5 overflow-hidden rounded-full bg-brand-soft" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="Repaid">
-        <div className="h-full rounded-full bg-brand-ink transition-[width]" style={{ width: `${percent}%` }} />
-      </div>
-      <div className="flex items-baseline justify-between">
-        <span className="font-medium">{loan.status === 'written_off' ? 'Forgiven' : 'Still owed'}</span>
-        <span className="text-2xl font-semibold tabular-nums text-brand-ink">
-          {formatCents(loan.status === 'written_off' ? balance.writtenOffCents : balance.outstandingCents)}
-        </span>
+      <div
+        className="h-2 overflow-hidden rounded-full bg-ring-track"
+        role="progressbar"
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Repaid"
+      >
+        <div
+          className="h-full rounded-full bg-brand-ink transition-[width] duration-700"
+          style={{ width: `${percent}%` }}
+        />
       </div>
       {balance.overdueCount > 0 && (
         <Notice tone="error">
-          {formatCents(balance.overdueCents)} is overdue ({balance.overdueCount} payment{balance.overdueCount === 1 ? '' : 's'}).
+          {formatCents(balance.overdueCents)} is overdue ({balance.overdueCount} payment
+          {balance.overdueCount === 1 ? '' : 's'}).
         </Notice>
       )}
       {loan.status === 'completed' && <Notice tone="success">Fully repaid. 🎉</Notice>}
       {loan.status === 'active' && balance.nextDueOn && balance.nextDueCents !== null && balance.overdueCount === 0 && (
-        <p className="text-sm text-ink-muted">
-          Next: {formatCents(balance.nextDueCents)} due {formatDate(balance.nextDueOn)}
+        <p className="text-sm">
+          Next: <span className="font-semibold tabular-nums">{formatCents(balance.nextDueCents)}</span> due{' '}
+          {formatShortDate(balance.nextDueOn)}
         </p>
       )}
     </Card>
   )
 }
 
+/** The schedule as a timeline: a filled dot when paid, red when overdue. */
 function ScheduleProgress({ progress }: { progress: InstalmentProgress[] }) {
   return (
-    <ul className="mt-2 divide-y divide-line text-sm tabular-nums">
-      {progress.map((p) => (
-        <li key={p.sequence} className="flex items-center justify-between gap-3 py-2.5">
-          <div>
-            <p>{formatDate(p.dueOn)}</p>
-            <p className="text-xs text-ink-muted">
-              {p.status === 'paid'
-                ? `Paid${p.paidOn ? ` ${formatDate(p.paidOn)}` : ''}`
-                : p.paidCents > 0
-                  ? `${formatCents(p.paidCents)} paid, ${formatCents(p.remainingCents)} left`
-                  : 'Not paid yet'}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{formatCents(p.amountCents)}</span>
-            <Badge tone={p.status === 'paid' ? 'positive' : p.status === 'overdue' ? 'danger' : 'neutral'}>
-              {p.status === 'paid' ? 'Paid' : p.status === 'overdue' ? 'Overdue' : 'Due'}
-            </Badge>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <ol className="mt-3 tabular-nums">
+      {progress.map((p, index) => {
+        const last = index === progress.length - 1
+        const dot =
+          p.status === 'paid'
+            ? 'bg-brand text-on-brand'
+            : p.status === 'overdue'
+              ? 'bg-danger text-on-danger'
+              : 'border-2 border-line bg-surface'
+        return (
+          <li key={p.sequence} className="relative flex gap-3 pb-4 last:pb-0">
+            {!last && <span aria-hidden="true" className="absolute top-7 bottom-0 left-[13px] w-0.5 bg-line" />}
+            <span
+              aria-hidden="true"
+              className={`z-10 flex size-7 shrink-0 items-center justify-center rounded-full ${dot}`}
+            >
+              {p.status === 'paid' && <CheckIcon className="size-4" />}
+            </span>
+            <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+              <div>
+                <p className="font-medium">{formatDate(p.dueOn)}</p>
+                <p className="text-sm text-ink-muted">
+                  {p.status === 'paid'
+                    ? `Paid${p.paidOn ? ` ${formatDate(p.paidOn)}` : ''}`
+                    : p.paidCents > 0
+                      ? `${formatCents(p.paidCents)} paid, ${formatCents(p.remainingCents)} left`
+                      : 'Not paid yet'}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <span className="font-semibold">{formatCents(p.amountCents)}</span>
+                <Badge tone={p.status === 'paid' ? 'positive' : p.status === 'overdue' ? 'danger' : 'neutral'}>
+                  {p.status === 'paid' ? 'Paid' : p.status === 'overdue' ? 'Overdue' : 'Due'}
+                </Badge>
+              </div>
+            </div>
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 
 function PaymentLine({ repayment }: { repayment: Repayment }) {
   return (
-    <div>
-      <p className="font-medium tabular-nums">
-        {formatCents(repayment.amountCents)}{' '}
-        <span className="font-normal text-ink-muted">
-          · {methodLabel(repayment.method)} · {formatDate(repayment.receivedOn)}
-          {repayment.reference ? ` · ref ${repayment.reference}` : ''}
-        </span>
+    <div className="min-w-0">
+      <p className="font-display text-lg font-semibold tabular-nums">{formatCents(repayment.amountCents)}</p>
+      <p className="text-sm text-ink-muted">
+        {methodLabel(repayment.method)} on {formatShortDate(repayment.receivedOn)}
+        {repayment.reference ? `, ref ${repayment.reference}` : ''}
       </p>
-      {repayment.notes && <p className="text-xs text-ink-muted">“{repayment.notes}”</p>}
+      {repayment.notes && <p className="text-sm text-ink-muted">“{repayment.notes}”</p>}
     </div>
   )
 }
@@ -213,7 +283,7 @@ function PendingClaim({
   }
 
   return (
-    <div className="space-y-2 rounded-xl border border-line p-3">
+    <div className="space-y-2 rounded-2xl border border-line p-3">
       <div className="flex items-start justify-between gap-2">
         <PaymentLine repayment={repayment} />
         <Badge tone={repayment.status === 'disputed' ? 'danger' : 'warning'}>
@@ -237,7 +307,13 @@ function PendingClaim({
       )}
       {disputing && (
         <div className="space-y-2">
-          <TextField label="What’s wrong?" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Not in my account yet" />
+          <TextField
+            label="What’s wrong?"
+            maxLength={500}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. Not in my account yet"
+          />
           <div className="grid grid-cols-2 gap-2">
             <Button variant="danger" busy={busy} onClick={() => run(() => disputeRepayment(repayment.id, reason))}>
               Dispute
@@ -299,10 +375,18 @@ function SettledPayment({
         )}
       </div>
       <p className="text-xs text-ink-muted">Recorded by {submittedByLabel}</p>
-      {reversed && repayment.reversalReason && <p className="text-xs text-ink-muted">Reversed: {repayment.reversalReason}</p>}
+      {reversed && repayment.reversalReason && (
+        <p className="text-xs text-ink-muted">Reversed: {repayment.reversalReason}</p>
+      )}
       {reversing && (
         <div className="space-y-2">
-          <TextField label="Why undo this payment?" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Entered twice" />
+          <TextField
+            label="Why undo this payment?"
+            maxLength={500}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. Entered twice"
+          />
           {error && <Notice tone="error">{error}</Notice>}
           <div className="grid grid-cols-2 gap-2">
             <Button variant="danger" busy={busy} onClick={handleReverse}>
@@ -333,7 +417,11 @@ function ForgiveButton({
   const [error, setError] = useState<string | null>(null)
 
   async function handleForgive() {
-    if (!window.confirm(`Forgive the remaining ${formatCents(toCents(outstandingCents))}? ${borrowerName} won’t owe anything more on this loan. This can’t be undone.`)) {
+    if (
+      !window.confirm(
+        `Forgive the remaining ${formatCents(toCents(outstandingCents))}? ${borrowerName} won’t owe anything more on this loan. This can’t be undone.`,
+      )
+    ) {
       return
     }
     setBusy(true)

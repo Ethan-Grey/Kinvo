@@ -2,13 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { todayInNZ } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
 import type { PaymentMethod } from '../../data/database.types'
-import {
-  acceptTerms,
-  confirmFundsSent,
-  rejectTerms,
-  withdrawLoan,
-  type LoanDetail,
-} from '../../data/loans'
+import { acceptTerms, confirmFundsSent, rejectTerms, withdrawLoan, type LoanDetail } from '../../data/loans'
 import { Button, Notice, Select, TextField } from '../../shared/ui'
 import { PAYMENT_METHODS } from './labels'
 
@@ -95,7 +89,9 @@ function ReplyToProposal({
 
   return (
     <div className="space-y-4">
-      <label className="flex gap-3 rounded-xl border border-line p-3 text-sm">
+      <label
+        className={`flex cursor-pointer gap-3 rounded-2xl border-2 p-4 text-sm transition-colors ${agreed ? 'border-brand' : 'border-line'}`}
+      >
         <input
           type="checkbox"
           checked={agreed}
@@ -116,11 +112,12 @@ function ReplyToProposal({
         {isDebt ? 'Confirm this debt' : 'Accept Loan Agreement'}
       </Button>
       <div className="grid grid-cols-2 gap-2">
-        <Button variant="secondary" onClick={onCounter} disabled={busy !== null}>
+        <Button variant="secondary" className="px-3" onClick={onCounter} disabled={busy !== null}>
           Suggest changes
         </Button>
         <Button
           variant="danger"
+          className="px-3"
           busy={busy === 'reject'}
           disabled={busy !== null}
           onClick={() => {
@@ -136,8 +133,8 @@ function ReplyToProposal({
         </Button>
       </div>
       <p className="text-xs text-ink-muted">
-        Accepting records your agreement, the date and time, and a fingerprint of these exact terms. It’s a
-        record of what you both agreed, not a guarantee that it’s legally enforceable.
+        Accepting records your agreement, the date and time, and a fingerprint of these exact terms. It’s a record of
+        what you both agreed, not a guarantee that it’s legally enforceable.
       </p>
     </div>
   )
@@ -173,7 +170,9 @@ function WaitingForReply({
 
   return (
     <div className="space-y-3">
-      <Notice>Waiting for {otherName} to {isDebt ? 'confirm this debt' : 'reply'}.</Notice>
+      <Notice>
+        Waiting for {otherName} to {isDebt ? 'confirm this debt' : 'reply'}.
+      </Notice>
       {error && <Notice tone="error">{error}</Notice>}
       <div className="grid grid-cols-2 gap-2">
         <Button variant="secondary" onClick={onCounter} disabled={busy}>
@@ -211,11 +210,18 @@ function ConfirmFunds({ loan, onChanged }: { loan: LoanDetail; onChanged: () => 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <Notice>
-        {loan.borrowerName} accepted. Send them {formatCents(loan.currentTerms.principalCents)}, then confirm it
-        here. The loan starts once you confirm.
+        {loan.borrowerName} accepted. Send them {formatCents(loan.currentTerms.principalCents)}, then confirm it here.
+        The loan starts once you confirm.
       </Notice>
       <div className="grid grid-cols-2 gap-2">
-        <TextField label="Date sent" type="date" max={today} required value={sentOn} onChange={(e) => setSentOn(e.target.value)} />
+        <TextField
+          label="Date sent"
+          type="date"
+          max={today}
+          required
+          value={sentOn}
+          onChange={(e) => setSentOn(e.target.value)}
+        />
         <Select
           label="How"
           options={PAYMENT_METHODS}

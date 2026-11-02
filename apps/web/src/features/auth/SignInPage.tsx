@@ -3,6 +3,7 @@ import { Navigate, useSearchParams } from 'react-router'
 import { sendSignInCode, signInWithGoogle, verifySignInCode } from '../../data/auth'
 import { safeNextPath } from '../../shared/navigation'
 import { ThemeToggle } from '../../shared/ThemeToggle'
+import { ProgressRing } from '../../shared/ProgressRing'
 import { Button, Card, Logo, Notice, TextField } from '../../shared/ui'
 import { useAuth } from './useAuth'
 
@@ -20,18 +21,21 @@ export function SignInPage() {
   if (session) return <Navigate to={next} replace />
 
   return (
-    <main className="relative mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-6 px-4 py-12">
-      <div className="absolute right-4 top-4">
+    <main className="relative mx-auto flex min-h-svh max-w-sm flex-col justify-center gap-8 px-4 py-12">
+      <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      <header className="flex items-center gap-3">
-        <Logo className="size-10" />
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Sign in to Kinvo</h1>
-          <p className="text-sm text-ink-muted">
-            {arrivingFromInvite ? 'Sign in to accept your invite.' : 'Your private family lending ledger.'}
-          </p>
-        </div>
+      <header className="flex flex-col items-center text-center">
+        <span className="relative flex size-28 items-center justify-center">
+          <ProgressRing value={0.75} size={112} stroke={6} className="absolute inset-0" />
+          <Logo className="size-16" />
+        </span>
+        <p className="mt-4 font-display text-4xl font-semibold">Kinvo</p>
+        <h1 className="mt-2 font-sans text-base font-normal text-ink-muted">
+          {arrivingFromInvite
+            ? 'Sign in to accept your invite.'
+            : 'Lend and borrow within your family, and keep track together.'}
+        </h1>
       </header>
 
       <Card>
@@ -192,10 +196,22 @@ function CodeStep({ email, next, onChangeEmail }: { email: string; next: string;
 function GoogleMark() {
   return (
     <svg aria-hidden="true" viewBox="0 0 48 48" className="size-4">
-      <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.7 17.7 9.5 24 9.5z" />
-      <path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 7l7.1 5.5c4.2-3.9 7.2-9.6 7.2-17z" />
-      <path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z" />
-      <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.4-4.6 2.3-8.8 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z" />
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.1C12.4 13.7 17.7 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 7l7.1 5.5c4.2-3.9 7.2-9.6 7.2-17z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.5 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.1-5.5c-2 1.4-4.6 2.3-8.8 2.3-6.3 0-11.6-4.2-13.5-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"
+      />
     </svg>
   )
 }

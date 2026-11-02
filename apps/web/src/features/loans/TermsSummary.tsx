@@ -7,33 +7,42 @@ import type { TermsVersion } from '../../data/loans'
  * The full terms of one version, laid out as the agreement both people see
  * (AG-01): amount, charge, total, every payment, and any conditions.
  */
-export function TermsSummary({ terms, lenderName, borrowerName }: { terms: TermsVersion; lenderName: string; borrowerName: string }) {
+export function TermsSummary({
+  terms,
+  lenderName,
+  borrowerName,
+}: {
+  terms: TermsVersion
+  lenderName: string
+  borrowerName: string
+}) {
   return (
     <div className="space-y-4">
-      <dl className="space-y-2 tabular-nums">
-        <Line label={`${lenderName} lends ${borrowerName}`} value={formatCents(terms.principalCents)} />
-        <Line
-          label={`One-off charge (${chargePercent(terms.principalCents, terms.chargeCents)})`}
+      <dl className="grid grid-cols-3 gap-2 tabular-nums">
+        <Figure label={`${lenderName.split(' ')[0]} lends`} value={formatCents(terms.principalCents)} />
+        <Figure
+          label={`Charge (${chargePercent(terms.principalCents, terms.chargeCents)})`}
           value={formatCents(terms.chargeCents)}
         />
-        <div className="border-t border-line pt-2">
-          <Line label={`${borrowerName} repays`} value={formatCents(terms.totalCents)} strong />
-        </div>
+        <Figure label={`${borrowerName.split(' ')[0]} repays`} value={formatCents(terms.totalCents)} strong />
       </dl>
 
       <div>
-        <h3 className="text-sm font-medium text-ink-muted">Repayment schedule</h3>
-        <table className="mt-2 w-full text-sm tabular-nums">
-          <tbody className="divide-y divide-line">
-            {terms.instalments.map((instalment, index) => (
-              <tr key={instalment.dueOn}>
-                <td className="w-8 py-2 text-ink-muted">{index + 1}.</td>
-                <td className="py-2">{formatDate(instalment.dueOn)}</td>
-                <td className="py-2 text-right font-medium">{formatCents(instalment.amountCents)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2 className="font-sans text-sm font-semibold">Repayment schedule</h2>
+        <ol className="mt-2 space-y-1.5 text-sm tabular-nums">
+          {terms.instalments.map((instalment, index) => (
+            <li key={instalment.dueOn} className="flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="flex size-7 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-on-brand-soft"
+              >
+                {index + 1}
+              </span>
+              <span className="flex-1">{formatDate(instalment.dueOn)}</span>
+              <span className="font-semibold">{formatCents(instalment.amountCents)}</span>
+            </li>
+          ))}
+        </ol>
       </div>
 
       <Clause title="If a payment is late" text={terms.lateTerms || 'No late-payment terms. No late fees apply.'} />
@@ -42,11 +51,11 @@ export function TermsSummary({ terms, lenderName, borrowerName }: { terms: Terms
   )
 }
 
-function Line({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+function Figure({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className="flex justify-between gap-4">
-      <dt className={strong ? 'font-medium' : 'text-ink-muted'}>{label}</dt>
-      <dd className={strong ? 'text-lg font-semibold text-brand-ink' : ''}>{value}</dd>
+    <div className={`min-w-0 rounded-2xl p-3 ${strong ? 'bg-brand text-on-brand' : 'border border-line'}`}>
+      <dt className={`truncate text-xs ${strong ? 'text-on-brand-muted' : 'text-ink-muted'}`}>{label}</dt>
+      <dd className="mt-0.5 truncate font-display text-lg font-semibold">{value}</dd>
     </div>
   )
 }
@@ -54,7 +63,7 @@ function Line({ label, value, strong = false }: { label: string; value: string; 
 function Clause({ title, text }: { title: string; text: string }) {
   return (
     <div>
-      <h3 className="text-sm font-medium text-ink-muted">{title}</h3>
+      <h2 className="font-sans text-sm font-semibold">{title}</h2>
       <p className="mt-1 whitespace-pre-line text-sm">{text}</p>
     </div>
   )

@@ -3,13 +3,18 @@ import type { Role } from '../../data/loans'
 import { formatCents } from '../../domain/money'
 import { MAX_INSTALMENTS, type ScheduleProblem } from '../../domain/schedule'
 
+/** Loans that are still in progress (not closed). */
+export const OPEN_STATUSES: ReadonlySet<LoanStatus> = new Set<LoanStatus>(['negotiating', 'agreed', 'active'])
+
 type Tone = 'neutral' | 'brand' | 'positive' | 'warning' | 'danger'
 
 /** Short status for badges, worded from the viewer's point of view. */
 export function statusBadge(status: LoanStatus, role: Role, awaitingMe: boolean): { label: string; tone: Tone } {
   switch (status) {
     case 'negotiating':
-      return awaitingMe ? { label: 'Your reply needed', tone: 'warning' } : { label: 'Waiting for reply', tone: 'neutral' }
+      return awaitingMe
+        ? { label: 'Your reply needed', tone: 'warning' }
+        : { label: 'Waiting for reply', tone: 'neutral' }
     case 'agreed':
       return role === 'lender'
         ? { label: 'Send the money', tone: 'warning' }

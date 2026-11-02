@@ -64,7 +64,7 @@ describe('AccountPage', () => {
 
   it('switches notification emails off', async () => {
     renderPage()
-    const toggle = (await screen.findByRole('checkbox', { name: /Email me/ })) as HTMLInputElement
+    const toggle = (await screen.findByRole('switch', { name: /Email me/ })) as HTMLInputElement
     expect(toggle.checked).toBe(true)
     fireEvent.click(toggle)
     await waitFor(() => expect(api.setEmailNotifications).toHaveBeenCalledWith(false))
