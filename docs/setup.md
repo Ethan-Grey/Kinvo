@@ -111,3 +111,21 @@ After this one-time setup, merging a pull request that changes `supabase/migrati
 4. **Try it:** **Actions → Deploy Supabase → Run workflow**. The "Show pending migrations" step lists what it's about to apply.
 
 Edge Function secrets (`GMAIL_USER` and so on) and Vault secrets stay where they are; the workflow never touches them.
+
+## 8. Phone notifications
+
+Pop-up notifications on phones and computers use Web Push (ADR-0017). On iPhone they need iOS 16.4 or later, with Kinvo added to the Home Screen. Until this is set up, the "Notify this phone" card in Account says so and nothing else changes.
+
+1. **Make a key pair**, once, on your computer:
+   ```bash
+   npx web-push generate-vapid-keys
+   ```
+   It prints a **Public Key** and a **Private Key**. The private key is a secret: don't commit it or paste it into chats or issues.
+2. **Supabase → Edge Functions → Secrets**, add:
+   - `VAPID_PUBLIC_KEY`: the public key
+   - `VAPID_PRIVATE_KEY`: the private key
+   - `VAPID_SUBJECT`: `mailto:` followed by your email, e.g. `mailto:you@gmail.com`. Push services use it to contact you if something goes wrong.
+3. **Vercel → Project → Settings → Environment Variables**, add `VITE_VAPID_PUBLIC_KEY` with the **public** key only, then redeploy.
+4. **On each phone:** open Kinvo from the Home Screen, go to **Account → Notify this phone → Turn on notifications**, and allow. Home also shows a one-off card offering the same.
+
+Notifications are sent the moment something happens: a database trigger wakes the sender, with the 5-minute schedule as a fallback. If a phone turns notifications off or Kinvo is removed, the push service reports it and Kinvo forgets that device.
