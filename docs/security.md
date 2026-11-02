@@ -28,6 +28,7 @@ The realistic threats for a family app are: someone outside the family finding t
 | Emails | All names and text are HTML-escaped, and links are restricted to in-app paths. | `_shared/email.ts` |
 | Web app | React escapes all output, and there's no `dangerouslySetInnerHTML`. Redirects after sign-in accept in-app paths only (`safeNextPath`). | `apps/web` |
 | Browser | Strict Content Security Policy (no inline or third-party scripts; connections only to our Supabase project), HSTS, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` (keeps invite links out of Referer headers) | `apps/web/vercel.json` |
+| Images | Receipts and profile photos are re-encoded to fresh JPEGs on the device (metadata and hidden content dropped, non-images refused), stored in private buckets limited to JPEG/WebP and 5 MB / 2 MB, readable only by the people involved, and never overwritable (ADR-0016) | `data/images.ts`, receipts and photos migrations |
 | Secrets | None in the repository. They live in Vercel env vars (public keys only), Supabase Edge Function secrets, Supabase Vault and GitHub Actions secrets. | NF-02 |
 | Your data | "Download my data" runs with the caller's own permissions, so it can't return more than the app shows. | `export_my_data` |
 

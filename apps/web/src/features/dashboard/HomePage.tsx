@@ -72,7 +72,7 @@ export function HomePage() {
 
       <NeedsYou summary={summary} />
 
-      {isLender && isBorrower && <BorrowingStrip summary={summary} />}
+      {isLender && isBorrower && <BorrowingStrip summary={summary} loans={loans} />}
 
       {circle.length > 0 && <PeopleStrip people={circle} isLender={isLender} />}
 
@@ -106,6 +106,17 @@ export function HomePage() {
   )
 }
 
+/**
+ * Where "Pay back" / "Record a payment" goes: straight to the payment page
+ * when there's one loan, otherwise to the list of those loans to pick from.
+ */
+function payTarget(loans: LoanSummary[], role: 'lender' | 'borrower'): string | null {
+  const active = loans.filter((l) => l.role === role && l.status === 'active' && (l.balance?.outstandingCents ?? 0) > 0)
+  if (active.length === 0) return null
+  if (active.length === 1 && active[0]) return `/loans/${active[0].id}/pay`
+  return `/loans?show=${role === 'borrower' ? 'borrowing' : 'lending'}`
+}
+
 /** Share of the total that's been repaid across a set of loans, 0–1. */
 function repaidShare(loans: LoanSummary[]): number {
   let paid = 0
@@ -123,11 +134,14 @@ function HeroFrame({
   amount,
   ring,
   children,
+  action,
 }: {
   label: string
   amount: Cents
   ring: number
   children: ReactNode
+  /** The main thing to do from here, e.g. Pay back. */
+  action?: { to: string; label: string }
 }) {
   const percent = Math.round(ring * 100)
   return (
@@ -148,6 +162,18 @@ function HeroFrame({
         </div>
       </div>
       <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-white/20 pt-4 text-sm">{children}</dl>
+      {action && (
+        <Link
+          to={action.to}
+          className={
+            'mt-5 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white font-semibold text-[#4e148c] ' +
+            'transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+          }
+        >
+          <PaymentIcon className="size-5" />
+          {action.label}
+        </Link>
+      )}
     </section>
   )
 }
@@ -168,7 +194,14 @@ function LendingHero({ summary, loans }: { summary: DashboardSummary; loans: Loa
   const l = summary.lending
   const lending = loans.filter((loan) => loan.role === 'lender' && loan.status === 'active')
   return (
-    <HeroFrame label="Owed to you" amount={l.owedCents} ring={repaidShare(lending)}>
+    <HeroFrame
+      label="Owed to you"
+      amount={l.owedCents}
+      ring={repaidShare(lending)}
+      action={
+        payTarget(loans, 'lender') ? { to: payTarget(loans, 'lender') ?? '', label: 'Record a payment' } : undefined
+      }
+    >
       <HeroFigure
         label="Overdue"
         value={l.overdueCount > 0 ? formatCents(l.overdueCents) : 'Nothing'}
@@ -185,7 +218,12 @@ function BorrowingHero({ summary, loans }: { summary: DashboardSummary; loans: L
   const b = summary.borrowing
   const borrowing = loans.filter((loan) => loan.role === 'borrower' && loan.status === 'active')
   return (
-    <HeroFrame label="You owe" amount={b.owedCents} ring={repaidShare(borrowing)}>
+    <HeroFrame
+      label="You owe"
+      amount={b.owedCents}
+      ring={repaidShare(borrowing)}
+      action={payTarget(loans, 'borrower') ? { to: payTarget(loans, 'borrower') ?? '', label: 'Pay back' } : undefined}
+    >
       <HeroFigure
         label="Next payment"
         value={b.nextDueOn && b.nextDueCents !== null ? formatCents(b.nextDueCents) : 'Nothing due'}
@@ -196,28 +234,36 @@ function BorrowingHero({ summary, loans }: { summary: DashboardSummary; loans: L
   )
 }
 
-/** For people who both lend and borrow: their borrowing, one line under the lending hero. */
-function BorrowingStrip({ summary }: { summary: DashboardSummary }) {
+/** For people who both lend and borrow: their borrowing, under the lending card, with its own Pay back. */
+function BorrowingStrip({ summary, loans }: { summary: DashboardSummary; loans: LoanSummary[] }) {
   const b = summary.borrowing
+  const pay = payTarget(loans, 'borrower')
   return (
-    <Link
-      to="/loans?show=borrowing"
-      className="flex items-center gap-3 rounded-3xl border border-line p-4 transition hover:border-brand-ink active:scale-[0.99]"
-    >
-      <IconBubble tone="soft">
-        <PaymentIcon />
-      </IconBubble>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm text-ink-muted">You owe</p>
-        <p className="font-display text-xl font-semibold tabular-nums">{formatCents(b.owedCents)}</p>
-      </div>
-      {b.nextDueOn && b.nextDueCents !== null && (
-        <p className="text-right text-sm">
-          <span className="block font-semibold tabular-nums">{formatCents(b.nextDueCents)}</span>
-          <span className="text-ink-muted">due {formatShortDate(b.nextDueOn)}</span>
-        </p>
+    <section className="rounded-3xl border border-line p-4">
+      <Link to="/loans?show=borrowing" className="flex items-center gap-3">
+        <IconBubble tone="soft">
+          <PaymentIcon />
+        </IconBubble>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-ink-muted">You owe</p>
+          <p className="font-display text-xl font-semibold tabular-nums">{formatCents(b.owedCents)}</p>
+        </div>
+        {b.nextDueOn && b.nextDueCents !== null && (
+          <p className="text-right text-sm">
+            <span className="block font-semibold tabular-nums">{formatCents(b.nextDueCents)}</span>
+            <span className="text-ink-muted">due {formatShortDate(b.nextDueOn)}</span>
+          </p>
+        )}
+      </Link>
+      {pay && (
+        <Link
+          to={pay}
+          className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-brand font-semibold text-on-brand transition active:scale-[0.98]"
+        >
+          Pay back
+        </Link>
       )}
-    </Link>
+    </section>
   )
 }
 
@@ -292,6 +338,10 @@ interface PersonBalance {
   outstandingCents: Cents
   progress: number
   overdue: boolean
+  photo: string | null
+  /** Where Pay back goes for this person. */
+  payTo: string
+  nextDueOn: string | null
 }
 
 /** Groups active loans by person, so each person appears once with one ring. */
@@ -307,15 +357,23 @@ function peopleWithBalances(loans: LoanSummary[]): PersonBalance[] {
     .map(({ loans: group, first }) => ({
       relationshipId: first.relationshipId,
       name: first.otherPersonName,
+      photo: first.otherPersonPhoto,
       role: first.role,
       outstandingCents: toCents(group.reduce((sum, l) => sum + (l.balance?.outstandingCents ?? 0), 0)),
       progress: repaidShare(group),
       overdue: group.some((l) => (l.balance?.overdueCount ?? 0) > 0),
+      payTo: group.length === 1 ? `/loans/${first.id}/pay` : `/people/${first.relationshipId}`,
+      nextDueOn:
+        group
+          .map((l) => l.balance?.nextDueOn ?? null)
+          .filter((d): d is string => d !== null)
+          .sort()[0] ?? null,
     }))
     .sort((a, b) => Number(b.overdue) - Number(a.overdue) || b.outstandingCents - a.outstandingCents)
 }
 
 function PeopleStrip({ people, isLender }: { people: PersonBalance[]; isLender: boolean }) {
+  if (!isLender) return <OwedBars people={people} />
   return (
     <section className="space-y-3">
       <SectionHeader
@@ -329,7 +387,13 @@ function PeopleStrip({ people, isLender }: { people: PersonBalance[]; isLender: 
               to={`/people/${person.relationshipId}`}
               className="flex w-28 flex-col items-center rounded-3xl border border-line px-2 py-4 text-center transition hover:border-brand-ink active:scale-[0.98]"
             >
-              <RingAvatar name={person.name} progress={person.progress} overdue={person.overdue} size="lg" />
+              <RingAvatar
+                name={person.name}
+                photo={person.photo}
+                progress={person.progress}
+                overdue={person.overdue}
+                size="lg"
+              />
               <span className="mt-2 w-full truncate text-sm font-semibold">{person.name.split(' ')[0]}</span>
               <span
                 className={`text-sm tabular-nums ${person.overdue ? 'font-semibold text-danger' : 'text-ink-muted'}`}
@@ -340,6 +404,53 @@ function PeopleStrip({ people, isLender }: { people: PersonBalance[]; isLender: 
                 {person.role === 'borrower' ? 'owes you' : 'you owe'}, {Math.round(person.progress * 100)}% repaid
                 {person.overdue ? ', overdue' : ''}
               </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/**
+ * Borrowers usually owe one or two people, so each gets a full-width bar
+ * with what's owed, when the next payment is due, and a Pay back button.
+ */
+function OwedBars({ people }: { people: PersonBalance[] }) {
+  return (
+    <section className="space-y-3">
+      <SectionHeader title="Who you owe" />
+      <ul className="space-y-2">
+        {people.map((person) => (
+          <li key={person.relationshipId} className="rounded-3xl border border-line p-4">
+            <Link to={`/people/${person.relationshipId}`} className="flex items-center gap-3">
+              <RingAvatar
+                name={person.name}
+                photo={person.photo}
+                progress={person.progress}
+                overdue={person.overdue}
+                size="lg"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-display text-lg font-semibold">{person.name}</p>
+                <p className={`text-sm ${person.overdue ? 'font-semibold text-danger' : 'text-ink-muted'}`}>
+                  {person.overdue
+                    ? 'A payment is overdue'
+                    : person.nextDueOn
+                      ? `Next payment ${formatShortDate(person.nextDueOn)}`
+                      : `${Math.round(person.progress * 100)}% repaid`}
+                </p>
+              </div>
+              <span className="font-display text-xl font-semibold tabular-nums">
+                {formatCents(person.outstandingCents)}
+              </span>
+            </Link>
+            <Link
+              to={person.payTo}
+              className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-brand font-semibold text-on-brand transition active:scale-[0.98]"
+            >
+              <PaymentIcon className="size-5" />
+              Pay {person.name.split(' ')[0]}
             </Link>
           </li>
         ))}

@@ -6,6 +6,7 @@ import { recordRepayment } from '../../data/repayments'
 import { MoneyField, QuickPicks, WizardStep } from '../../shared/Wizard'
 import { Segmented, TextField } from '../../shared/ui'
 import { PAYMENT_METHODS, methodLabel } from '../loans/labels'
+import { ReceiptField } from './ReceiptField'
 
 interface PaymentFormProps {
   loanId: string
@@ -26,7 +27,7 @@ function toAmountText(cents: number): string {
  * Lender: "Record a payment" (counts straight away).
  * Borrower: "I've paid" (a claim the lender confirms).
  *
- * Two short steps: how much, then how and when.
+ * Three short steps: how much, how and when, then the receipt.
  */
 export function PaymentForm({
   loanId,
@@ -38,7 +39,8 @@ export function PaymentForm({
   onRecorded,
 }: PaymentFormProps) {
   const today = todayInNZ()
-  const [step, setStep] = useState<'amount' | 'details'>('amount')
+  const [step, setStep] = useState<'amount' | 'details' | 'receipt'>('amount')
+  const [receiptPath, setReceiptPath] = useState<string | null>(null)
   const [amountText, setAmountText] = useState(toAmountText(suggestedCents))
   const [receivedOn, setReceivedOn] = useState<string>(today)
   const [method, setMethod] = useState<PaymentMethod>('bank_transfer')
@@ -61,13 +63,24 @@ export function PaymentForm({
     const problems = amountProblems()
     setErrors(problems)
     if (problems.length > 0 || !amount.ok) return
-    if (step === 'amount') {
-      setStep('details')
+    if (step !== 'receipt') {
+      setStep(step === 'amount' ? 'details' : 'receipt')
+      return
+    }
+    if (!receiptPath) {
+      setErrors(['Add a photo of the receipt or bank statement.'])
       return
     }
     setBusy(true)
     try {
-      await recordRepayment(loanId, { amountCents: amount.cents, receivedOn, method, reference, notes: '' })
+      await recordRepayment(loanId, {
+        amountCents: amount.cents,
+        receivedOn,
+        method,
+        reference,
+        notes: '',
+        receiptPath,
+      })
       onRecorded()
     } catch (err) {
       setErrors([(err as Error).message])
@@ -87,7 +100,7 @@ export function PaymentForm({
       {step === 'amount' ? (
         <WizardStep
           step={1}
-          of={2}
+          of={3}
           title={isLender ? 'How much did they pay?' : 'How much did you pay?'}
           hint={isLender ? undefined : `${lenderName} confirms it once it arrives.`}
           errors={errors}
@@ -107,10 +120,10 @@ export function PaymentForm({
             onPick={(cents) => setAmountText(toAmountText(cents))}
           />
         </WizardStep>
-      ) : (
+      ) : step === 'details' ? (
         <WizardStep
           step={2}
-          of={2}
+          of={3}
           title={`${amount.ok ? formatCents(amount.cents) : ''} by ${methodLabel(method).toLowerCase()}`}
           hint={`On ${isIsoDate(receivedOn) ? formatDate(receivedOn) : receivedOn}`}
           errors={errors}
@@ -118,7 +131,7 @@ export function PaymentForm({
             setErrors([])
             setStep('amount')
           }}
-          next={{ label: isLender ? 'Record payment' : 'Tell them I’ve paid', submit: true, busy }}
+          next={{ label: 'Continue', submit: true }}
         >
           <div>
             <p className="mb-1.5 text-sm font-medium">How</p>
@@ -138,6 +151,29 @@ export function PaymentForm({
             maxLength={100}
             value={reference}
             onChange={(e) => setReference(e.target.value)}
+          />
+        </WizardStep>
+      ) : (
+        <WizardStep
+          step={3}
+          of={3}
+          title="Add the receipt"
+          hint={
+            isLender ? 'Proof the money arrived, for both of your records.' : `So ${lenderName} can check it arrived.`
+          }
+          errors={errors}
+          onBack={() => {
+            setErrors([])
+            setStep('details')
+          }}
+          next={{ label: isLender ? 'Record payment' : 'Tell them I’ve paid', submit: true, busy }}
+        >
+          <ReceiptField
+            loanId={loanId}
+            onChange={(path) => {
+              setReceiptPath(path)
+              if (path) setErrors([])
+            }}
           />
         </WizardStep>
       )}

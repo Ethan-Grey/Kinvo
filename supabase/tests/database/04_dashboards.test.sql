@@ -13,6 +13,28 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(22);
 
+-- Every payment and money-sent needs a receipt (ADR-0016). These stand-ins
+-- upload one and pass it along, so the tests can focus on the payment rules.
+create function pg_temp.receipt(p_loan uuid) returns text language plpgsql security definer as $h$
+declare v_path text := p_loan || '/' || gen_random_uuid() || '.jpg';
+begin
+  if to_regclass('storage.objects') is not null then
+    execute 'insert into storage.objects (bucket_id, name) values ($1, $2)' using 'receipts', v_path;
+  end if;
+  return v_path;
+end
+$h$;
+create function pg_temp.record_repayment(
+  p_loan uuid, p_amount bigint, p_on date, p_method public.payment_method, p_ref text default null, p_notes text default null
+) returns uuid language sql as $h$
+  select public.record_repayment(p_loan, p_amount, p_on, p_method, p_ref, p_notes, pg_temp.receipt(p_loan));
+$h$;
+create function pg_temp.confirm_funds_sent(p_loan uuid, p_on date, p_method public.payment_method, p_ref text default null)
+returns void language sql as $h$
+  select public.confirm_funds_sent(p_loan, p_on, p_method, p_ref, pg_temp.receipt(p_loan));
+$h$;
+grant execute on all functions in schema pg_temp to authenticated;
+
 -- -----------------------------------------------------------------------------
 -- Tax year boundaries (as the owner; the helper isn't exposed to users)
 -- -----------------------------------------------------------------------------
@@ -56,7 +78,7 @@ select set_config('test.loan_a', public.create_loan('00000000-0000-4000-8000-000
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select pg_temp.accept(current_setting('test.loan_a')::uuid);
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
-select public.confirm_funds_sent(current_setting('test.loan_a')::uuid, current_setting('test.today')::date, 'bank_transfer');
+select pg_temp.confirm_funds_sent(current_setting('test.loan_a')::uuid, current_setting('test.today')::date, 'bank_transfer');
 
 -- Move loan A into the past: sent 40 days ago, due 30 and 10 days ago.
 reset role;
@@ -68,11 +90,11 @@ set local role authenticated;
 
 -- First instalment paid 2 days early (32 days ago).
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
-select public.record_repayment(current_setting('test.loan_a')::uuid, 15000, current_setting('test.today')::date - 32, 'cash');
+select pg_temp.record_repayment(current_setting('test.loan_a')::uuid, 15000, current_setting('test.today')::date - 32, 'cash');
 
 -- Bob claims a small payment Lena hasn't confirmed.
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
-select set_config('test.claim', public.record_repayment(
+select set_config('test.claim', pg_temp.record_repayment(
   current_setting('test.loan_a')::uuid, 1000, current_setting('test.today')::date, 'bank_transfer', 'BOB')::text, true);
 
 -- Loan B: Bob's unanswered request.

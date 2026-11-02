@@ -118,6 +118,54 @@ describe('HomePage', () => {
     expect(screen.queryByText('Owed to you')).toBeNull()
   })
 
+  it('gives borrowers a clear Pay back, and a bar for each person they owe', async () => {
+    api.getMyProfile.mockResolvedValue({ display_name: 'Bob', email: 'b@example.test', can_lend: false })
+    api.listPeople.mockResolvedValue({
+      lenders: [{ relationshipId: 'r1', personId: 'l', personName: 'Lena Grey', since: '' }],
+      borrowers: [],
+    })
+    api.getDashboardSummary.mockResolvedValue({
+      ...empty,
+      borrowing: {
+        ...empty.borrowing,
+        owedCents: toCents(15000),
+        nextDueOn: '2026-11-09',
+        nextDueCents: toCents(5000),
+        activeCount: 1,
+      },
+    })
+    api.listLoans.mockResolvedValue([
+      {
+        id: 'L1',
+        relationshipId: 'r1',
+        status: 'active',
+        kind: 'new',
+        role: 'borrower',
+        otherPersonName: 'Lena Grey',
+        principalCents: toCents(20000),
+        totalCents: toCents(20000),
+        firstDueOn: '2026-11-09',
+        awaitingMe: false,
+        createdAt: '',
+        balance: {
+          totalCents: toCents(20000),
+          paidCents: toCents(5000),
+          writtenOffCents: toCents(0),
+          outstandingCents: toCents(15000),
+          nextDueOn: '2026-11-09',
+          nextDueCents: toCents(5000),
+          overdueCents: toCents(0),
+          overdueCount: 0,
+        },
+      },
+    ])
+    renderHome()
+
+    expect((await screen.findByRole('link', { name: 'Pay back' })).getAttribute('href')).toBe('/loans/L1/pay')
+    expect(screen.getByRole('heading', { name: 'Who you owe' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Pay Lena' }).getAttribute('href')).toBe('/loans/L1/pay')
+  })
+
   it('has no accessibility problems', async () => {
     api.getDashboardSummary.mockResolvedValue({ ...empty, actions: { ...empty.actions, claimsToConfirm: 1 } })
     const { container } = renderHome()

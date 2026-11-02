@@ -20,6 +20,7 @@ import { RingAvatar } from '../../shared/Avatar'
 import { CheckIcon, PaymentIcon } from '../../shared/icons'
 import { Badge, Button, Card, Notice, Skeleton, TextField } from '../../shared/ui'
 import { methodLabel } from '../loans/labels'
+import { ReceiptLink } from './ReceiptField'
 
 interface PanelProps {
   loan: LoanDetail
@@ -151,7 +152,13 @@ function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail
   return (
     <Card className="space-y-4">
       <div className="flex items-center gap-4">
-        <RingAvatar name={otherName} progress={share} overdue={balance.overdueCount > 0} size="xl" />
+        <RingAvatar
+          name={otherName}
+          photo={loan.role === 'lender' ? loan.borrowerPhoto : loan.lenderPhoto}
+          progress={share}
+          overdue={balance.overdueCount > 0}
+          size="xl"
+        />
         <div className="min-w-0">
           <p className="text-sm text-ink-muted">{writtenOff ? 'Forgiven' : 'Still owed'}</p>
           <p className="font-display text-[2.5rem] leading-none font-semibold tabular-nums text-brand-ink">
@@ -247,6 +254,7 @@ function PaymentLine({ repayment }: { repayment: Repayment }) {
         {repayment.reference ? `, ref ${repayment.reference}` : ''}
       </p>
       {repayment.notes && <p className="text-sm text-ink-muted">“{repayment.notes}”</p>}
+      {repayment.receiptPath && <ReceiptLink path={repayment.receiptPath} />}
     </div>
   )
 }

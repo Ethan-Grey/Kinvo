@@ -30,6 +30,8 @@ export interface Repayment {
   createdAt: string
   disputeReason: string | null
   reversalReason: string | null
+  /** Photo of the receipt or statement (older payments may have none). */
+  receiptPath: string | null
 }
 
 export interface LoanBalance {
@@ -49,6 +51,7 @@ export interface NewRepayment {
   method: PaymentMethod
   reference: string
   notes: string
+  receiptPath: string
 }
 
 export async function getInstalmentProgress(loanId: string): Promise<InstalmentProgress[]> {
@@ -111,6 +114,7 @@ export async function recordRepayment(loanId: string, input: NewRepayment): Prom
     p_method: input.method,
     p_reference: input.reference.trim() || null,
     p_notes: input.notes.trim() || null,
+    p_receipt_path: input.receiptPath,
   })
   if (error) throw toAppError(error)
 }
@@ -150,5 +154,6 @@ function toRepayment(row: RepaymentRow): Repayment {
     createdAt: row.created_at,
     disputeReason: row.dispute_reason,
     reversalReason: row.reversal_reason,
+    receiptPath: row.receipt_path,
   }
 }

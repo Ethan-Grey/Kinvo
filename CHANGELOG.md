@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Receipts (ADR-0016): every payment, and the lender sending the loan, needs a photo of the receipt or bank statement. Choose a photo, or paste an image copied from your banking app. Both people can view it. Images are re-encoded on the phone, which strips hidden data, and stored privately.
+- Profile photos, visible only to you and the people you lend to or borrow from.
+- New members confirm their real name (and can add a photo) before using the app.
+- A clear Pay back button on Home, and a full-width bar for each person a borrower owes, with their own Pay button.
 - Lenders can remove a loan that shouldn't be there, such as a test or a mistake (ADR-0015). It disappears from lists, totals, track records, reminders and alerts for both people, and the audit log keeps a note.
 - "Clear all" on Alerts.
 

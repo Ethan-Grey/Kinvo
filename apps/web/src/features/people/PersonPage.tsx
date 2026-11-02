@@ -44,6 +44,7 @@ export function PersonPage() {
       <section className="flex flex-col items-center text-center">
         <RingAvatar
           name={person.personName}
+          photo={person.personPhoto}
           progress={
             record && record.totalRepaidCents + record.owedCents > 0
               ? record.totalRepaidCents / (record.totalRepaidCents + record.owedCents)

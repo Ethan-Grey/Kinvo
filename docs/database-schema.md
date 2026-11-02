@@ -214,6 +214,8 @@ Functions raise errors whose message is a stable key (`invite_expired`, `lender_
 | `forgive_remaining(loan, note?)` | The lender, active loan | Writes off the balance; returns the amount |
 | `set_email_notifications(enabled)` | Any user | Switches your notification emails on or off |
 | `export_my_data()` | Any user | Everything you can see, as one JSON document. Runs under your own RLS, so it can't reveal more than the app does |
+| `record_repayment(…, receipt_path)` / `confirm_funds_sent(…, receipt_path)` | As before | Now require an uploaded receipt in the loan's folder (ADR-0016) |
+| `set_avatar(path?)` | Any user | Uses an uploaded photo from your own folder, or removes it |
 | `remove_loan(loan, reason?)` | The lender, any status | Hides the loan everywhere (status `removed`), deletes its alerts, logs `loan_removed` (ADR-0015) |
 | `clear_notifications(ids?)` | Any user | Deletes your own alerts (all of them when no ids are given) |
 | `mark_notifications_read(ids?)` | Any user | Marks your notifications read (all of them when no ids are given) |

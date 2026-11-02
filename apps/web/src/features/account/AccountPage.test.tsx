@@ -29,6 +29,8 @@ const profile: Profile = {
   can_lend: false,
   created_at: '2026-11-01T00:00:00Z',
   email_notifications: true,
+  name_confirmed: true,
+  avatar_path: null,
 }
 
 function renderPage() {

@@ -64,7 +64,12 @@ export function Rows({ loans }: { loans: LoanSummary[] }) {
                 (loan.awaitingMe ? 'border-attention' : 'border-line')
               }
             >
-              <RingAvatar name={loan.otherPersonName} progress={progress} overdue={overdue} />
+              <RingAvatar
+                name={loan.otherPersonName}
+                photo={loan.otherPersonPhoto}
+                progress={progress}
+                overdue={overdue}
+              />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">
                   {loan.role === 'lender' ? `To ${loan.otherPersonName}` : `From ${loan.otherPersonName}`}

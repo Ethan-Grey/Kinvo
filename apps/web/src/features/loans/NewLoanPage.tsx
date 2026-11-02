@@ -71,7 +71,7 @@ export function NewLoanPage() {
                 onClick={() => setChosen(p.relationshipId)}
                 className="flex w-full items-center gap-3 rounded-3xl border border-line p-3 pr-4 text-left transition hover:border-brand-ink active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-brand-ink"
               >
-                <Avatar name={p.personName} size="lg" />
+                <Avatar name={p.personName} photo={p.personPhoto} size="lg" />
                 <span className="min-w-0 flex-1">
                   <span className="block font-display text-lg font-semibold">{p.personName}</span>
                   <span className="block text-sm text-ink-muted">

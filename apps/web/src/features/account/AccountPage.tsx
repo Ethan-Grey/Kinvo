@@ -4,18 +4,19 @@ import { signOut } from '../../data/auth'
 import type { Profile } from '../../data/database.types'
 import { getMyProfile } from '../../data/people'
 import { Link } from 'react-router'
-import { Avatar } from '../../shared/Avatar'
 import { ChevronIcon, DownloadIcon, MailIcon, PaletteIcon, PeopleIcon, SignOutIcon } from '../../shared/icons'
 import { ThemeToggle } from '../../shared/ThemeToggle'
 import { useAsync } from '../../shared/useAsync'
 import { Button, Card, IconBubble, Notice, PageSkeleton, TextField } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
+import { ProfilePhoto } from './ProfilePhoto'
 
 /** Your name, email switch, theme, data download and sign out. */
 export function AccountPage() {
   const { session } = useAuth()
   const userId = session?.user.id ?? ''
   const [profile] = useAsync(() => getMyProfile(userId), userId)
+  const [photo, setPhoto] = useState<string | null | undefined>(undefined)
 
   if (profile.status === 'loading') return <PageSkeleton label="Loading your account" />
   if (profile.status === 'error') return <Notice tone="error">{profile.error.message}</Notice>
@@ -24,7 +25,12 @@ export function AccountPage() {
     <div className="space-y-5">
       <h1 className="sr-only">Account</h1>
       <section className="flex flex-col items-center pt-2 text-center">
-        <Avatar name={profile.data.display_name} size="xl" />
+        <ProfilePhoto
+          userId={userId}
+          name={profile.data.display_name}
+          photo={photo === undefined ? profile.data.avatar_path : photo}
+          onChange={setPhoto}
+        />
         <p className="mt-3 font-display text-2xl font-semibold">{profile.data.display_name}</p>
         <p className="text-sm text-ink-muted">{profile.data.email}</p>
       </section>

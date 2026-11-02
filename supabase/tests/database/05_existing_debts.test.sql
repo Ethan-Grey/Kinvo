@@ -10,6 +10,28 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(20);
 
+-- Every payment and money-sent needs a receipt (ADR-0016). These stand-ins
+-- upload one and pass it along, so the tests can focus on the payment rules.
+create function pg_temp.receipt(p_loan uuid) returns text language plpgsql security definer as $h$
+declare v_path text := p_loan || '/' || gen_random_uuid() || '.jpg';
+begin
+  if to_regclass('storage.objects') is not null then
+    execute 'insert into storage.objects (bucket_id, name) values ($1, $2)' using 'receipts', v_path;
+  end if;
+  return v_path;
+end
+$h$;
+create function pg_temp.record_repayment(
+  p_loan uuid, p_amount bigint, p_on date, p_method public.payment_method, p_ref text default null, p_notes text default null
+) returns uuid language sql as $h$
+  select public.record_repayment(p_loan, p_amount, p_on, p_method, p_ref, p_notes, pg_temp.receipt(p_loan));
+$h$;
+create function pg_temp.confirm_funds_sent(p_loan uuid, p_on date, p_method public.payment_method, p_ref text default null)
+returns void language sql as $h$
+  select public.confirm_funds_sent(p_loan, p_on, p_method, p_ref, pg_temp.receipt(p_loan));
+$h$;
+grant execute on all functions in schema pg_temp to authenticated;
+
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-8000-00000000000a', 'lena@example.test', '{"full_name": "Lena Lender"}'),
   ('00000000-0000-4000-8000-00000000000b', 'bob@example.test',  '{"full_name": "Bob Borrower"}'),
@@ -98,7 +120,7 @@ select is(
   0, 'an unconfirmed debt doesn''t count towards balances'
 );
 select throws_ok(
-  format('select public.record_repayment(%L, 1000, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
+  format('select pg_temp.record_repayment(%L, 1000, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
   'P0001', 'loan_not_active', 'nothing can be paid on an unconfirmed debt'
 );
 
@@ -122,7 +144,7 @@ select is(
   30000::bigint, 'the full amount is owed once confirmed'
 );
 select lives_ok(
-  format('select public.record_repayment(%L, 5000, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
+  format('select pg_temp.record_repayment(%L, 5000, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
   'the borrower can now say they''ve paid'
 );
 select is(

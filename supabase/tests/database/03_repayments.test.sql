@@ -10,6 +10,28 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(41);
 
+-- Every payment and money-sent needs a receipt (ADR-0016). These stand-ins
+-- upload one and pass it along, so the tests can focus on the payment rules.
+create function pg_temp.receipt(p_loan uuid) returns text language plpgsql security definer as $h$
+declare v_path text := p_loan || '/' || gen_random_uuid() || '.jpg';
+begin
+  if to_regclass('storage.objects') is not null then
+    execute 'insert into storage.objects (bucket_id, name) values ($1, $2)' using 'receipts', v_path;
+  end if;
+  return v_path;
+end
+$h$;
+create function pg_temp.record_repayment(
+  p_loan uuid, p_amount bigint, p_on date, p_method public.payment_method, p_ref text default null, p_notes text default null
+) returns uuid language sql as $h$
+  select public.record_repayment(p_loan, p_amount, p_on, p_method, p_ref, p_notes, pg_temp.receipt(p_loan));
+$h$;
+create function pg_temp.confirm_funds_sent(p_loan uuid, p_on date, p_method public.payment_method, p_ref text default null)
+returns void language sql as $h$
+  select public.confirm_funds_sent(p_loan, p_on, p_method, p_ref, pg_temp.receipt(p_loan));
+$h$;
+grant execute on all functions in schema pg_temp to authenticated;
+
 -- -----------------------------------------------------------------------------
 -- Fixtures
 -- -----------------------------------------------------------------------------
@@ -45,11 +67,11 @@ select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-000000
 
 -- Repaying before the loan is funded isn't possible.
 select throws_ok(
-  format('select public.record_repayment(%L, 1000, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
+  format('select pg_temp.record_repayment(%L, 1000, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
   'P0001', 'loan_not_active', 'payments can only be recorded on an active loan'
 );
 
-select public.confirm_funds_sent(current_setting('test.loan')::uuid, current_setting('test.today')::date, 'bank_transfer');
+select pg_temp.confirm_funds_sent(current_setting('test.loan')::uuid, current_setting('test.today')::date, 'bank_transfer');
 
 -- Move dates into the past so overdue logic can be tested: money sent 20 days
 -- ago, first instalment due 10 days ago, second due next week.
@@ -75,7 +97,7 @@ select is(
   '1 / 15000', 'balances report the overdue instalment and amount'
 );
 select lives_ok(
-  format($f$ select set_config('test.claim', public.record_repayment(%L, 5000, %L, 'bank_transfer', 'BOB-1', 'First bit')::text, true) $f$,
+  format($f$ select set_config('test.claim', pg_temp.record_repayment(%L, 5000, %L, 'bank_transfer', 'BOB-1', 'First bit')::text, true) $f$,
     current_setting('test.loan'), current_setting('test.today')),
   'the borrower can say they have paid'
 );
@@ -104,7 +126,7 @@ select throws_ok(
   'P0001', 'loan_not_found', 'outsiders cannot read instalment progress'
 );
 select throws_ok(
-  format('select public.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
+  format('select pg_temp.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
   'P0001', 'loan_not_found', 'outsiders cannot record payments'
 );
 
@@ -125,7 +147,7 @@ select is(
 );
 
 select lives_ok(
-  format($f$ select set_config('test.p2', public.record_repayment(%L, 12000, %L, 'cash')::text, true) $f$,
+  format($f$ select set_config('test.p2', pg_temp.record_repayment(%L, 12000, %L, 'cash')::text, true) $f$,
     current_setting('test.loan'), current_setting('test.today')),
   'the lender can record a payment'
 );
@@ -157,22 +179,22 @@ select is(
 -- Validation
 -- -----------------------------------------------------------------------------
 select throws_ok(
-  format('select public.record_repayment(%L, 13001, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
+  format('select pg_temp.record_repayment(%L, 13001, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
   'P0001', 'amount_exceeds_outstanding', 'a payment cannot exceed what is owed'
 );
 select throws_ok(
-  format('select public.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'), current_setting('test.tomorrow'), 'cash'),
+  format('select pg_temp.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'), current_setting('test.tomorrow'), 'cash'),
   'P0001', 'invalid_received_date', 'a payment cannot be dated in the future'
 );
 select throws_ok(
-  format('select public.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'),
+  format('select pg_temp.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'),
     (current_setting('test.today')::date - 30)::text, 'cash'),
   'P0001', 'received_before_funds_sent', 'a payment cannot predate the loan'
 );
-select set_config('test.dup', public.record_repayment(
+select set_config('test.dup', pg_temp.record_repayment(
   current_setting('test.loan')::uuid, 1000, current_setting('test.today')::date, 'bank_transfer', 'DUP')::text, true);
 select throws_ok(
-  format($f$ select public.record_repayment(%L, 1000, %L, 'bank_transfer', 'DUP') $f$,
+  format($f$ select pg_temp.record_repayment(%L, 1000, %L, 'bank_transfer', 'DUP') $f$,
     current_setting('test.loan'), current_setting('test.today')),
   'P0001', 'duplicate_repayment', 'an identical payment submitted twice is rejected'
 );
@@ -182,7 +204,7 @@ select throws_ok(
 -- Disputes and reversals
 -- -----------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
-select set_config('test.claim2', public.record_repayment(
+select set_config('test.claim2', pg_temp.record_repayment(
   current_setting('test.loan')::uuid, 3000, current_setting('test.today')::date, 'cash')::text, true);
 select throws_ok(
   format('select public.reverse_repayment(%L, %L)', current_setting('test.dup'), 'mine'),
@@ -223,14 +245,14 @@ select throws_ok(
 -- -----------------------------------------------------------------------------
 -- Completion, reopening and forgiveness
 -- -----------------------------------------------------------------------------
-select set_config('test.final', public.record_repayment(
+select set_config('test.final', pg_temp.record_repayment(
   current_setting('test.loan')::uuid, 13000, current_setting('test.today')::date, 'bank_transfer', 'FINAL')::text, true);
 select is(
   (select status::text from public.loans where id = current_setting('test.loan')::uuid),
   'completed', 'the loan completes when nothing is owed'
 );
 select throws_ok(
-  format('select public.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
+  format('select pg_temp.record_repayment(%L, 100, %L, %L)', current_setting('test.loan'), current_setting('test.today'), 'cash'),
   'P0001', 'loan_not_active', 'no payments on a completed loan'
 );
 select lives_ok(

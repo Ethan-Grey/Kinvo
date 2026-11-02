@@ -49,6 +49,8 @@ export interface LoanDetail {
   borrowerId: string
   lenderName: string
   borrowerName: string
+  lenderPhoto: string | null
+  borrowerPhoto: string | null
   reason: string | null
   createdAt: string
   agreedAt: string | null
@@ -56,6 +58,7 @@ export interface LoanDetail {
   fundsSentOn: IsoDate | null
   fundsMethod: PaymentMethod | null
   fundsReference: string | null
+  fundsReceiptPath: string | null
   /** The latest proposal. */
   currentTerms: TermsVersion
   /** Every proposal, newest first. */
@@ -69,6 +72,7 @@ export interface LoanSummary {
   kind: LoanKind
   role: Role
   otherPersonName: string
+  otherPersonPhoto: string | null
   principalCents: Cents
   totalCents: Cents
   firstDueOn: IsoDate | null
@@ -90,8 +94,8 @@ export interface TermsInput {
 }
 
 const LOAN_WITH_NAMES = `*,
-  lender:profiles!loans_lender_id_fkey ( display_name ),
-  borrower:profiles!loans_borrower_id_fkey ( display_name )` as const
+  lender:profiles!loans_lender_id_fkey ( display_name, avatar_path ),
+  borrower:profiles!loans_borrower_id_fkey ( display_name, avatar_path )` as const
 
 /** Whether the next step is this user's: answering a proposal, or sending the money. */
 export function isAwaitingUser(status: LoanStatus, role: Role, currentProposerId: string | null, userId: string) {
@@ -127,6 +131,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
       kind: loan.kind,
       role,
       otherPersonName: role === 'lender' ? loan.borrower.display_name : loan.lender.display_name,
+      otherPersonPhoto: role === 'lender' ? loan.borrower.avatar_path : loan.lender.avatar_path,
       principalCents: toCents(principal),
       totalCents: toCents(principal + (current?.charge_cents ?? 0)),
       firstDueOn: firstDue?.due_on ?? null,
@@ -166,6 +171,8 @@ export async function getLoan(loanId: string, userId: string): Promise<LoanDetai
     borrowerId: loan.borrower_id,
     lenderName: loan.lender.display_name,
     borrowerName: loan.borrower.display_name,
+    lenderPhoto: loan.lender.avatar_path,
+    borrowerPhoto: loan.borrower.avatar_path,
     reason: loan.reason,
     createdAt: loan.created_at,
     agreedAt: loan.agreed_at,
@@ -173,6 +180,7 @@ export async function getLoan(loanId: string, userId: string): Promise<LoanDetai
     fundsSentOn: loan.funds_sent_on,
     fundsMethod: loan.funds_method,
     fundsReference: loan.funds_reference,
+    fundsReceiptPath: loan.funds_receipt_path,
     currentTerms,
     history,
   }
@@ -234,12 +242,14 @@ export async function confirmFundsSent(
   sentOn: IsoDate,
   method: PaymentMethod,
   reference: string,
+  receiptPath: string,
 ): Promise<void> {
   const { error } = await supabase().rpc('confirm_funds_sent', {
     p_loan_id: loanId,
     p_sent_on: sentOn,
     p_method: method,
     p_reference: reference.trim() || null,
+    p_receipt_path: receiptPath,
   })
   if (error) throw toAppError(error)
 }
