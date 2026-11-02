@@ -35,11 +35,14 @@ describe('InvitePanel', () => {
     await userEvent.click(screen.getByLabelText(/they already owe me money/i))
 
     const lentOn = addDays(today, -60)
+    await userEvent.type(screen.getByLabelText(/amount they owe you now/i), '300')
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    // No charge step for an existing debt: straight to the plan.
+    expect(screen.queryByLabelText(/one-off charge/i)).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'More payments' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await userEvent.type(screen.getByLabelText(/originally lent on/i), lentOn)
     await userEvent.type(screen.getByLabelText(/what for/i), 'Car rego')
-    await userEvent.type(screen.getByLabelText(/amount they owe you now/i), '300')
-    expect(screen.queryByLabelText(/one-off charge/i)).toBeNull()
-    await userEvent.selectOptions(screen.getByLabelText(/^payments$/i), '2')
     await userEvent.click(screen.getByRole('button', { name: /create invite link/i }))
 
     expect(api.createInvite).toHaveBeenCalledWith(
@@ -60,6 +63,8 @@ describe('InvitePanel', () => {
     render(<InvitePanel />)
     await userEvent.click(screen.getByLabelText(/they already owe me money/i))
     await userEvent.type(screen.getByLabelText(/amount they owe you now/i), '300')
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await userEvent.click(screen.getByRole('button', { name: /create invite link/i }))
     expect(api.createInvite).not.toHaveBeenCalled()
     expect(await screen.findByText(/when you lent the money/i)).toBeTruthy()

@@ -1,6 +1,12 @@
 import { useState, type FormEvent } from 'react'
 import { todayInNZ } from '../../domain/dates'
-import { createInvite, listOpenInvites, revokeInvite, type CreatedInvite, type ExistingDebtInput } from '../../data/invites'
+import {
+  createInvite,
+  listOpenInvites,
+  revokeInvite,
+  type CreatedInvite,
+  type ExistingDebtInput,
+} from '../../data/invites'
 import type { TermsInput } from '../../data/loans'
 import { useAsync } from '../../shared/useAsync'
 import { Button, Card, Notice, Spinner, TextField } from '../../shared/ui'
@@ -90,7 +96,7 @@ export function InvitePanel() {
   return (
     <Card className="space-y-4">
       <div>
-        <h2 className="font-semibold">Invite a borrower</h2>
+        <h2 className="text-lg font-semibold">Invite a borrower</h2>
         <p className="text-sm text-ink-muted">Each link works once and expires after 7 days.</p>
       </div>
 
@@ -118,26 +124,33 @@ export function InvitePanel() {
       </label>
 
       {withDebt ? (
-        <div className="space-y-4 border-t border-line pt-4">
-          <div className="grid grid-cols-2 gap-3">
-            <TextField
-              label="Originally lent on"
-              type="date"
-              max={todayInNZ()}
-              required
-              value={lentOn}
-              onChange={(e) => setLentOn(e.target.value)}
-              hint="Roughly is fine"
-            />
-            <TextField
-              label="What for? (optional)"
-              maxLength={500}
-              value={debtReason}
-              onChange={(e) => setDebtReason(e.target.value)}
-              placeholder="e.g. Car rego"
-            />
-          </div>
-          <TermsForm key={formKey} variant="existing_debt" submitLabel="Create invite link" onSubmit={handleCreateWithDebt} />
+        <div className="border-t border-line pt-4">
+          <TermsForm
+            key={formKey}
+            variant="existing_debt"
+            submitLabel="Create invite link"
+            onSubmit={handleCreateWithDebt}
+            reviewExtras={
+              <div className="grid grid-cols-2 gap-3">
+                <TextField
+                  label="Originally lent on"
+                  type="date"
+                  max={todayInNZ()}
+                  required
+                  value={lentOn}
+                  onChange={(e) => setLentOn(e.target.value)}
+                  hint="Roughly is fine"
+                />
+                <TextField
+                  label="What for? (optional)"
+                  maxLength={500}
+                  value={debtReason}
+                  onChange={(e) => setDebtReason(e.target.value)}
+                  placeholder="e.g. Car rego"
+                />
+              </div>
+            }
+          />
         </div>
       ) : (
         <form onSubmit={handleCreate}>
