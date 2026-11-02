@@ -14,5 +14,6 @@ An ADR records one significant decision: the context, what was decided, and the 
 | [0008](0008-lender-access-and-invites.md) | Lender access is granted manually; borrowers join by single-use invite | Accepted |
 | [0009](0009-versioned-terms-and-acceptance.md) | Versioned terms, fingerprinted acceptance and two-way negotiation | Accepted |
 | [0010](0010-derived-allocation-and-repayment-rules.md) | Derive payment allocation by replay; repayment rules | Accepted |
+| [0011](0011-borrower-track-record.md) | Borrower track record: definitions and visibility | Accepted |
 
 New ADRs copy [`template.md`](template.md).

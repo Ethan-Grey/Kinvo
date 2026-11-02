@@ -36,8 +36,8 @@ export function LoanDetailPage() {
 
   return (
     <div className="space-y-5">
-      <Link to="/" className="text-sm text-ink-muted hover:text-ink">
-        ← Home
+      <Link to="/loans" className="text-sm text-ink-muted hover:text-ink">
+        ← Loans
       </Link>
 
       <header className="flex items-start justify-between gap-3">

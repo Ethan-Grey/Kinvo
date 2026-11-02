@@ -8,6 +8,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Bottom tab bar: Home, Loans and People.
+- Home dashboard: a "Needs you" panel (proposals to answer, money to send, payments to confirm or disputed), lending figures (owed to you, overdue, total lent, charges received this tax year), borrowing figures (what you owe, next payment) and upcoming payments across all loans.
+- People tab and person pages, with each borrower's track record (on-time payments and average lateness), visible to the lender only (ADR-0011).
+- Lenders can stop lending to someone from their person page; history is kept.
+- Payment allocation refactored into a single replay that also reports how each payment was split; 22 more pgTAP tests.
+
 - Kinvo colour palette (Pitch Black, Red, Princeton Orange, Amber Gold, Vanilla Custard) across both themes, with a matching app icon. Text uses darker shades where the brights fall below WCAG contrast.
 - Repayments: lenders record payments directly; borrowers tap "I've paid" and the lender confirms or disputes it.
 - Balances, progress bar and per-instalment status (paid, due, overdue from the day after the due date), calculated by replaying confirmed payments (ADR-0010).

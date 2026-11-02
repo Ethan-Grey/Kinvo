@@ -15,7 +15,7 @@ export function LoansSection({ userId, canStartLoan }: { userId: string; canStar
   return (
     <Card>
       <div className="flex items-center justify-between">
-        <h2 className="font-semibold">Loans</h2>
+        <h2 className="font-semibold">All loans</h2>
         {canStartLoan && (
           <Link
             to="/loans/new"
@@ -33,7 +33,8 @@ export function LoansSection({ userId, canStartLoan }: { userId: string; canStar
   )
 }
 
-function LoanList({ loans }: { loans: LoanSummary[] }) {
+/** Open loans (anything waiting on you first), then closed ones folded away. */
+export function LoanList({ loans }: { loans: LoanSummary[] }) {
   if (loans.length === 0) {
     return <p className="mt-2 text-sm text-ink-muted">No loans yet.</p>
   }

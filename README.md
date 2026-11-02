@@ -69,7 +69,7 @@ Every pull request runs type checks, lint, tests and a production build in GitHu
 - [x] **M2 — Auth & onboarding:** Google and email sign-in, lender invite links
 - [x] **M3 — Loans:** requests, counter-offers, versioned terms, agreement acceptance
 - [x] **M4 — Repayments:** recording, allocation, borrower payment claims
-- [ ] **M5 — Dashboards:** lender and borrower views, borrower history
+- [x] **M5 — Dashboards:** lender and borrower views, borrower history
 - [ ] **M6 — Notifications:** email reminders, then PWA push
 - [ ] **M7 — Hardening:** security review, accessibility, release v1.0.0
 
