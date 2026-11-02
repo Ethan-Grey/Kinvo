@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { toCents } from '../../domain/money'
 import type { DashboardSummary } from '../../data/dashboard'
 import { HomePage } from './HomePage'
+import { expectNoAxeViolations } from '../../test/axe'
 
 const api = vi.hoisted(() => ({
   getDashboardSummary: vi.fn(),
@@ -86,5 +87,12 @@ describe('HomePage', () => {
     expect(screen.getByText('You owe')).toBeTruthy()
     expect(screen.getByText(/Due Mon, 9 Nov 2026/)).toBeTruthy()
     expect(screen.queryByText('Lending')).toBeNull()
+  })
+
+  it('has no accessibility problems', async () => {
+    api.getDashboardSummary.mockResolvedValue({ ...empty, actions: { ...empty.actions, claimsToConfirm: 1 } })
+    const { container } = renderHome()
+    await screen.findByText('Kia ora, Ethan')
+    await expectNoAxeViolations(container)
   })
 })

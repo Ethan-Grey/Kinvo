@@ -1,14 +1,24 @@
-import type { ReactNode } from 'react'
-import { Link, NavLink, Outlet } from 'react-router'
+import { useEffect, type ReactNode } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { Logo } from '../../shared/ui'
+import { pageTitle } from './pageTitle'
 import { NotificationBell } from '../notifications/NotificationBell'
 import { UnreadCountProvider } from '../notifications/UnreadCountProvider'
 
 /** Header, page frame and bottom tab bar for signed-in screens. */
 export function AppLayout() {
+  usePageTitle()
+
   return (
     <UnreadCountProvider>
       <div className="min-h-svh">
+        {/* First thing keyboard and screen reader users reach (WCAG 2.4.1). */}
+        <a
+          href="#main"
+          className="sr-only z-20 rounded-xl bg-surface px-4 py-2 font-medium focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:outline-2 focus:outline-brand-ink"
+        >
+          Skip to content
+        </a>
         <header className="sticky top-0 z-10 border-b border-line bg-surface">
           <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
             <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
@@ -23,7 +33,7 @@ export function AppLayout() {
         </header>
 
         {/* Bottom padding keeps content clear of the tab bar and the iPhone home bar. */}
-        <main className="mx-auto max-w-2xl px-4 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+        <main id="main" tabIndex={-1} className="mx-auto outline-none max-w-2xl px-4 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
           <Outlet />
         </main>
 
@@ -31,6 +41,13 @@ export function AppLayout() {
       </div>
     </UnreadCountProvider>
   )
+}
+
+function usePageTitle() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    document.title = pageTitle(pathname)
+  }, [pathname])
 }
 
 function AccountLink() {

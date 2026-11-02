@@ -6,8 +6,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-02
+
+First complete release: loans, agreements, repayments, dashboards, notifications and account settings (milestones M0–M7).
+
+### Security
+
+- Content Security Policy and other security headers on every page. The theme script moved out of the HTML so inline scripts can be forbidden.
+- Schema-wide security audit in pgTAP: RLS on every table, no direct writes, no anonymous access, pinned `search_path`.
+- `npm audit` in CI and weekly Dependabot updates.
+- docs/security.md: threat model, controls and known limitations.
+
 ### Added
 
+- Account page (person icon in the header): change your name, switch notification emails off, choose light or dark mode, download all your data as JSON, and sign out. Notification emails link to it.
+- Automatic Supabase deploys: merging a change to migrations or Edge Functions applies it to the live project (docs/setup.md, section 7).
+- Accessibility: a "Skip to content" link, a page title for each screen, and automated axe-core checks on every main component.
 - Notifications (ADR-0013). A bell in the header with an unread count, and a list of everything that needs you, each linking to its loan.
 - Emails for every loan and payment event the other person needs to know about, sent through Gmail by a new `send-notifications` Edge Function from a retrying outbox.
 - Reminders at 9am NZ: to the borrower the day before and on the day a payment is due, and to both people the day after a missed payment, then weekly. 32 more pgTAP tests, Deno tests for the email builder, and a CI job for the Edge Function.
@@ -41,6 +55,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- The database now waits up to 60 seconds for the email sender, instead of timing out on its first, slower start.
 - Email sign-in now uses a one-time code, with a link fallback that works in any browser. Links alone failed when opened in a different browser, and can never reach an app installed on an iPhone home screen.
 - Sign-in errors (unauthorised address, rate limits, expired codes) now explain what happened instead of a generic message.
 - A deploy missing its configuration, or any crash, now shows an error screen instead of a blank page.
@@ -58,3 +73,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Project requirements, architecture overview and draft database schema.
 - Architecture Decision Records 0001–0007.
 - Contribution guidelines, issue templates and pull request template.
+
+[Unreleased]: https://github.com/Ethan-Grey/Kinvo/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Ethan-Grey/Kinvo/compare/v0.1.0...v1.0.0
+[0.1.0]: https://github.com/Ethan-Grey/Kinvo/releases/tag/v0.1.0

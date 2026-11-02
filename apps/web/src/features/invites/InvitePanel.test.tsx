@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { addDays, todayInNZ } from '../../domain/dates'
 import { InvitePanel } from './InvitePanel'
+import { expectNoAxeViolations } from '../../test/axe'
 
 const api = vi.hoisted(() => ({
   createInvite: vi.fn(),
@@ -62,5 +63,11 @@ describe('InvitePanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /create invite link/i }))
     expect(api.createInvite).not.toHaveBeenCalled()
     expect(await screen.findByText(/when you lent the money/i)).toBeTruthy()
+  })
+
+  it('has no accessibility problems, including the existing-debt form', async () => {
+    const { container } = render(<InvitePanel />)
+    await userEvent.click(screen.getByRole('checkbox'))
+    await expectNoAxeViolations(container)
   })
 })

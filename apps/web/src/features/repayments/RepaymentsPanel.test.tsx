@@ -7,6 +7,7 @@ import { toCents } from '../../domain/money'
 import type { LoanDetail } from '../../data/loans'
 import type { InstalmentProgress, LoanBalance, Repayment } from '../../data/repayments'
 import { RepaymentsPanel } from './RepaymentsPanel'
+import { expectNoAxeViolations } from '../../test/axe'
 
 const api = vi.hoisted(() => ({
   getBalance: vi.fn(),
@@ -119,5 +120,11 @@ describe('RepaymentsPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /record payment/i }))
     expect(api.recordRepayment).not.toHaveBeenCalled()
     expect(screen.getByText(/most you can record is \$150\.00/i)).toBeTruthy()
+  })
+
+  it('has no accessibility problems', async () => {
+    const { container } = renderPanel()
+    await screen.findByText(/paid \$150\.00 of \$300\.00/i)
+    await expectNoAxeViolations(container)
   })
 })

@@ -6,6 +6,7 @@ import type { AppNotification } from '../../data/notifications'
 import { NotificationBell } from './NotificationBell'
 import { NotificationsPage } from './NotificationsPage'
 import { UnreadCountProvider } from './UnreadCountProvider'
+import { expectNoAxeViolations } from '../../test/axe'
 
 const api = vi.hoisted(() => ({
   listNotifications: vi.fn(),
@@ -75,5 +76,13 @@ describe('notifications', () => {
     renderWithBell()
     expect(await screen.findByText(/Nothing yet/)).toBeTruthy()
     expect(api.markRead).not.toHaveBeenCalled()
+  })
+
+  it('has no accessibility problems', async () => {
+    api.listNotifications.mockResolvedValue([unread])
+    api.countUnread.mockResolvedValue(1)
+    const { container } = renderWithBell()
+    await screen.findByRole('link', { name: /Bob says they paid you/ })
+    await expectNoAxeViolations(container)
   })
 })
