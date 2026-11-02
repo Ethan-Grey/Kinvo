@@ -8,7 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
-- Proof of payment on every loan: the receipt for the money sent and for each payment back, in one place, for both the lender and the borrower. Tap one to see it full size or save it. Payments to confirm show their receipt, so the lender can check it before tapping "I received it".
+- Proof of payment on every loan, for both lender and borrower. It's in two parts: the money the lender sent, and the payments back grouped by the instalment they paid off (a payment that covers two instalments shows under both). Each entry is a date and an amount; tap it to open the receipt full size or save it. Payments waiting to be confirmed are listed first.
 - Phone notifications (ADR-0017): loan requests, payments and due dates pop up like a message, even with Kinvo closed. Turn them on per device in Account, or from the one-off card on Home. On iPhone, Kinvo needs to be on the Home Screen (iOS 16.4+). The app icon shows the unread count.
 - Notifications and emails now go out the moment something happens, instead of within 5 minutes.
 - Receipts (ADR-0016): every payment, and the lender sending the loan, needs a photo of the receipt or bank statement. Choose a photo, or paste an image copied from your banking app. Both people can view it. Images are re-encoded on the phone, which strips hidden data, and stored privately.

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -21,6 +21,13 @@ const api = vi.hoisted(() => ({
   forgiveRemaining: vi.fn(),
 }))
 vi.mock('../../data/repayments', () => api)
+// jsdom has no <dialog> methods; enough of them for the receipt viewer.
+HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+  this.setAttribute('open', '')
+}
+HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+  this.removeAttribute('open')
+}
 const receiptObjectUrl = vi.hoisted(() => vi.fn(() => Promise.resolve('blob:receipt')))
 vi.mock('../../data/images', () => ({ receiptObjectUrl }))
 
@@ -111,7 +118,7 @@ describe('RepaymentsPanel', () => {
     expect(await screen.findByText(/paid \$150\.00 of \$300\.00/i)).toBeTruthy()
     expect(screen.getByText(/\$150\.00 is overdue/i)).toBeTruthy()
     expect(screen.getAllByText('Overdue').length).toBeGreaterThan(0)
-    expect(screen.getByText('Paid')).toBeTruthy()
+    expect(screen.getAllByText('Paid').length).toBeGreaterThan(0)
   })
 
   it('lets the lender confirm a borrower’s claim', async () => {
@@ -139,14 +146,21 @@ describe('RepaymentsPanel', () => {
     await expectNoAxeViolations(container)
   })
 
-  it('shows every receipt to both people under Proof of payment', async () => {
+  it('separates money sent from payments back, and only loads a receipt when opened', async () => {
     for (const role of ['lender', 'borrower'] as const) {
       renderPanel(role)
       expect(await screen.findByRole('heading', { name: 'Proof of payment' })).toBeTruthy()
-      expect(screen.getAllByRole('button', { name: /view receipt: lena sent \$200\.00/i }).length).toBe(1)
-      expect(screen.getAllByRole('button', { name: /view receipt/i }).length).toBeGreaterThanOrEqual(2)
-      // The images themselves load for whoever is looking.
-      await waitFor(() => expect(document.querySelectorAll('img[src="blob:receipt"]').length).toBeGreaterThanOrEqual(2))
+      expect(screen.getByRole('heading', { name: 'Money sent by Lena' })).toBeTruthy()
+      expect(screen.getByRole('heading', { name: 'Payments back from Bob' })).toBeTruthy()
+      expect(screen.getByText('Waiting to be confirmed')).toBeTruthy()
+      expect(screen.getAllByText(/^Payment \d$/).length).toBe(progress.length)
+
+      // No images until a payment is tapped.
+      expect(document.querySelectorAll('img').length).toBe(0)
+      await userEvent.click(screen.getByRole('button', { name: /view receipt:.*\$200\.00/i }))
+      const image = await screen.findByRole('img', { name: /receipt for \$200\.00/i })
+      expect(image.getAttribute('src')).toBe('blob:receipt')
+      expect(document.querySelectorAll('img').length).toBe(1)
       cleanup()
     }
   })
