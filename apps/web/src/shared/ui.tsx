@@ -402,3 +402,44 @@ export function Segmented<T extends string>({
     </div>
   )
 }
+
+/** An on/off switch with a label and optional description. */
+export function Switch({
+  label,
+  description,
+  checked,
+  disabled,
+  onChange,
+}: {
+  label: string
+  description?: string
+  checked: boolean
+  disabled?: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <label className="relative flex cursor-pointer items-center gap-3 py-1">
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">{label}</span>
+        {description && <span className="block text-sm text-ink-muted">{description}</span>}
+      </span>
+      <input
+        type="checkbox"
+        role="switch"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
+      <span
+        aria-hidden="true"
+        className={
+          'relative h-7 w-12 shrink-0 rounded-full bg-ring-track transition-colors peer-checked:bg-brand ' +
+          'peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-ink ' +
+          'peer-disabled:opacity-60 after:absolute after:top-1 after:left-1 after:size-5 after:rounded-full ' +
+          'after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5'
+        }
+      />
+    </label>
+  )
+}

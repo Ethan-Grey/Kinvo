@@ -78,6 +78,12 @@ const MESSAGES: Record<string, string> = {
   // Existing debts
   invalid_existing_debt: 'Check the existing debt details and try again.',
   invalid_lent_date: 'The date the money was lent can’t be in the future.',
+
+  // Reminders
+  invalid_reminder_message: 'Write a message for the reminder (up to 200 characters).',
+  reminder_in_past: 'Pick a date and time that hasn’t passed yet.',
+  reminder_not_found: 'That reminder has already finished or been cancelled.',
+  too_many_reminders: 'You can have up to 20 reminders for one person. Cancel one first.',
 }
 
 const FALLBACK = 'Something went wrong. Please try again.'

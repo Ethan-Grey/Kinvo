@@ -8,6 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Lenders can change the dates and amounts of a running loan (ADR-0018): move every unpaid payment later or earlier in one tap, edit any payment, add or remove payments, or split what's left evenly. Paid payments stay as they are, the total owed can't change, and the borrower is notified straight away.
+- Reminder settings per borrower: the time reminders go out, and whether to send them the day before, on the day and when late (and how often).
+- Your own reminders: a message to a borrower at a date and time you choose, once or repeating.
 - Proof of payment on every loan, for both lender and borrower. It's in two parts: the money the lender sent, and the payments back grouped by the instalment they paid off (a payment that covers two instalments shows under both). Each entry is a date and an amount; tap it to open the receipt full size or save it. Payments waiting to be confirmed are listed first.
 - Phone notifications (ADR-0017): loan requests, payments and due dates pop up like a message, even with Kinvo closed. Turn them on per device in Account, or from the one-off card on Home. On iPhone, Kinvo needs to be on the Home Screen (iOS 16.4+). The app icon shows the unread count.
 - Notifications and emails now go out the moment something happens, instead of within 5 minutes.

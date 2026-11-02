@@ -7,6 +7,7 @@ import { RequireAuth } from './features/auth/RequireAuth'
 import { SignInPage } from './features/auth/SignInPage'
 import { AcceptInvitePage } from './features/invites/AcceptInvitePage'
 import { HomePage } from './features/dashboard/HomePage'
+import { ChangeSchedulePage } from './features/loans/ChangeSchedulePage'
 import { LoanDetailPage } from './features/loans/LoanDetailPage'
 import {
   AcceptLoanPage,
@@ -20,6 +21,7 @@ import { NewLoanPage } from './features/loans/NewLoanPage'
 import { NotificationsPage } from './features/notifications/NotificationsPage'
 import { PeoplePage } from './features/people/PeoplePage'
 import { PersonPage } from './features/people/PersonPage'
+import { RemindersPage } from './features/people/RemindersPage'
 import { AppLayout } from './features/shell/AppLayout'
 import { RouteErrorScreen } from './shared/ErrorScreens'
 
@@ -51,7 +53,9 @@ const router = createBrowserRouter([
               { path: 'loans/:id/sent', element: <FundsSentPage /> },
               { path: 'loans/:id/pay', element: <RecordPaymentPage /> },
               { path: 'loans/:id/remove', element: <RemoveLoanPage /> },
+              { path: 'loans/:id/schedule', element: <ChangeSchedulePage /> },
               { path: 'people/:relationshipId', element: <PersonPage /> },
+              { path: 'people/:relationshipId/reminders', element: <RemindersPage /> },
             ],
           },
         ],

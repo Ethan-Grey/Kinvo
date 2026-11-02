@@ -2,6 +2,7 @@ import { Link, useLocation, useParams } from 'react-router'
 import { formatDate } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
 import { getLoan, isAwaitingUser, type LoanDetail, type TermsVersion } from '../../data/loans'
+import { BellIcon } from '../../shared/icons'
 import { useAsync } from '../../shared/useAsync'
 import { Badge, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
 import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
@@ -88,6 +89,16 @@ export function LoanDetailPage() {
       )}
 
       {data.history.length > 1 && <History loan={data} userId={userId} />}
+
+      {data.role === 'lender' && (
+        <Link
+          to={`/people/${data.relationshipId}/reminders`}
+          className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-line font-semibold hover:border-brand-ink"
+        >
+          <BellIcon className="size-5" />
+          Reminders for {data.borrowerName.split(' ')[0]}
+        </Link>
+      )}
 
       {data.role === 'lender' && (
         <Link

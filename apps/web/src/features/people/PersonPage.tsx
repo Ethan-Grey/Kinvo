@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { RingAvatar } from '../../shared/Avatar'
-import { PlusIcon } from '../../shared/icons'
+import { BellIcon, ChevronIcon, PlusIcon } from '../../shared/icons'
 import { formatCents } from '../../domain/money'
 import { describeTrackRecord, listBorrowerRecords, type BorrowerRecord } from '../../data/dashboard'
 import { listLoans } from '../../data/loans'
 import { endRelationship, listPeople } from '../../data/people'
+import { formatHour, getReminderSettings, listCustomReminders, type ReminderSettings } from '../../data/reminders'
 import { useAsync } from '../../shared/useAsync'
 import { BackLink, Button, Card, Notice, PageSkeleton, SectionHeader, Stat } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
@@ -24,7 +25,11 @@ export function PersonPage() {
     const [people, records, loans] = await Promise.all([listPeople(userId), listBorrowerRecords(), listLoans(userId)])
     const asLender = people.borrowers.find((p) => p.relationshipId === relationshipId)
     const asBorrower = people.lenders.find((p) => p.relationshipId === relationshipId)
+    const reminders = asLender
+      ? await Promise.all([getReminderSettings(relationshipId), listCustomReminders(relationshipId)])
+      : null
     return {
+      reminders: reminders && { settings: reminders[0], customCount: reminders[1].length },
       person: asLender ?? asBorrower ?? null,
       iLend: Boolean(asLender),
       record: records.find((r) => r.relationshipId === relationshipId) ?? null,
@@ -35,7 +40,7 @@ export function PersonPage() {
   if (data.status === 'loading') return <PageSkeleton label="Loading person" />
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
 
-  const { person, iLend, record, loans } = data.data
+  const { person, iLend, record, loans, reminders } = data.data
   if (!person) return <Notice tone="error">You’re not connected with this person.</Notice>
 
   return (
@@ -66,6 +71,14 @@ export function PersonPage() {
 
       {iLend && record && <TrackRecord record={record} />}
 
+      {reminders && (
+        <RemindersLink
+          relationshipId={relationshipId}
+          settings={reminders.settings}
+          customCount={reminders.customCount}
+        />
+      )}
+
       <section className="space-y-3">
         <SectionHeader title="Loans" />
         {loans.length === 0 ? (
@@ -77,6 +90,48 @@ export function PersonPage() {
 
       {iLend && <EndConnection relationshipId={relationshipId} name={person.personName} />}
     </div>
+  )
+}
+
+function describeReminders(settings: ReminderSettings): string {
+  const which = [
+    settings.dayBefore && 'the day before',
+    settings.onTheDay && 'on the day',
+    settings.whenOverdue && 'when late',
+  ].filter(Boolean)
+  if (which.length === 0) return 'Payment reminders are off'
+  return `At ${formatHour(settings.sendHour)}: ${which.join(', ')}`
+}
+
+function RemindersLink({
+  relationshipId,
+  settings,
+  customCount,
+}: {
+  relationshipId: string
+  settings: ReminderSettings
+  customCount: number
+}) {
+  return (
+    <Link
+      to={`/people/${relationshipId}/reminders`}
+      className="flex items-center gap-3 rounded-3xl border border-line bg-surface p-4 hover:border-brand-ink focus-visible:outline-2 focus-visible:outline-brand-ink"
+    >
+      <span
+        aria-hidden="true"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-on-brand-soft"
+      >
+        <BellIcon className="size-5" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">Reminders</span>
+        <span className="block text-sm text-ink-muted">
+          {describeReminders(settings)}
+          {customCount > 0 && `. ${customCount} of your own`}
+        </span>
+      </span>
+      <ChevronIcon className="size-5 shrink-0 text-ink-muted" />
+    </Link>
   )
 }
 

@@ -99,7 +99,17 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
       )}
 
       <Card>
-        <h2 className="text-lg font-semibold">Schedule</h2>
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="text-lg font-semibold">Schedule</h2>
+          {isLender && isActive && balance.outstandingCents > 0 && (
+            <Link
+              to={`/loans/${loan.id}/schedule`}
+              className="text-sm font-semibold text-brand-ink hover:underline focus-visible:outline-2 focus-visible:outline-brand-ink"
+            >
+              Change dates
+            </Link>
+          )}
+        </div>
         <ScheduleProgress progress={progress} />
       </Card>
 
