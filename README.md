@@ -79,4 +79,8 @@ Kinvo is a record-keeping tool. Accepting an agreement in the app is evidence of
 
 ## Privacy
 
-This repository contains no real financial data. All seed and test data is fictional.
+This repository contains no real financial data. All seed and test data is fictional. Each user can download everything Kinvo holds about them from the Account page.
+
+## Security
+
+How data is protected, what CI checks, and the known limitations are in [`docs/security.md`](docs/security.md). Please report vulnerabilities through a [private security advisory](https://github.com/Ethan-Grey/Kinvo/security/advisories/new), not a public issue.
