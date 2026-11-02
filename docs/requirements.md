@@ -91,7 +91,7 @@ A single account can be a lender to some people and a borrower to others. Roles 
 | NT-03 | Overdue notices to both parties the day after a missed instalment, then weekly while it stays unpaid. | Must |
 | NT-06 | An in-app notification list with an unread count. | Must |
 | NT-04 | PWA push notifications as an additional channel. (Not yet built; the outbox is ready for a second sender.) | Should |
-| NT-05 | Users can choose which notifications they receive. (Not yet built.) | Should |
+| NT-05 | Users can switch notification emails off with one setting. In-app notifications always stay on. | Should |
 
 ## Non-functional (NF)
 
@@ -103,6 +103,7 @@ A single account can be a lender to some people and a borrower to others. Roles 
 | NF-04 | All dates shown and scheduled in `Pacific/Auckland`. Due dates are calendar dates, not timestamps. | Must |
 | NF-05 | Core screens meet WCAG 2.2 AA. | Should |
 | NF-06 | CI must pass (types, lint, tests, build) before merging to `main`. | Must |
+| NF-07 | Users can download everything Kinvo holds that involves them (Privacy Act 2020, principle 6). | Must |
 
 ## Out of scope for v1
 
