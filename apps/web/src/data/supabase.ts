@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
+import { durableStorage } from './sessionStorage'
 
 let client: SupabaseClient<Database> | undefined
 
@@ -36,6 +37,8 @@ export function supabase(): SupabaseClient<Database> {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      // Mirrored to IndexedDB so a lost localStorage doesn't sign you out.
+      storage: durableStorage,
     },
   })
   return client

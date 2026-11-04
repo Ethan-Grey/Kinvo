@@ -1,4 +1,5 @@
 import { toAppError } from './errors'
+import { markSignedOutOnPurpose, rememberEmail } from './sessionStorage'
 import { supabase } from './supabase'
 
 const PENDING_NEXT_KEY = 'kinvo.pendingNext'
@@ -39,6 +40,7 @@ export async function sendSignInCode(email: string, next: string): Promise<void>
 export async function verifySignInCode(email: string, code: string): Promise<void> {
   const { error } = await supabase().auth.verifyOtp({ email, token: code, type: 'email' })
   if (error) throw toAppError(error)
+  rememberEmail(email)
 }
 
 /** Signs in from the link in the email. Works in any browser, unlike a PKCE code. */
@@ -48,6 +50,7 @@ export async function verifyEmailLink(tokenHash: string): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  markSignedOutOnPurpose()
   const { error } = await supabase().auth.signOut()
   if (error) throw toAppError(error)
 }
