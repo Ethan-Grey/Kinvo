@@ -16,7 +16,7 @@ import { BackIcon } from './icons'
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 const BUTTON_STYLES: Record<ButtonVariant, string> = {
-  primary: 'bg-brand text-on-brand shadow-[0_6px_16px_-6px_rgb(97_61_193/0.6)] hover:opacity-95',
+  primary: 'bg-brand text-on-brand shadow-[0_6px_16px_-6px_rgb(111_26_7/0.6)] hover:opacity-95',
   secondary: 'border border-line bg-surface text-ink hover:border-brand-ink',
   ghost: 'text-ink-muted hover:text-ink',
   danger: 'border border-line bg-surface text-danger hover:border-danger',

@@ -47,7 +47,7 @@ const otherOf = (loan: LoanDetail) => (loan.role === 'lender' ? loan.borrowerNam
 
 export function AcceptLoanPage() {
   return (
-    <LoanStep title={(loan) => (loan.kind === 'existing_debt' ? 'Confirm what you owe' : 'Accept')}>
+    <LoanStep title={(loan) => (loan.kind === 'existing_debt' ? 'Confirm what you owe' : loan.kind === 'bill' ? 'Accept your share' : 'Accept')}>
       {(loan, done) => (
         <>
           <Card>
@@ -70,7 +70,7 @@ export function ChangeTermsPage() {
           initial={{ ...loan.currentTerms, message: '' }}
           perspective={loan.role}
           fixedCharge={loan.role === 'borrower' ? (principal) => borrowerCharge(loan, principal) : undefined}
-          variant={loan.kind}
+          variant={loan.kind === 'existing_debt' ? 'existing_debt' : 'new'}
           submitLabel={`Send to ${otherOf(loan)}`}
           messageLabel={`Message to ${otherOf(loan)} (optional)`}
           onSubmit={async (input) => {

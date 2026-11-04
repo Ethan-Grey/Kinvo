@@ -1,5 +1,8 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { AccountPage } from './features/account/AccountPage'
+import { SplitBillPage } from './features/bills/SplitBillPage'
+import { NewRepeatingPage } from './features/repeating/NewRepeatingPage'
+import { RepeatingPage } from './features/repeating/RepeatingPage'
 import { AuthCallbackPage } from './features/auth/AuthCallbackPage'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { EmailConfirmPage } from './features/auth/EmailConfirmPage'
@@ -55,6 +58,9 @@ const router = createBrowserRouter([
               { path: 'loans/:id/remove', element: <RemoveLoanPage /> },
               { path: 'loans/:id/schedule', element: <ChangeSchedulePage /> },
               { path: 'people/:relationshipId', element: <PersonPage /> },
+              { path: 'bills/new', element: <SplitBillPage /> },
+              { path: 'repeating/new', element: <NewRepeatingPage /> },
+              { path: 'repeating/:id', element: <RepeatingPage /> },
               { path: 'people/:relationshipId/reminders', element: <RemindersPage /> },
             ],
           },

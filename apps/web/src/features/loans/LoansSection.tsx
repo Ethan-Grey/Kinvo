@@ -102,6 +102,7 @@ function summaryLine(loan: LoanSummary): string {
   if (loan.status === 'completed') return 'Paid back in full'
   if (loan.status === 'written_off') return 'Forgiven'
   if (loan.kind === 'existing_debt') return 'Existing debt'
+  if (loan.kind === 'bill') return 'Share of a bill'
   return loan.firstDueOn
     ? `First payment ${formatShortDate(loan.firstDueOn)}`
     : `${formatCents(loan.principalCents)} proposed`

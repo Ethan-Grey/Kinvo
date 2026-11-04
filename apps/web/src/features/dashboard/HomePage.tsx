@@ -9,9 +9,10 @@ import {
   type UpcomingInstalment,
 } from '../../data/dashboard'
 import { listLoans, type LoanSummary } from '../../data/loans'
+import { listRepeating } from '../../data/repeating'
 import { getMyProfile, listPeople } from '../../data/people'
 import { RingAvatar } from '../../shared/Avatar'
-import { AlertIcon, CheckIcon, DocumentIcon, InviteIcon, PaymentIcon, SendIcon } from '../../shared/icons'
+import { AlertIcon, CheckIcon, DocumentIcon, InviteIcon, PaymentIcon, RepeatIcon, SendIcon } from '../../shared/icons'
 import { ProgressRing } from '../../shared/ProgressRing'
 import { useAsync } from '../../shared/useAsync'
 import { Card, EmptyState, IconBubble, Notice, PageSkeleton, SectionHeader } from '../../shared/ui'
@@ -36,20 +37,22 @@ export function HomePage() {
   const justJoined = (location.state as { joined?: boolean } | null)?.joined === true
 
   const [data] = useAsync(async () => {
-    const [profile, people, summary, upcoming, loans] = await Promise.all([
+    const [profile, people, summary, upcoming, loans, repeating] = await Promise.all([
       getMyProfile(userId),
       listPeople(userId),
       getDashboardSummary(),
       listUpcomingInstalments(6),
       listLoans(userId),
+      listRepeating(userId),
     ])
-    return { profile, people, summary, upcoming, loans }
+    const repeatingToAccept = repeating.filter((r) => r.status === 'proposed' && r.role === 'borrower').length
+    return { profile, people, summary, upcoming, loans, repeatingToAccept }
   }, userId)
 
   if (data.status === 'loading') return <PageSkeleton label="Loading your home screen" />
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
 
-  const { profile, people, summary, upcoming, loans } = data.data
+  const { profile, people, summary, upcoming, loans, repeatingToAccept } = data.data
   const isLender = profile.can_lend && (people.borrowers.length > 0 || summary.lending.activeCount > 0)
   const isBorrower = people.lenders.length > 0 || summary.borrowing.activeCount > 0
   const firstName = profile.display_name.split(' ')[0]
@@ -71,7 +74,7 @@ export function HomePage() {
         <BorrowingHero summary={summary} loans={loans} />
       ) : null}
 
-      <NeedsYou summary={summary} />
+      <NeedsYou summary={summary} repeatingToAccept={repeatingToAccept} />
 
       {(isLender || isBorrower) && <PushNudge />}
 
@@ -157,20 +160,20 @@ function HeroFrame({
           </p>
         </div>
         <div className="relative shrink-0" role="img" aria-label={`${percent}% paid back so far`}>
-          <ProgressRing value={ring} size={76} stroke={7} tone="on-brand" track="stroke-white/25" />
+          <ProgressRing value={ring} size={76} stroke={7} tone="on-brand" track="stroke-on-brand/25" />
           <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
             <span className="font-display text-lg font-semibold tabular-nums">{percent}%</span>
             <span className="text-[10px] text-on-brand-muted">paid back</span>
           </span>
         </div>
       </div>
-      <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-white/20 pt-4 text-sm">{children}</dl>
+      <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-on-brand/20 pt-4 text-sm">{children}</dl>
       {action && (
         <Link
           to={action.to}
           className={
-            'mt-5 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white font-semibold text-[#4e148c] ' +
-            'transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white'
+            'mt-5 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-on-brand font-semibold text-brand ' +
+            'transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-brand'
           }
         >
           <PaymentIcon className="size-5" />
@@ -270,7 +273,7 @@ function BorrowingStrip({ summary, loans }: { summary: DashboardSummary; loans: 
   )
 }
 
-function NeedsYou({ summary }: { summary: DashboardSummary }) {
+function NeedsYou({ summary, repeatingToAccept }: { summary: DashboardSummary; repeatingToAccept: number }) {
   const { repliesNeeded, fundsToSend, claimsToConfirm, claimsDisputed } = summary.actions
   const tasks = [
     {
@@ -278,6 +281,14 @@ function NeedsYou({ summary }: { summary: DashboardSummary }) {
       one: 'proposal to answer',
       many: 'proposals to answer',
       icon: <DocumentIcon />,
+      tone: 'attention' as const,
+      to: '/loans?show=waiting',
+    },
+    {
+      count: repeatingToAccept,
+      one: 'repeating to accept',
+      many: 'repeating to accept',
+      icon: <RepeatIcon />,
       tone: 'attention' as const,
       to: '/loans?show=waiting',
     },

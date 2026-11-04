@@ -11,7 +11,7 @@ import { PAYMENT_METHODS } from './labels'
 
 const primaryLink =
   'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand px-5 font-semibold text-on-brand ' +
-  'shadow-[0_6px_16px_-6px_rgb(97_61_193/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
+  'shadow-[0_6px_16px_-6px_rgb(111_26_7/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
 const secondaryLink =
   'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line px-5 font-semibold ' +
   'transition hover:border-brand-ink active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
@@ -25,13 +25,14 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
   const proposedByMe = loan.currentTerms.proposedBy === userId
   const otherName = loan.role === 'lender' ? loan.borrowerName : loan.lenderName
   const isDebt = loan.kind === 'existing_debt'
+  const isBill = loan.kind === 'bill'
 
   if (loan.status === 'negotiating' && !proposedByMe) {
     return (
       <div className="space-y-3">
         <Link to={`/loans/${loan.id}/accept`} className={primaryLink}>
           <CheckIcon className="size-5" />
-          {isDebt ? 'Confirm this debt' : 'Accept'}
+          {isDebt ? 'Confirm this debt' : isBill ? 'Accept my share' : 'Accept'}
         </Link>
         <Link to={`/loans/${loan.id}/change`} className={secondaryLink}>
           <DocumentIcon className="size-5" />
@@ -42,7 +43,9 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
           question={
             isDebt
               ? `Tell ${otherName} this debt isn't right? It won't be recorded. You can talk it through and they can invite you again.`
-              : `Decline ${otherName}'s proposal? This ends the request.`
+              : isBill
+                ? `Decline your share of ${loan.reason ?? 'this bill'}? It won't be recorded.`
+                : `Decline ${otherName}'s proposal? This ends the request.`
           }
           action={() => rejectTerms(loan.id, '')}
           onDone={onChanged}
@@ -55,7 +58,8 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
     return (
       <div className="space-y-3">
         <Notice>
-          Waiting for {otherName} to {isDebt ? 'confirm this debt' : 'reply'}. You’ll get an alert when they do.
+          Waiting for {otherName} to {isDebt ? 'confirm this debt' : isBill ? 'accept their share' : 'reply'}. You’ll
+          get an alert when they do.
         </Notice>
         <Link to={`/loans/${loan.id}/change`} className={secondaryLink}>
           Change my proposal
@@ -156,13 +160,18 @@ export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted:
   const isDebt = loan.kind === 'existing_debt'
   const total = formatCents(loan.currentTerms.totalCents)
 
-  const statement = isDebt
-    ? isBorrower
-      ? `I confirm I owe ${loan.lenderName} ${total}, and I agree to pay it back on the dates shown.`
-      : `I confirm ${loan.borrowerName} owes me ${total}, to be paid back on the dates shown.`
-    : isBorrower
-      ? `I agree to pay ${loan.lenderName} back ${total} on the dates shown, under these terms.`
-      : `I agree to pay out ${formatCents(loan.currentTerms.principalCents)} for ${loan.borrowerName}, to be paid back under these terms.`
+  const statement =
+    loan.kind === 'bill'
+      ? isBorrower
+        ? `I agree I owe ${loan.lenderName} ${total} as my share of ${loan.reason ?? 'the bill'}, to be paid back on the date shown.`
+        : `I confirm ${loan.borrowerName} owes me ${total} as their share of ${loan.reason ?? 'the bill'}.`
+      : isDebt
+        ? isBorrower
+          ? `I confirm I owe ${loan.lenderName} ${total}, and I agree to pay it back on the dates shown.`
+          : `I confirm ${loan.borrowerName} owes me ${total}, to be paid back on the dates shown.`
+        : isBorrower
+          ? `I agree to pay ${loan.lenderName} back ${total} on the dates shown, under these terms.`
+          : `I agree to pay out ${formatCents(loan.currentTerms.principalCents)} for ${loan.borrowerName}, to be paid back under these terms.`
 
   async function handleAccept() {
     setBusy(true)
@@ -191,7 +200,7 @@ export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted:
       </label>
       {error && <Notice tone="error">{error}</Notice>}
       <Button className="w-full" disabled={!agreed} busy={busy} onClick={handleAccept}>
-        {isDebt ? 'Confirm what you owe' : 'Accept agreement'}
+        {isDebt ? 'Confirm what you owe' : loan.kind === 'bill' ? 'Accept my share' : 'Accept agreement'}
       </Button>
       <p className="text-xs text-ink-muted">
         Accepting records your agreement, the date and time, and a fingerprint of these exact terms. It’s a record of

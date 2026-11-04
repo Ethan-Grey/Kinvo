@@ -177,3 +177,19 @@ export const SignOutIcon = (p: IconProps) => (
     <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10" />
   </Svg>
 )
+
+export const RepeatIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M17 2.5 20.5 6 17 9.5" />
+    <path d="M3.5 11V9.5A3.5 3.5 0 0 1 7 6h13.5" />
+    <path d="M7 21.5 3.5 18 7 14.5" />
+    <path d="M20.5 13v1.5A3.5 3.5 0 0 1 17 18H3.5" />
+  </Svg>
+)
+
+export const SplitIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M5 4h14v16l-2.3-1.5L14.3 20 12 18.5 9.7 20l-2.4-1.5L5 20z" />
+    <path d="M12 7.5v8M9 10.5h6" />
+  </Svg>
+)
