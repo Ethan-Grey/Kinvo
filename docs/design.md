@@ -4,15 +4,16 @@
 
 | Name | Hex | Used for |
 |---|---|---|
-| Camel | `#AF9164` | "Needs you" panels; primary buttons and accent text (dark); avatars |
-| Ivory Mist | `#F7F3E3` | Background (light); body text (dark); text on Molten Lava |
-| Silver | `#B3B6B7` | Card edges (softened); muted text (dark); avatars |
-| Molten Lava | `#6F1A07` | Primary buttons, accent text and progress (light); info panels (dark) |
-| Dark Coffee | `#2B2118` | Body text (light); background (dark); text on Camel |
+| Royal Blue | `#1E3A8A` | Logo; primary buttons, main card and accent text (light) |
+| Sky | `#93B4FF` | Logo stripe; primary buttons, main card and accent text (dark) |
+| Pale blue | `#DCE6FA` / `#B9CCF4` | Info panels and "needs you" (light) |
+| Deep royal | `#172B66` / `#2C4A9A` | Info panels and "needs you" (dark) |
+| Silver | `#B3B6B7` | Card edges (lightened, `#DCDEDF`); muted text (dark) |
+| Midnight | `#0F1A33` | Body text (light) |
 
-Light mode is Ivory Mist with Dark Coffee text; dark mode is Dark Coffee with Ivory Mist text (ADR-0020, replacing the earlier pure white and black). Cards are separated by soft borders, not shading.
+**Backgrounds are pure white (light mode) or pure black (dark mode)** (ADR-0021). No tinted backgrounds. Cards are separated by soft borders, not shading.
 
-**Red and green are kept for meaning, not decoration.** Overdue and errors are a brighter red than Molten Lava (`#B3261E` light, `#F4A097` dark) so the two aren't confused; paid and success are green.
+**Red and green are kept for meaning, not decoration.** Overdue and errors are red (`#C62828` light, `#FF8A80` dark); paid and success are green.
 
 ## Contrast
 
@@ -20,15 +21,15 @@ Every text and background pair meets WCAG AA (4.5:1 for normal text):
 
 | Pair | Light | Dark |
 |---|---|---|
-| Body text | Dark Coffee on Ivory, 14.2:1 | Ivory on Dark Coffee, 14.2:1 |
-| Primary button | Ivory on Molten Lava, 10.3:1 | Dark Coffee on Camel, 5.3:1 |
-| Accent text | Molten Lava on Ivory, 10.3:1 | Camel on Dark Coffee, 5.3:1 |
-| Info panel | Dark Coffee on `#D7C7AA`, 9.5:1 | Ivory on Molten Lava, 10.3:1 |
-| "Needs you" | Dark Coffee on Camel, 5.3:1 | same |
-| Danger badge | White on `#B3261E`, 6.5:1 | Dark Coffee on `#F4A097`, 7.7:1 |
-| Muted text | `#6B5E51` on Ivory, 5.7:1 | Silver on Dark Coffee, 7.7:1 |
+| Body text | Midnight on white, 17.3:1 | White on black, 21:1 |
+| Primary button | White on Royal Blue, 10.4:1 | Black on Sky, 10.2:1 |
+| Accent text | Royal Blue on white, 10.4:1 | Sky on black, 10.2:1 |
+| Info panel | Royal Blue on `#DCE6FA`, 8.3:1 | White on `#172B66`, 13.3:1 |
+| "Needs you" | Midnight on `#B9CCF4`, 10.7:1 | White on `#2C4A9A`, 8.2:1 |
+| Danger badge | White on `#C62828`, 5.6:1 | Black on `#FF8A80`, 9.2:1 |
+| Muted text | `#5F6264` on white, 6.1:1 | Silver on black, 10.3:1 |
 
-Combinations that fail, and are never used for text: Camel or Silver on Ivory (2.7:1, 1.8:1), and Molten Lava on Dark Coffee.
+Combinations that fail, and are never used for text: Sky or Silver on white, and Royal Blue on black.
 
 ## Tokens
 

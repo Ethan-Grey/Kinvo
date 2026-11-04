@@ -11,7 +11,7 @@ import { PAYMENT_METHODS } from './labels'
 
 const primaryLink =
   'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand px-5 font-semibold text-on-brand ' +
-  'shadow-[0_6px_16px_-6px_rgb(111_26_7/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
+  'shadow-[0_6px_16px_-6px_rgb(30_58_138/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
 const secondaryLink =
   'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line px-5 font-semibold ' +
   'transition hover:border-brand-ink active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'

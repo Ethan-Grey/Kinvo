@@ -46,7 +46,7 @@ export function QuickActionsButton() {
         aria-haspopup="dialog"
         className={
           '-mt-6 flex size-14 items-center justify-center rounded-full bg-brand text-on-brand ' +
-          'shadow-[0_8px_20px_-6px_rgb(111_26_7/0.7)] ring-4 ring-canvas transition active:scale-95 ' +
+          'shadow-[0_8px_20px_-6px_rgb(30_58_138/0.7)] ring-4 ring-canvas transition active:scale-95 ' +
           'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-ink'
         }
       >

@@ -27,7 +27,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
-- New palette: Camel, Ivory Mist, Silver, Molten Lava and Dark Coffee, in light and dark.
+- New look (ADR-0021): royal blue on pure white (light) and sky blue on pure black (dark), with silver accents, and a new royal-blue logo and app icon.
 - Neutral wording throughout: "owes you" and "you owe" instead of lending and borrowing, so it fits paying someone back for shopping as well as loans. The Loans tab is now "Owed".
 - Only the lender sets a charge (ADR-0015). Borrowers' requests have none. Once the lender proposes one, the borrower can change the amount or plan, and the charge follows the lender's rate.
 - One question per step:
