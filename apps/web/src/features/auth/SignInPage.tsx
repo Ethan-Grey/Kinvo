@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 import { sendSignInCode, signInWithGoogle, verifySignInCode } from '../../data/auth'
+import { isInstalledApp, lastEmail } from '../../data/sessionStorage'
 import { safeNextPath } from '../../shared/navigation'
 import { ThemeToggle } from '../../shared/ThemeToggle'
 import { ProgressRing } from '../../shared/ProgressRing'
@@ -36,6 +37,8 @@ export function SignInPage() {
         </h1>
       </header>
 
+      <DeviceTip />
+
       <Card>
         {step.kind === 'email' ? (
           <EmailStep next={next} onCodeSent={(email) => setStep({ kind: 'code', email })} />
@@ -48,7 +51,7 @@ export function SignInPage() {
 }
 
 function EmailStep({ next, onCodeSent }: { next: string; onCodeSent: (email: string) => void }) {
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(lastEmail)
   const [busy, setBusy] = useState<'google' | 'email' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -77,24 +80,33 @@ function EmailStep({ next, onCodeSent }: { next: string; onCodeSent: (email: str
     }
   }
 
+  // On an iPhone Home Screen app, Google sign-in finishes in Safari, which has
+  // separate storage, so the app itself stays signed out. The email code works.
+  const iosApp = isInstalledApp() && /iPhone|iPad|iPod/.test(navigator.userAgent)
+
+  const google = (
+    <Button
+      variant="secondary"
+      className="w-full"
+      onClick={handleGoogle}
+      busy={busy === 'google'}
+      disabled={busy !== null}
+    >
+      <GoogleMark />
+      Continue with Google
+    </Button>
+  )
+
   return (
     <div className="space-y-5">
-      <Button
-        variant="secondary"
-        className="w-full"
-        onClick={handleGoogle}
-        busy={busy === 'google'}
-        disabled={busy !== null}
-      >
-        <GoogleMark />
-        Continue with Google
-      </Button>
-
-      <div className="flex items-center gap-3 text-xs text-ink-muted">
-        <span className="h-px flex-1 bg-line" />
-        or
-        <span className="h-px flex-1 bg-line" />
-      </div>
+      {!iosApp && google}
+      {!iosApp && (
+        <div className="flex items-center gap-3 text-xs text-ink-muted">
+          <span className="h-px flex-1 bg-line" />
+          or
+          <span className="h-px flex-1 bg-line" />
+        </div>
+      )}
 
       <form onSubmit={handleEmail} className="space-y-3">
         <TextField
@@ -115,6 +127,18 @@ function EmailStep({ next, onCodeSent }: { next: string; onCodeSent: (email: str
 
       {error && <Notice tone="error">{error}</Notice>}
     </div>
+  )
+}
+
+/** On iPhone in Safari, point to the Home Screen app, which keeps you signed in. */
+function DeviceTip() {
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent)
+  if (!ios || isInstalledApp()) return null
+  return (
+    <Notice>
+      You’re in Safari. To stay signed in, add Kinvo to your Home Screen (Share, then Add to Home Screen) and open it
+      from there. Safari and the Home Screen app sign in separately.
+    </Notice>
   )
 }
 
