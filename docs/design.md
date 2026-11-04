@@ -4,15 +4,15 @@
 
 | Name | Hex | Used for |
 |---|---|---|
-| Frozen Lake | `#97DFFC` | Info panels and progress track (light); accent text (dark); icon |
-| Soft Periwinkle | `#858AE3` | "Needs you" panel and badges; icon |
-| Violet Twilight | `#613DC1` | Primary buttons, selected states |
-| Indigo | `#4E148C` | Accent text and progress fill (light); info panels (dark) |
-| Dark Amethyst | `#2C0735` | Body text (light); text on Frozen Lake and Periwinkle; icon background |
+| Camel | `#AF9164` | "Needs you" panels; primary buttons and accent text (dark); avatars |
+| Ivory Mist | `#F7F3E3` | Background (light); body text (dark); text on Molten Lava |
+| Silver | `#B3B6B7` | Card edges (softened); muted text (dark); avatars |
+| Molten Lava | `#6F1A07` | Primary buttons, accent text and progress (light); info panels (dark) |
+| Dark Coffee | `#2B2118` | Body text (light); background (dark); text on Camel |
 
-**Backgrounds are pure white (light mode) or pure black (dark mode).** No tinted or translucent backgrounds anywhere. Cards are separated by neutral grey borders (`#E4E4E7` / `#2A2A2A`), not shading.
+Light mode is Ivory Mist with Dark Coffee text; dark mode is Dark Coffee with Ivory Mist text (ADR-0020, replacing the earlier pure white and black). Cards are separated by soft borders, not shading.
 
-**Red and green are kept for meaning, not decoration.** Overdue and errors are red, paid and success are green. They aren't in the palette, but people read them instantly, and purple can't do that job.
+**Red and green are kept for meaning, not decoration.** Overdue and errors are a brighter red than Molten Lava (`#B3261E` light, `#F4A097` dark) so the two aren't confused; paid and success are green.
 
 ## Contrast
 
@@ -20,15 +20,15 @@ Every text and background pair meets WCAG AA (4.5:1 for normal text):
 
 | Pair | Light | Dark |
 |---|---|---|
-| Body text | Dark Amethyst on white, 17.7:1 | White on black, 21:1 |
-| Primary button | White on Violet Twilight, 7.1:1 | same |
-| Accent text | Indigo on white, 11.7:1 | Frozen Lake on black, 14.3:1 |
-| Info panel | Dark Amethyst on Frozen Lake, 12:1 | White on Indigo, 11.7:1 |
-| "Needs you" | Dark Amethyst on Periwinkle, 5.7:1 | Black on Periwinkle, 6.7:1 |
-| Danger badge | White on `#C40000`, 6.3:1 | Black on `#FF6B6B`, 7.6:1 |
-| Muted text | `#5C5C5C` on white, 6.7:1 | `#A3A3A3` on black, 8.3:1 |
+| Body text | Dark Coffee on Ivory, 14.2:1 | Ivory on Dark Coffee, 14.2:1 |
+| Primary button | Ivory on Molten Lava, 10.3:1 | Dark Coffee on Camel, 5.3:1 |
+| Accent text | Molten Lava on Ivory, 10.3:1 | Camel on Dark Coffee, 5.3:1 |
+| Info panel | Dark Coffee on `#D7C7AA`, 9.5:1 | Ivory on Molten Lava, 10.3:1 |
+| "Needs you" | Dark Coffee on Camel, 5.3:1 | same |
+| Danger badge | White on `#B3261E`, 6.5:1 | Dark Coffee on `#F4A097`, 7.7:1 |
+| Muted text | `#6B5E51` on Ivory, 5.7:1 | Silver on Dark Coffee, 7.7:1 |
 
-Combinations that fail, and are never used: Frozen Lake or Periwinkle on white (1.5:1, 3.1:1), and Indigo or Violet on black (1.8:1, 3:1).
+Combinations that fail, and are never used for text: Camel or Silver on Ivory (2.7:1, 1.8:1), and Molten Lava on Dark Coffee.
 
 ## Tokens
 

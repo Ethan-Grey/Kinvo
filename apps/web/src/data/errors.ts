@@ -79,6 +79,15 @@ const MESSAGES: Record<string, string> = {
   invalid_existing_debt: 'Check the existing debt details and try again.',
   invalid_lent_date: 'That date can’t be in the future.',
 
+  // Split bills and repeating debts
+  invalid_split: 'Give each person a share of more than $0.',
+  split_more_than_total: 'The shares add up to more than the bill.',
+  borrower_only: 'Only the person who owes can do that.',
+  repeating_not_found: 'That repeating debt doesn’t exist, or you don’t have access to it.',
+  repeating_not_proposed: 'This has already been answered.',
+  repeating_stopped: 'This has been stopped.',
+  invalid_end_date: 'The end date must be on or after the start date.',
+
   // Reminders
   invalid_reminder_message: 'Write a message for the reminder (up to 200 characters).',
   reminder_in_past: 'Pick a date and time that hasn’t passed yet.',

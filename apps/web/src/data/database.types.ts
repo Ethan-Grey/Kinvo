@@ -86,6 +86,7 @@ export interface Database {
       }
       loans: {
         Row: {
+          repeating_debt_id: string | null
           id: string
           relationship_id: string
           lender_id: string
@@ -222,6 +223,27 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      repeating_debts: {
+        Row: {
+          id: string
+          relationship_id: string
+          created_by: string
+          description: string
+          amount_cents: number
+          frequency: RepeatFrequency
+          first_on: string
+          end_on: string | null
+          status: RepeatingStatus
+          created_count: number
+          next_on: string | null
+          accepted_at: string | null
+          stopped_at: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       custom_reminders: {
         Row: {
           id: string
@@ -257,6 +279,37 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      create_split_bill: {
+        Args: { p_description: string; p_total_cents: number; p_paid_on: string; p_due_on: string; p_shares: Json }
+        Returns: string[]
+      }
+      attach_bill_receipt: {
+        Args: { p_loan_id: string; p_receipt_path: string }
+        Returns: undefined
+      }
+      propose_repeating_debt: {
+        Args: {
+          p_relationship_id: string
+          p_description: string
+          p_amount_cents: number
+          p_frequency: RepeatFrequency
+          p_first_on: string
+          p_end_on?: string | null
+        }
+        Returns: string
+      }
+      respond_repeating_debt: {
+        Args: { p_id: string; p_accept: boolean }
+        Returns: undefined
+      }
+      change_repeating_amount: {
+        Args: { p_id: string; p_amount_cents: number }
+        Returns: undefined
+      }
+      set_repeating_status: {
+        Args: { p_id: string; p_status: 'active' | 'paused' | 'stopped' }
+        Returns: undefined
+      }
       reschedule_loan: {
         Args: { p_loan_id: string; p_expected_terms_id: string; p_instalments: Json; p_note?: string | null }
         Returns: string
@@ -506,7 +559,9 @@ type TermsArgs = {
 
 export type LoanStatus =
   'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off' | 'removed'
-export type LoanKind = 'new' | 'existing_debt'
+export type LoanKind = 'new' | 'existing_debt' | 'bill' | 'repeating'
+export type RepeatFrequency = 'weekly' | 'fortnightly' | 'monthly'
+export type RepeatingStatus = 'proposed' | 'active' | 'paused' | 'stopped' | 'declined'
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'
 export type RepaymentStatus = 'claimed' | 'confirmed' | 'disputed' | 'reversed'
 export type ReminderRepeat = 'never' | 'daily' | 'weekly' | 'fortnightly' | 'monthly'

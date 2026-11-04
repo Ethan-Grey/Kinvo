@@ -16,7 +16,9 @@ import {
   HandIcon,
   HeartIcon,
   PaymentIcon,
+  RepeatIcon,
   SendIcon,
+  SplitIcon,
 } from '../../shared/icons'
 import { useAsync } from '../../shared/useAsync'
 import { Button, EmptyState, IconBubble, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
@@ -47,6 +49,16 @@ const KINDS: Record<string, { icon: ReactNode; tone: Tone }> = {
   borrower_overdue: { icon: <AlertIcon />, tone: 'danger' },
   loan_rescheduled: { icon: <ClockIcon />, tone: 'attention' },
   custom_reminder: { icon: <BellIcon />, tone: 'soft' },
+  bill_shared: { icon: <SplitIcon />, tone: 'attention' },
+  bill_accepted: { icon: <CheckIcon />, tone: 'brand' },
+  repeating_proposed: { icon: <RepeatIcon />, tone: 'attention' },
+  repeating_accepted: { icon: <CheckIcon />, tone: 'brand' },
+  repeating_declined: { icon: <RepeatIcon />, tone: 'neutral' },
+  repeating_changed: { icon: <RepeatIcon />, tone: 'attention' },
+  repeating_created: { icon: <RepeatIcon />, tone: 'soft' },
+  repeating_paused: { icon: <RepeatIcon />, tone: 'neutral' },
+  repeating_active: { icon: <RepeatIcon />, tone: 'neutral' },
+  repeating_stopped: { icon: <RepeatIcon />, tone: 'neutral' },
 }
 
 const FALLBACK = { icon: <BellIcon />, tone: 'soft' as Tone }

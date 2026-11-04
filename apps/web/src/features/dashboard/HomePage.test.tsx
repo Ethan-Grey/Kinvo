@@ -20,6 +20,7 @@ vi.mock('../../data/dashboard', () => ({
   listUpcomingInstalments: api.listUpcomingInstalments,
 }))
 vi.mock('../../data/people', () => ({ getMyProfile: api.getMyProfile, listPeople: api.listPeople }))
+vi.mock('../../data/repeating', () => ({ listRepeating: () => Promise.resolve([]) }))
 vi.mock('../auth/useAuth', () => ({ useAuth: () => ({ session: { user: { id: 'me' } }, loading: false }) }))
 
 const empty: DashboardSummary = {

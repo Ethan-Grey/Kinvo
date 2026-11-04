@@ -8,7 +8,12 @@ import { Button, Notice, Spinner } from '../../shared/ui'
  * from the bank app). The image is cleaned and uploaded straight away, and
  * `onChange` gets its storage path, or null when removed.
  */
-export function ReceiptField({ loanId, onChange }: { loanId: string; onChange: (path: string | null) => void }) {
+export function ReceiptField(
+  props:
+    | { loanId: string; onChange: (path: string | null) => void }
+    /** Not uploaded yet (e.g. a bill split before its debts exist): get the cleaned image instead. */
+    | { onImage: (jpeg: Blob | null) => void },
+) {
   const inputId = useId()
   const fileRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -27,9 +32,12 @@ export function ReceiptField({ loanId, onChange }: { loanId: string; onChange: (
     setError(null)
     try {
       const jpeg = await cleanImage(file)
-      const path = await uploadReceipt(loanId, jpeg)
+      if ('onImage' in props) {
+        props.onImage(jpeg)
+      } else {
+        props.onChange(await uploadReceipt(props.loanId, jpeg))
+      }
       setPreview(URL.createObjectURL(jpeg))
-      onChange(path)
     } catch (err) {
       setError(err instanceof ReceiptError || err instanceof Error ? err.message : String(err))
     } finally {
@@ -63,7 +71,8 @@ export function ReceiptField({ loanId, onChange }: { loanId: string; onChange: (
 
   function remove() {
     setPreview(null)
-    onChange(null)
+    if ('onImage' in props) props.onImage(null)
+    else props.onChange(null)
     if (fileRef.current) fileRef.current.value = ''
   }
 

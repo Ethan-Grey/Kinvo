@@ -40,57 +40,58 @@
 }
 
 /*
- * Kinvo palette (docs/design.md):
- *   Frozen Lake #97DFFC · Soft Periwinkle #858AE3 · Violet Twilight #613DC1
- *   Indigo #4E148C · Dark Amethyst #2C0735
+ * Kinvo palette (docs/design.md, ADR-0020):
+ *   Camel #AF9164 · Ivory Mist #F7F3E3 · Silver #B3B6B7
+ *   Molten Lava #6F1A07 · Dark Coffee #2B2118
  *
- * Backgrounds are pure white (light) or pure black (dark), with no tints.
- * Every text/background pair below meets WCAG AA (4.5:1); ratios in the doc.
- * Red and green aren't in the palette but stay for overdue and paid, since
- * people read those colours as "problem" and "done".
+ * Light is Ivory Mist with Dark Coffee text and Molten Lava buttons; dark is
+ * Dark Coffee with Ivory text and Camel buttons. Every text/background pair
+ * meets WCAG AA (4.5:1). Red and green stay for overdue and paid, since people
+ * read those colours as "problem" and "done"; the red is brighter than Molten
+ * Lava so the two aren't confused.
  */
 :root {
   color-scheme: light;
-  --kv-canvas: #ffffff;
-  --kv-surface: #ffffff;
-  --kv-line: #e4e4e7;
-  --kv-ink: #2c0735; /* Dark Amethyst, 17.7:1 */
-  --kv-ink-muted: #5c5c5c;
-  --kv-brand: #613dc1; /* Violet Twilight: buttons */
-  --kv-on-brand: #ffffff; /* 7.1:1 */
-  --kv-brand-ink: #4e148c; /* Indigo: accent text, 11.7:1 */
-  --kv-brand-soft: #97dffc; /* Frozen Lake: info panels, progress track */
-  --kv-on-brand-soft: #2c0735; /* 12:1 */
-  --kv-attention: #858ae3; /* Soft Periwinkle: "needs you" */
-  --kv-on-attention: #2c0735; /* 5.7:1 */
-  --kv-positive: #1b7f3b;
+  --kv-canvas: #f7f3e3; /* Ivory Mist */
+  --kv-surface: #f7f3e3;
+  --kv-line: #d9d6cc; /* Silver, softened for card edges */
+  --kv-ink: #2b2118; /* Dark Coffee, 14.2:1 */
+  --kv-ink-muted: #6b5e51; /* 5.7:1 */
+  --kv-brand: #6f1a07; /* Molten Lava: buttons */
+  --kv-on-brand: #f7f3e3; /* 10.3:1 */
+  --kv-brand-ink: #6f1a07; /* accent text, 10.3:1 */
+  --kv-brand-soft: #d7c7aa; /* Camel, lightened: info panels */
+  --kv-on-brand-soft: #2b2118; /* 9.5:1 */
+  --kv-attention: #af9164; /* Camel: "needs you" */
+  --kv-on-attention: #2b2118; /* 5.3:1 */
+  --kv-positive: #2e6b38; /* 5.8:1 */
   --kv-on-positive: #ffffff;
-  --kv-danger: #c40000;
+  --kv-danger: #b3261e; /* 5.9:1 */
   --kv-on-danger: #ffffff;
-  --kv-on-brand-muted: #e4dcfa; /* secondary text on Violet Twilight, 5.4:1 */
-  --kv-ring-track: #e4e4e7;
+  --kv-on-brand-muted: #dcc8b7; /* secondary text on Molten Lava, 7.1:1 */
+  --kv-ring-track: #dfdacb;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --kv-canvas: #000000;
-  --kv-surface: #000000;
-  --kv-line: #2a2a2a;
-  --kv-ink: #ffffff;
-  --kv-ink-muted: #a3a3a3;
-  --kv-brand: #613dc1; /* Violet Twilight with white text, 7.1:1 */
-  --kv-on-brand: #ffffff;
-  --kv-brand-ink: #97dffc; /* Frozen Lake: accent text, 14.3:1 */
-  --kv-brand-soft: #4e148c; /* Indigo */
-  --kv-on-brand-soft: #ffffff; /* 11.7:1 */
-  --kv-attention: #858ae3; /* Soft Periwinkle */
-  --kv-on-attention: #000000; /* 6.7:1 */
-  --kv-positive: #4ade80;
-  --kv-on-positive: #000000;
-  --kv-danger: #ff6b6b;
-  --kv-on-danger: #000000;
-  --kv-on-brand-muted: #e4dcfa;
-  --kv-ring-track: #2a2a2a;
+  --kv-canvas: #2b2118; /* Dark Coffee */
+  --kv-surface: #2b2118;
+  --kv-line: #4a4036;
+  --kv-ink: #f7f3e3; /* Ivory Mist, 14.2:1 */
+  --kv-ink-muted: #b3b6b7; /* Silver, 7.7:1 */
+  --kv-brand: #af9164; /* Camel: buttons, with Dark Coffee text 5.3:1 */
+  --kv-on-brand: #2b2118;
+  --kv-brand-ink: #af9164; /* accent text, 5.3:1 */
+  --kv-brand-soft: #6f1a07; /* Molten Lava */
+  --kv-on-brand-soft: #f7f3e3; /* 10.3:1 */
+  --kv-attention: #af9164;
+  --kv-on-attention: #2b2118;
+  --kv-positive: #8fd19a;
+  --kv-on-positive: #2b2118;
+  --kv-danger: #f4a097;
+  --kv-on-danger: #2b2118;
+  --kv-on-brand-muted: #33281d; /* secondary text on Camel, 4.8:1 */
+  --kv-ring-track: #4a4036;
 }
 
 @keyframes sheet-up {

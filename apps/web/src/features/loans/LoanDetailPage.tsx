@@ -55,7 +55,21 @@ export function LoanDetailPage() {
           (data.reason || data.originallyLentOn) && (
             <>
               {data.reason && <p>For {data.reason}</p>}
-              {data.originallyLentOn && <p>Originally lent {formatDate(data.originallyLentOn)}, before Kinvo</p>}
+              {data.originallyLentOn &&
+                (data.kind === 'bill' ? (
+                  <p>Bill paid {formatDate(data.originallyLentOn)}</p>
+                ) : data.kind === 'repeating' ? (
+                  <p>
+                    Due {formatDate(data.originallyLentOn)}.{' '}
+                    {data.repeatingDebtId && (
+                      <Link to={`/repeating/${data.repeatingDebtId}`} className="font-medium text-brand-ink underline">
+                        See the repeating debt
+                      </Link>
+                    )}
+                  </p>
+                ) : (
+                  <p>Originally lent {formatDate(data.originallyLentOn)}, before Kinvo</p>
+                ))}
             </>
           )
         }
@@ -119,17 +133,22 @@ function ProposalCard({ loan, userId }: { loan: LoanDetail; userId: string }) {
   const byMe = terms.proposedBy === userId
   const isDebt = loan.kind === 'existing_debt'
   const first = loan.borrowerName.split(' ')[0]
-  const headline = isDebt
-    ? loan.role === 'lender'
-      ? `${first} owes you`
-      : `You owe ${loan.lenderName.split(' ')[0]}`
-    : loan.role === 'lender'
-      ? byMe
-        ? `You offered ${first}`
-        : `${first} asks you for`
-      : byMe
-        ? 'You asked for'
-        : `${loan.lenderName.split(' ')[0]} offers you`
+  const headline =
+    loan.kind === 'bill'
+      ? loan.role === 'lender'
+        ? `${first}’s share`
+        : 'Your share'
+      : isDebt
+        ? loan.role === 'lender'
+          ? `${first} owes you`
+          : `You owe ${loan.lenderName.split(' ')[0]}`
+        : loan.role === 'lender'
+          ? byMe
+            ? `You offered ${first}`
+            : `${first} asks you for`
+          : byMe
+            ? 'You asked for'
+            : `${loan.lenderName.split(' ')[0]} offers you`
   const last = terms.instalments.at(-1)
   const count = terms.instalments.length
 

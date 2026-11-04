@@ -4,7 +4,17 @@ import { formatCents } from '../../domain/money'
 import { listLoans, type LoanSummary } from '../../data/loans'
 import { getMyProfile, listPeople } from '../../data/people'
 import { RingAvatar } from '../../shared/Avatar'
-import { ChevronIcon, CloseIcon, HandIcon, InviteIcon, PaymentIcon, PlusIcon, SendIcon } from '../../shared/icons'
+import {
+  ChevronIcon,
+  CloseIcon,
+  HandIcon,
+  InviteIcon,
+  PaymentIcon,
+  PlusIcon,
+  RepeatIcon,
+  SendIcon,
+  SplitIcon,
+} from '../../shared/icons'
 import { useAsync } from '../../shared/useAsync'
 import { IconBubble, Notice, Skeleton } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
@@ -36,7 +46,7 @@ export function QuickActionsButton() {
         aria-haspopup="dialog"
         className={
           '-mt-6 flex size-14 items-center justify-center rounded-full bg-brand text-on-brand ' +
-          'shadow-[0_8px_20px_-6px_rgb(97_61_193/0.7)] ring-4 ring-canvas transition active:scale-95 ' +
+          'shadow-[0_8px_20px_-6px_rgb(111_26_7/0.7)] ring-4 ring-canvas transition active:scale-95 ' +
           'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-ink'
         }
       >
@@ -153,6 +163,22 @@ function SheetBody({ onDone }: { onDone: () => void }) {
           title="Someone owes me"
           detail="Propose terms for someone to accept"
           onClick={() => go('/loans/new?as=lender')}
+        />
+      )}
+      {hasBorrowers && (
+        <Action
+          icon={<SplitIcon />}
+          title="Split a bill"
+          detail="You paid, others owe you their share"
+          onClick={() => go('/bills/new')}
+        />
+      )}
+      {hasBorrowers && (
+        <Action
+          icon={<RepeatIcon />}
+          title="Repeating"
+          detail="Like a rent share, added automatically"
+          onClick={() => go('/repeating/new')}
         />
       )}
       {active.length > 0 && (

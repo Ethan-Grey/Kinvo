@@ -21,8 +21,8 @@ export default defineConfig({
         lang: 'en-NZ',
         start_url: '/',
         display: 'standalone',
-        background_color: '#000000',
-        theme_color: '#2C0735',
+        background_color: '#f7f3e3',
+        theme_color: '#6f1a07',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
