@@ -61,7 +61,7 @@ select is(
    from pg_proc p
    where p.pronamespace = 'private'::regnamespace
      and has_function_privilege('authenticated', p.oid, 'execute')
-     and p.proname not in ('shares_relationship_with', 'is_party_to', 'is_loan_party', 'is_terms_party', 'require_user', 'receipt_loan_id', 'avatar_owner', 'can_see_avatar')),
+     and p.proname not in ('shares_relationship_with', 'is_party_to', 'is_loan_party', 'is_terms_party', 'require_user', 'receipt_loan_id', 'avatar_owner', 'can_see_avatar', 'is_household_member', 'shares_household_with', 'household_receipt_id')),
   '', 'signed-in users can only call the private helpers RLS needs'
 );
 

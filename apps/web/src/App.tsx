@@ -1,6 +1,10 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { AccountPage } from './features/account/AccountPage'
 import { SplitBillPage } from './features/bills/SplitBillPage'
+import { BillDuePage, BillPage, NewBillPage } from './features/households/BillPages'
+import { HouseholdPage } from './features/households/HouseholdPage'
+import { HouseholdSettingsPage, SettlePage } from './features/households/HouseholdSettings'
+import { HouseholdInvitePage, HouseholdsPage, NewHouseholdPage } from './features/households/HouseholdsPage'
 import { NewRepeatingPage } from './features/repeating/NewRepeatingPage'
 import { RepeatingPage } from './features/repeating/RepeatingPage'
 import { AuthCallbackPage } from './features/auth/AuthCallbackPage'
@@ -59,6 +63,15 @@ const router = createBrowserRouter([
               { path: 'loans/:id/schedule', element: <ChangeSchedulePage /> },
               { path: 'people/:relationshipId', element: <PersonPage /> },
               { path: 'bills/new', element: <SplitBillPage /> },
+              { path: 'households', element: <HouseholdsPage /> },
+              { path: 'households/new', element: <NewHouseholdPage /> },
+              { path: 'households/:id', element: <HouseholdPage /> },
+              { path: 'households/:id/settings', element: <HouseholdSettingsPage /> },
+              { path: 'households/:id/bills/new', element: <NewBillPage /> },
+              { path: 'households/:id/bills/due/:occurrenceId', element: <BillDuePage /> },
+              { path: 'households/:id/bills/:billId', element: <BillPage /> },
+              { path: 'households/:id/settle/:userId', element: <SettlePage /> },
+              { path: 'household-invite/:token', element: <HouseholdInvitePage /> },
               { path: 'repeating/new', element: <NewRepeatingPage /> },
               { path: 'repeating/:id', element: <RepeatingPage /> },
               { path: 'people/:relationshipId/reminders', element: <RemindersPage /> },

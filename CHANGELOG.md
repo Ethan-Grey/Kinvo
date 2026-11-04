@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Households (ADR-0022): create one, invite the people you live with, and set it up your way.
+  - An optional shared account: regular top-ups (assumed to go in, tap Missed if one doesn't), an estimated balance you can check against your banking app, and a warning if a bill might not be covered.
+  - Bills like rent, power and internet: the same amount each time or one that changes (you're asked for it before it's due, with an optional bill photo). Each is paid from the shared account, by one person (others' shares go on the tab), by everyone paying their own share, or covered by one person. Any single date can be skipped or paid differently, e.g. you covered the rent yourself that week.
+  - Who owes who, with Settle up, and the simplest way to settle when there are three or more of you.
 - Split a bill (ADR-0020): enter what you paid, add the receipt, choose who it's split with and how (evenly, by percentage or by amount), and when to pay back. Each person accepts their share.
 - Repeating debts, like a rent share: set the amount, how often and when it starts; it's accepted once and then added automatically. Change the amount for future ones, pause, restart or stop at any time.
 - Reminder times (ADR-0019): set as many reminders as you like for each person, each a day (before, on or after the due date) and a time, e.g. 9am and 6pm on the day, then noon the day after. Optionally keep reminding every few days while a payment is late.

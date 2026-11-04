@@ -8,6 +8,7 @@ import {
   ChevronIcon,
   CloseIcon,
   HandIcon,
+  HomeIcon,
   InviteIcon,
   PaymentIcon,
   PlusIcon,
@@ -165,6 +166,12 @@ function SheetBody({ onDone }: { onDone: () => void }) {
           onClick={() => go('/loans/new?as=lender')}
         />
       )}
+      <Action
+        icon={<HomeIcon />}
+        title="Household"
+        detail="Rent, bills and the shared account"
+        onClick={() => go('/households')}
+      />
       {hasBorrowers && (
         <Action
           icon={<SplitIcon />}

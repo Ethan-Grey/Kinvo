@@ -88,6 +88,24 @@ const MESSAGES: Record<string, string> = {
   repeating_stopped: 'This has been stopped.',
   invalid_end_date: 'The end date must be on or after the start date.',
 
+  // Households
+  household_not_found: 'That household doesn’t exist, or you’re not in it.',
+  invalid_household_name: 'Give the household a name (up to 60 characters).',
+  too_many_households: 'You can be in up to 10 households.',
+  owner_only: 'Only the person who runs the household can do that.',
+  no_shared_account: 'This household doesn’t have a shared account. Turn it on in the household’s settings.',
+  split_must_total_100: 'The shares must add up to 100%.',
+  invalid_bill_name: 'Give the bill a name, e.g. Power.',
+  invalid_payer: 'Choose who pays it.',
+  too_many_bills: 'A household can have up to 40 bills.',
+  bill_not_found: 'That bill doesn’t exist, or you’re not in its household.',
+  bill_skipped: 'That bill was skipped.',
+  bill_already_paid: 'Someone has already paid their share, so the amount can’t change now.',
+  share_not_found: 'You’ve already ticked off your share.',
+  entry_not_found: 'That has already been undone.',
+  cannot_undo_entry: 'Only the person it’s from can undo that.',
+  topup_not_found: 'That top-up has already stopped.',
+
   // Reminders
   invalid_reminder_message: 'Write a message for the reminder (up to 200 characters).',
   reminder_in_past: 'Pick a date and time that hasn’t passed yet.',

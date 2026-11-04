@@ -15,6 +15,7 @@ import {
   DocumentIcon,
   HandIcon,
   HeartIcon,
+  HomeIcon,
   PaymentIcon,
   RepeatIcon,
   SendIcon,
@@ -59,6 +60,11 @@ const KINDS: Record<string, { icon: ReactNode; tone: Tone }> = {
   repeating_paused: { icon: <RepeatIcon />, tone: 'neutral' },
   repeating_active: { icon: <RepeatIcon />, tone: 'neutral' },
   repeating_stopped: { icon: <RepeatIcon />, tone: 'neutral' },
+  household_joined: { icon: <HomeIcon />, tone: 'brand' },
+  household_bill_amount: { icon: <DocumentIcon />, tone: 'attention' },
+  household_share_due: { icon: <ClockIcon />, tone: 'attention' },
+  household_settled: { icon: <CheckIcon />, tone: 'positive' },
+  shared_account_short: { icon: <AlertIcon />, tone: 'danger' },
 }
 
 const FALLBACK = { icon: <BellIcon />, tone: 'soft' as Tone }
