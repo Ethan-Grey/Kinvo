@@ -203,12 +203,20 @@ export interface Database {
       reminder_settings: {
         Row: {
           relationship_id: string
-          send_hour: number
-          day_before: boolean
-          on_the_day: boolean
-          when_overdue: boolean
-          overdue_every_days: number
+          late_every_days: number | null
+          late_hour: number
           updated_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      reminder_rules: {
+        Row: {
+          id: string
+          relationship_id: string
+          days_from_due: number
+          send_hour: number
         }
         Insert: never
         Update: never
@@ -254,14 +262,7 @@ export interface Database {
         Returns: string
       }
       save_reminder_settings: {
-        Args: {
-          p_relationship_id: string
-          p_send_hour: number
-          p_day_before: boolean
-          p_on_the_day: boolean
-          p_when_overdue: boolean
-          p_overdue_every_days: number
-        }
+        Args: { p_relationship_id: string; p_rules: Json; p_late_every_days?: number | null; p_late_hour?: number }
         Returns: undefined
       }
       create_custom_reminder: {

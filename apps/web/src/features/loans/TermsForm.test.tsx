@@ -22,7 +22,7 @@ const next = () => userEvent.click(screen.getByRole('button', { name: 'Continue'
 
 /** Step 1: how much. Step 2: charge. Leaves the form on step 3 (the plan). */
 async function enterAmounts(principal: string, charge: string) {
-  await userEvent.type(screen.getByLabelText(/amount to borrow/i), principal)
+  await userEvent.type(screen.getByLabelText(/^amount$/i), principal)
   await next()
   const chargeInput = screen.getByLabelText(/one-off charge/i)
   await userEvent.clear(chargeInput)
@@ -38,13 +38,13 @@ describe('TermsForm', () => {
   it('asks one thing per step and builds the brief’s example: $200 + $100, two weekly payments', async () => {
     const onSubmit = renderForm()
     expect(screen.getByText('Step 1 of 4')).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'How much do you need?' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'How much will you owe?' })).toBeTruthy()
 
-    await userEvent.type(screen.getByLabelText(/amount to borrow/i), '200')
+    await userEvent.type(screen.getByLabelText(/^amount$/i), '200')
     await next()
     expect(screen.getByRole('heading', { name: 'Is there a charge?' })).toBeTruthy()
     await userEvent.click(screen.getByRole('button', { name: '50%' }))
-    expect(screen.getByText(/50% of the amount borrowed/i)).toBeTruthy()
+    expect(screen.getByText(/50% of the amount$/i)).toBeTruthy()
     expect(screen.getByText('$300.00')).toBeTruthy()
     await next()
 
@@ -70,7 +70,7 @@ describe('TermsForm', () => {
   it('won’t move on without an amount', async () => {
     renderForm()
     await next()
-    expect(screen.getByText(/enter the amount to borrow/i)).toBeTruthy()
+    expect(screen.getByText(/enter the amount\./i)).toBeTruthy()
     expect(screen.getByText('Step 1 of 4')).toBeTruthy()
   })
 
@@ -95,7 +95,7 @@ describe('TermsForm', () => {
     await enterAmounts('120', '0')
     await userEvent.click(screen.getByRole('button', { name: 'Back' }))
     await userEvent.click(screen.getByRole('button', { name: 'Back' }))
-    expect((screen.getByLabelText(/amount to borrow/i) as HTMLInputElement).value).toBe('120')
+    expect((screen.getByLabelText(/^amount$/i) as HTMLInputElement).value).toBe('120')
   })
 
   it('pre-fills a change from existing terms', async () => {
@@ -115,8 +115,8 @@ describe('TermsForm', () => {
         onSubmit={vi.fn()}
       />,
     )
-    expect(screen.getByRole('heading', { name: 'How much are you lending?' })).toBeTruthy()
-    expect((screen.getByLabelText(/amount to borrow/i) as HTMLInputElement).value).toBe('200')
+    expect(screen.getByRole('heading', { name: 'How much will they owe you?' })).toBeTruthy()
+    expect((screen.getByLabelText(/^amount$/i) as HTMLInputElement).value).toBe('200')
     await next()
     expect((screen.getByLabelText(/one-off charge/i) as HTMLInputElement).value).toBe('20')
     await next()
@@ -142,7 +142,7 @@ describe('TermsForm', () => {
       />,
     )
     expect(screen.getByText('Step 1 of 3')).toBeTruthy()
-    await userEvent.type(screen.getByLabelText(/amount to borrow/i), '300')
+    await userEvent.type(screen.getByLabelText(/^amount$/i), '300')
     await next()
     expect(screen.getByRole('heading', { name: 'How will it be paid back?' })).toBeTruthy()
     expect(screen.getByText('$330.00 in total.')).toBeTruthy()
@@ -154,7 +154,7 @@ describe('TermsForm', () => {
 
   it('has no accessibility problems on any step', async () => {
     renderForm()
-    await userEvent.type(screen.getByLabelText(/amount to borrow/i), '100')
+    await userEvent.type(screen.getByLabelText(/^amount$/i), '100')
     for (let step = 0; step < 4; step++) {
       await expectNoAxeViolations(document.body)
       if (step < 3) await next()

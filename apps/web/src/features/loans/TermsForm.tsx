@@ -27,7 +27,7 @@ const FREQUENCIES: { value: Frequency; label: string }[] = [
   { value: 'monthly', label: 'Monthly' },
 ]
 
-/** One-tap charges, as a share of the amount borrowed. */
+/** One-tap charges, as a share of the amount. */
 const CHARGE_PRESETS = [0, 10, 25, 50] as const
 
 type Step = 'amount' | 'charge' | 'plan' | 'review'
@@ -127,7 +127,7 @@ export function TermsForm({
   function problemsFor(s: Step): string[] {
     if (s === 'amount') {
       return !principal.ok || principalCents === 0
-        ? [isExistingDebt ? 'Enter the amount they owe.' : 'Enter the amount to borrow.']
+        ? [isExistingDebt ? 'Enter the amount they owe.' : 'Enter the amount.']
         : []
     }
     if (s === 'charge') return charge.ok ? [] : ['Enter the charge in dollars, or 0.']
@@ -183,8 +183,8 @@ export function TermsForm({
             isExistingDebt
               ? 'How much do they owe you now?'
               : perspective === 'lender'
-                ? 'How much are you lending?'
-                : 'How much do you need?'
+                ? 'How much will they owe you?'
+                : 'How much will you owe?'
           }
           hint={isExistingDebt ? 'Only what’s still owed today. Past payments don’t need entering.' : undefined}
           errors={errors}
@@ -192,7 +192,7 @@ export function TermsForm({
           next={continueButton}
         >
           <MoneyField
-            label={isExistingDebt ? 'Amount they owe you now' : 'Amount to borrow'}
+            label={isExistingDebt ? 'Amount they owe you now' : 'Amount'}
             value={principalText}
             onChange={setPrincipalText}
             autoFocus
@@ -204,7 +204,7 @@ export function TermsForm({
         <WizardStep
           {...position}
           title="Is there a charge?"
-          hint="A one-off amount added on top, if you’ve agreed one. Most family loans have none."
+          hint="A one-off amount added on top, if you’ve agreed one. Most have none."
           errors={errors}
           onBack={back}
           next={continueButton}
@@ -225,7 +225,7 @@ export function TermsForm({
             onChange={(e) => setChargeText(e.target.value)}
             hint={
               charge.ok && principalCents > 0
-                ? `${chargePercent(principalCents, chargeCents)} of the amount borrowed`
+                ? `${chargePercent(principalCents, chargeCents)} of the amount`
                 : undefined
             }
           />
@@ -306,8 +306,8 @@ export function TermsForm({
           {fixedCharge && (
             <p className="text-sm text-ink-muted">
               {chargeCents > 0
-                ? 'The charge is the lender’s, at the same rate they proposed. Only they can change it.'
-                : 'No charge. If the lender wants one, they’ll add it when they reply, and you can accept or ask for changes.'}
+                ? 'The charge is set by the person you’d owe, at the rate they proposed. Only they can change it.'
+                : 'No charge. If the person you’d owe wants one, they’ll add it when they reply, and you can accept or ask for changes.'}
             </p>
           )}
           <SchedulePreview rows={rows} />
@@ -360,13 +360,13 @@ function TotalCard({
 }) {
   return (
     <div className="rounded-3xl bg-brand px-5 py-4 text-on-brand">
-      <p className="text-sm text-on-brand-muted">Total to repay</p>
+      <p className="text-sm text-on-brand-muted">Total to pay back</p>
       <p className="font-display text-4xl leading-tight font-semibold tabular-nums">
         {formatCents(toCents(principalCents + chargeCents))}
       </p>
       {!hideBreakdown && (
         <p className="text-sm text-on-brand-muted tabular-nums">
-          {formatCents(principalCents)} borrowed + {formatCents(chargeCents)} charge
+          {formatCents(principalCents)} + {formatCents(chargeCents)} charge
         </p>
       )}
     </div>

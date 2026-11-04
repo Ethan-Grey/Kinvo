@@ -114,7 +114,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
   if (choosingLoan) {
     return (
       <div className="mt-4">
-        <p className="text-sm text-ink-muted">Which loan is the payment for?</p>
+        <p className="text-sm text-ink-muted">Which one is the payment for?</p>
         <ul className="mt-3 space-y-2">
           {active.map((loan) => (
             <li key={loan.id}>
@@ -142,7 +142,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
       {hasLenders && (
         <Action
           icon={<HandIcon />}
-          title="Ask to borrow"
+          title="I owe someone"
           detail="Send a request with a repayment plan"
           onClick={() => go('/loans/new?as=borrower')}
         />
@@ -150,7 +150,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
       {hasBorrowers && (
         <Action
           icon={<SendIcon />}
-          title="Offer a loan"
+          title="Someone owes me"
           detail="Propose terms for someone to accept"
           onClick={() => go('/loans/new?as=lender')}
         />
@@ -159,7 +159,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
         <Action
           icon={<PaymentIcon />}
           title="Record a payment"
-          detail={only ? `For ${nameFor(only)}` : `Choose from ${active.length} active loans`}
+          detail={only ? `For ${nameFor(only)}` : `Choose from ${active.length}`}
           onClick={() => (only ? go(`/loans/${only.id}/pay`) : setChoosingLoan(true))}
         />
       )}
@@ -173,7 +173,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
       )}
       {!hasLenders && !hasBorrowers && !profile.can_lend && (
         <li className="rounded-2xl border border-line p-4 text-sm text-ink-muted">
-          Ask the person lending to you for an invite link. Once you’re connected you can request a loan here.{' '}
+          Ask someone you owe for an invite link. Once you’re connected you can add what you owe here.{' '}
           <Link to="/account" onClick={onDone} className="font-medium text-brand-ink underline">
             Your account
           </Link>
@@ -184,7 +184,7 @@ function SheetBody({ onDone }: { onDone: () => void }) {
 }
 
 function nameFor(loan: LoanSummary): string {
-  return loan.role === 'lender' ? `${loan.otherPersonName}’s loan` : `your loan from ${loan.otherPersonName}`
+  return loan.role === 'lender' ? `what ${loan.otherPersonName} owes you` : `what you owe ${loan.otherPersonName}`
 }
 
 function Action({

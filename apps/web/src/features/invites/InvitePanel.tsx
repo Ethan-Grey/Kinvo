@@ -54,7 +54,7 @@ export function InvitePanel() {
 
   /** Invite with a debt from before Kinvo. The TermsForm shows its own errors. */
   async function handleCreateWithDebt(terms: TermsInput) {
-    if (!lentOn) throw new Error('Enter roughly when you lent the money.')
+    if (!lentOn) throw new Error('Enter roughly when this started.')
     setError(null)
     setCopied(false)
     const debt: ExistingDebtInput = {
@@ -96,7 +96,7 @@ export function InvitePanel() {
   return (
     <Card className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold">Invite a borrower</h2>
+        <h2 className="text-lg font-semibold">Invite someone who owes you</h2>
         <p className="text-sm text-ink-muted">Each link works once and expires after 7 days.</p>
       </div>
 
@@ -133,7 +133,7 @@ export function InvitePanel() {
             reviewExtras={
               <div className="grid grid-cols-2 gap-3">
                 <TextField
-                  label="Originally lent on"
+                  label="Owed since"
                   type="date"
                   max={todayInNZ()}
                   required

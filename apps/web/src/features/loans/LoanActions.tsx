@@ -75,16 +75,16 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
       <div className="space-y-3">
         <p className="text-sm">
           {loan.borrowerName} accepted. Send them{' '}
-          <span className="font-semibold">{formatCents(loan.currentTerms.principalCents)}</span>, then tell Kinvo. The
-          loan starts once you do.
+          <span className="font-semibold">{formatCents(loan.currentTerms.principalCents)}</span> or pay for it, then
+          tell Kinvo. Paying back starts once you do.
         </p>
         <Link to={`/loans/${loan.id}/sent`} className={primaryLink}>
           <SendIcon className="size-5" />
-          I’ve sent the money
+          I’ve paid it out
         </Link>
         <QuietAction
-          label="Cancel loan"
-          question="Cancel this loan? No money has been sent yet."
+          label="Cancel"
+          question="Cancel this? Nothing has been paid out yet."
           action={() => withdrawLoan(loan.id, '')}
           onDone={onChanged}
         />
@@ -95,10 +95,10 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
   if (loan.status === 'agreed') {
     return (
       <div className="space-y-3">
-        <Notice>Agreed. Waiting for {loan.lenderName} to send the money.</Notice>
+        <Notice>Agreed. Waiting for {loan.lenderName} to pay it out.</Notice>
         <QuietAction
-          label="Cancel loan"
-          question="Cancel this loan? No money has been sent yet."
+          label="Cancel"
+          question="Cancel this? Nothing has been paid out yet."
           action={() => withdrawLoan(loan.id, '')}
           onDone={onChanged}
         />
@@ -158,11 +158,11 @@ export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted:
 
   const statement = isDebt
     ? isBorrower
-      ? `I confirm I owe ${loan.lenderName} ${total}, and I agree to repay it on the dates shown.`
-      : `I confirm ${loan.borrowerName} owes me ${total}, to be repaid on the dates shown.`
+      ? `I confirm I owe ${loan.lenderName} ${total}, and I agree to pay it back on the dates shown.`
+      : `I confirm ${loan.borrowerName} owes me ${total}, to be paid back on the dates shown.`
     : isBorrower
-      ? `I agree to repay ${loan.lenderName} ${total} on the dates shown, under these terms.`
-      : `I agree to lend ${loan.borrowerName} ${formatCents(loan.currentTerms.principalCents)} under these terms.`
+      ? `I agree to pay ${loan.lenderName} back ${total} on the dates shown, under these terms.`
+      : `I agree to pay out ${formatCents(loan.currentTerms.principalCents)} for ${loan.borrowerName}, to be paid back under these terms.`
 
   async function handleAccept() {
     setBusy(true)
@@ -191,7 +191,7 @@ export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted:
       </label>
       {error && <Notice tone="error">{error}</Notice>}
       <Button className="w-full" disabled={!agreed} busy={busy} onClick={handleAccept}>
-        {isDebt ? 'Confirm this debt' : 'Accept loan agreement'}
+        {isDebt ? 'Confirm what you owe' : 'Accept agreement'}
       </Button>
       <p className="text-xs text-ink-muted">
         Accepting records your agreement, the date and time, and a fingerprint of these exact terms. It’s a record of
@@ -231,11 +231,11 @@ export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () =
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <p className="mb-1.5 text-sm font-medium">How did you send it?</p>
-        <Segmented label="How did you send it?" options={PAYMENT_METHODS} value={method} onChange={setMethod} />
+        <p className="mb-1.5 text-sm font-medium">How did you pay it?</p>
+        <Segmented label="How did you pay it?" options={PAYMENT_METHODS} value={method} onChange={setMethod} />
       </div>
       <TextField
-        label="Date sent"
+        label="Date paid"
         type="date"
         max={today}
         required

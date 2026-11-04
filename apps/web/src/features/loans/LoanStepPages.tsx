@@ -30,14 +30,14 @@ export function LoanStep({
   const navigate = useNavigate()
   const [loan] = useAsync(() => getLoan(id, userId), `${id}:${userId}`)
 
-  if (loan.status === 'loading') return <PageSkeleton label="Loading loan" />
+  if (loan.status === 'loading') return <PageSkeleton label="Loading" />
   if (loan.status === 'error') return <Notice tone="error">{loan.error.message}</Notice>
 
   const done = (flash: string) => navigate(`/loans/${id}`, { replace: true, state: { flash } })
 
   return (
     <div className="space-y-6">
-      <PageHeader back={{ to: `/loans/${id}`, label: 'Loan' }} title={title(loan.data)} />
+      <PageHeader back={{ to: `/loans/${id}`, label: 'Back' }} title={title(loan.data)} />
       {children(loan.data, done)}
     </div>
   )
@@ -47,16 +47,13 @@ const otherOf = (loan: LoanDetail) => (loan.role === 'lender' ? loan.borrowerNam
 
 export function AcceptLoanPage() {
   return (
-    <LoanStep title={(loan) => (loan.kind === 'existing_debt' ? 'Confirm this debt' : 'Accept the loan')}>
+    <LoanStep title={(loan) => (loan.kind === 'existing_debt' ? 'Confirm what you owe' : 'Accept')}>
       {(loan, done) => (
         <>
           <Card>
             <TermsSummary terms={loan.currentTerms} lenderName={loan.lenderName} borrowerName={loan.borrowerName} />
           </Card>
-          <AcceptForm
-            loan={loan}
-            onAccepted={() => done(loan.kind === 'existing_debt' ? 'Debt confirmed.' : 'Loan accepted.')}
-          />
+          <AcceptForm loan={loan} onAccepted={() => done(loan.kind === 'existing_debt' ? 'Confirmed.' : 'Accepted.')} />
         </>
       )}
     </LoanStep>
@@ -89,9 +86,11 @@ export function ChangeTermsPage() {
 export function FundsSentPage() {
   return (
     <LoanStep
-      title={(loan) => `Sent ${formatCents(loan.currentTerms.principalCents)} to ${loan.borrowerName.split(' ')[0]}?`}
+      title={(loan) =>
+        `Paid out ${formatCents(loan.currentTerms.principalCents)} for ${loan.borrowerName.split(' ')[0]}?`
+      }
     >
-      {(loan, done) => <FundsSentForm loan={loan} onSent={() => done('Loan started.')} />}
+      {(loan, done) => <FundsSentForm loan={loan} onSent={() => done('Started. Payments back are now tracked.')} />}
     </LoanStep>
   )
 }
@@ -114,7 +113,7 @@ function PaymentStep({ loan, onDone }: { loan: LoanDetail; onDone: (flash: strin
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
   const { balance, progress } = data.data
   if (!balance || loan.status !== 'active' || balance.outstandingCents === 0) {
-    return <Notice>There’s nothing left to pay on this loan.</Notice>
+    return <Notice>There’s nothing left to pay.</Notice>
   }
 
   const nextUnpaid = progress.find((p) => p.status !== 'paid')
@@ -138,9 +137,13 @@ function PaymentStep({ loan, onDone }: { loan: LoanDetail; onDone: (flash: strin
  */
 export function RemoveLoanPage() {
   return (
-    <LoanStep title={() => 'Remove this loan?'}>
+    <LoanStep title={() => 'Remove this?'}>
       {(loan) =>
-        loan.role === 'lender' ? <RemoveForm loan={loan} /> : <Notice>Only the lender can remove a loan.</Notice>
+        loan.role === 'lender' ? (
+          <RemoveForm loan={loan} />
+        ) : (
+          <Notice>Only the person who’s owed can remove this.</Notice>
+        )
       }
     </LoanStep>
   )
@@ -159,7 +162,7 @@ function RemoveForm({ loan }: { loan: LoanDetail }) {
     setError(null)
     try {
       await removeLoan(loan.id, reason)
-      navigate('/loans', { replace: true, state: { flash: 'Loan removed.' } })
+      navigate('/loans', { replace: true, state: { flash: 'Removed.' } })
     } catch (err) {
       setError((err as Error).message)
       setBusy(false)
@@ -173,13 +176,13 @@ function RemoveForm({ loan }: { loan: LoanDetail }) {
         you:
       </p>
       <ul className="list-inside list-disc space-y-1 text-sm text-ink-muted">
-        <li>from your loans, alerts and reminders</li>
-        {funded && <li>from what’s owed, total lent and charges received</li>}
+        <li>from your list, alerts and reminders</li>
+        {funded && <li>from what’s owed, total paid out and charges received</li>}
         {funded && <li>from {loan.borrowerName.split(' ')[0]}’s track record</li>}
       </ul>
       <p className="text-sm text-ink-muted">
-        Kinvo keeps a private note that it was removed, by whom and when. If this is a real loan that’s been settled or
-        you’re letting go, use “Forgive the rest” instead.
+        Kinvo keeps a private note that it was removed, by whom and when. If this is real and has been settled or you’re
+        letting go, use “Forgive the rest” instead.
       </p>
       <TextField
         label="Reason (optional)"
@@ -190,7 +193,7 @@ function RemoveForm({ loan }: { loan: LoanDetail }) {
       />
       {error && <Notice tone="error">{error}</Notice>}
       <Button type="submit" variant="danger" className="w-full" busy={busy}>
-        Remove loan
+        Remove
       </Button>
     </form>
   )

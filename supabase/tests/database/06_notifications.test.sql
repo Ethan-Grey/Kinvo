@@ -69,7 +69,7 @@ reset role;
 
 select is(
   pg_temp.title_for('00000000-0000-4000-8000-00000000000a', 'loan_requested'),
-  'Bob Borrower asked to borrow $200.00', 'the lender hears about a new request'
+  'Bob Borrower asked you for $200.00', 'the lender hears about a new request'
 );
 select is(
   (select count(*)::int from public.notifications where recipient_id = '00000000-0000-4000-8000-00000000000b'),
@@ -101,22 +101,22 @@ select is(
 );
 select is(
   (select body from public.notifications where kind = 'counter_offer'),
-  'New proposal: borrow $200.00, repay $220.00. Open Kinvo to reply.', 'the counter-offer shows the new figures'
+  'New proposal: $200.00, paid back as $220.00 in total. Open Kinvo to reply.', 'the counter-offer shows the new figures'
 );
 select is(
   pg_temp.title_for('00000000-0000-4000-8000-00000000000a', 'terms_accepted'),
-  'Bob Borrower accepted the loan', 'the lender hears the loan was accepted'
+  'Bob Borrower accepted', 'the lender hears the loan was accepted'
 );
 select ok(
-  (select body like 'Send them $200.00%' from public.notifications where kind = 'terms_accepted'),
+  (select body like 'Once you''ve sent $200.00 or paid for it%' from public.notifications where kind = 'terms_accepted'),
   'and is told to send the money'
 );
 select is(
   pg_temp.title_for('00000000-0000-4000-8000-00000000000b', 'funds_sent'),
-  'Lena Lender sent you $200.00', 'the borrower hears the money was sent'
+  'Lena Lender paid out $200.00 for you', 'the borrower hears the money was sent'
 );
 select ok(
-  (select body like 'Your loan has started. First payment: $110.00 due %' from public.notifications where kind = 'funds_sent'),
+  (select body like 'Paying back has started. First payment: $110.00 due %' from public.notifications where kind = 'funds_sent'),
   'with the first payment amount and date'
 );
 

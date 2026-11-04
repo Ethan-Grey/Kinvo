@@ -50,8 +50,8 @@ select is(
 );
 select is(
   (select can_lend from public.profiles where id = '00000000-0000-4000-8000-00000000000b'),
-  false,
-  'new users are not lenders by default'
+  true,
+  'anyone can be owed, from the start (ADR-0019)'
 );
 
 
@@ -75,15 +75,14 @@ reset role;
 
 
 -- -----------------------------------------------------------------------------
--- Bob (not a lender) can't create invites
+-- Anyone can create invites (ADR-0019)
 -- -----------------------------------------------------------------------------
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 
-select throws_ok(
+select lives_ok(
   'select public.create_invite()',
-  'P0001', 'lender_access_required',
-  'users without lender access cannot create invites'
+  'anyone can create an invite'
 );
 
 
@@ -129,9 +128,9 @@ select throws_ok(
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 
 select is(
-  (select count(*)::int from public.lender_invites),
+  (select count(*)::int from public.lender_invites where lender_id <> '00000000-0000-4000-8000-00000000000b'),
   0,
-  'borrowers cannot see lender invites'
+  'people only see their own invites'
 );
 select is(
   (select count(*)::int from public.profiles),

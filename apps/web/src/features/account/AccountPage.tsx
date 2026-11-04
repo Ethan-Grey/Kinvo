@@ -56,7 +56,7 @@ export function AccountPage() {
         </IconBubble>
         <span className="min-w-0 flex-1">
           <span className="block font-display text-lg font-semibold">People and invites</span>
-          <span className="block text-sm text-ink-muted">Who you lend to and borrow from</span>
+          <span className="block text-sm text-ink-muted">Who owes you and who you owe</span>
         </span>
         <ChevronIcon className="size-5 text-ink-muted" />
       </Link>
@@ -96,7 +96,7 @@ function DetailsCard({ profile }: { profile: Profile }) {
       <form onSubmit={handleSubmit} className="mt-3 space-y-3">
         <TextField
           label="Name"
-          hint="This is what the people you lend to or borrow from see."
+          hint="This is what the people you’re connected with see."
           value={name}
           maxLength={80}
           required
@@ -139,7 +139,7 @@ function EmailCard({ profile }: { profile: Profile }) {
         <span className="min-w-0 flex-1">
           <span className="block font-display text-lg font-semibold">Email me</span>
           <span className="block text-sm text-ink-muted">
-            Loan updates, payments and due-date reminders. Alerts in the app always stay on.
+            New requests, payments and due-date reminders. Alerts in the app always stay on.
           </span>
         </span>
         <input
@@ -200,8 +200,8 @@ function DataCard() {
         <div className="min-w-0">
           <h2 className="text-lg font-semibold">Your data</h2>
           <p className="text-sm text-ink-muted">
-            A copy of everything Kinvo holds that involves you: loans, agreements, payments and activity, as a JSON
-            file.
+            A copy of everything Kinvo holds that involves you: what’s owed, agreements, payments and activity, as a
+            JSON file.
           </p>
         </div>
       </div>

@@ -6,7 +6,13 @@ import { formatCents } from '../../domain/money'
 import { describeTrackRecord, listBorrowerRecords, type BorrowerRecord } from '../../data/dashboard'
 import { listLoans } from '../../data/loans'
 import { endRelationship, listPeople } from '../../data/people'
-import { formatHour, getReminderSettings, listCustomReminders, type ReminderSettings } from '../../data/reminders'
+import {
+  describeDay,
+  formatHour,
+  getReminderSettings,
+  listCustomReminders,
+  type ReminderSettings,
+} from '../../data/reminders'
 import { useAsync } from '../../shared/useAsync'
 import { BackLink, Button, Card, Notice, PageSkeleton, SectionHeader, Stat } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
@@ -59,13 +65,13 @@ export function PersonPage() {
           size="xl"
         />
         <h1 className="mt-3 text-[1.75rem] leading-tight font-semibold">{person.personName}</h1>
-        <p className="text-sm text-ink-muted">{iLend ? 'Borrows from you' : 'Lends to you'}</p>
+        <p className="text-sm text-ink-muted">{iLend ? 'Owes you' : 'You owe them'}</p>
         <Link
           to={`/loans/new?with=${relationshipId}`}
           className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-2xl bg-brand px-5 font-semibold text-on-brand transition active:scale-[0.98]"
         >
           <PlusIcon className="size-5" />
-          {iLend ? 'Offer a loan' : 'Ask for a loan'}
+          {iLend ? 'Add what they owe' : 'Add what you owe'}
         </Link>
       </section>
 
@@ -80,9 +86,9 @@ export function PersonPage() {
       )}
 
       <section className="space-y-3">
-        <SectionHeader title="Loans" />
+        <SectionHeader title="Owed" />
         {loans.length === 0 ? (
-          <p className="text-sm text-ink-muted">No loans with {person.personName.split(' ')[0]} yet.</p>
+          <p className="text-sm text-ink-muted">Nothing owed with {person.personName.split(' ')[0]} yet.</p>
         ) : (
           <LoanList loans={loans} />
         )}
@@ -94,13 +100,13 @@ export function PersonPage() {
 }
 
 function describeReminders(settings: ReminderSettings): string {
-  const which = [
-    settings.dayBefore && 'the day before',
-    settings.onTheDay && 'on the day',
-    settings.whenOverdue && 'when late',
-  ].filter(Boolean)
-  if (which.length === 0) return 'Payment reminders are off'
-  return `At ${formatHour(settings.sendHour)}: ${which.join(', ')}`
+  if (settings.times.length === 0 && settings.lateEveryDays === null) return 'Payment reminders are off'
+  const shown = settings.times
+    .slice(0, 3)
+    .map((t) => `${describeDay(t.daysFromDue).toLowerCase()} at ${formatHour(t.sendHour)}`)
+  const more = settings.times.length > 3 ? ` and ${settings.times.length - 3} more` : ''
+  const text = shown.join(', ')
+  return text ? `${text.charAt(0).toUpperCase()}${text.slice(1)}${more}` : 'Only while late'
 }
 
 function RemindersLink({
@@ -161,11 +167,11 @@ function TrackRecord({ record }: { record: BorrowerRecord }) {
           }
         />
         <Stat
-          label="Borrowed"
+          label="Paid out"
           value={formatCents(record.totalBorrowedCents)}
-          hint={`${record.loansFunded} loan${record.loansFunded === 1 ? '' : 's'}`}
+          hint={`${record.loansFunded} time${record.loansFunded === 1 ? '' : 's'}`}
         />
-        <Stat label="Repaid" value={formatCents(record.totalRepaidCents)} hint="Including charges" />
+        <Stat label="Paid back" value={formatCents(record.totalRepaidCents)} hint="Including charges" />
         <Stat label="Owes now" value={formatCents(record.owedCents)} tone="brand" />
         <Stat
           label="Overdue"
@@ -186,7 +192,7 @@ function EndConnection({ relationshipId, name }: { relationshipId: string; name:
   const [error, setError] = useState<string | null>(null)
 
   async function handleEnd() {
-    if (!window.confirm(`Stop lending to ${name}? Your history stays. You can invite them again later.`)) return
+    if (!window.confirm(`Disconnect from ${name}? Your history stays. You can invite them again later.`)) return
     setBusy(true)
     setError(null)
     try {
@@ -202,7 +208,7 @@ function EndConnection({ relationshipId, name }: { relationshipId: string; name:
     <div className="space-y-2">
       {error && <Notice tone="error">{error}</Notice>}
       <Button variant="ghost" className="w-full" busy={busy} onClick={handleEnd}>
-        Stop lending to {name}
+        Disconnect from {name}
       </Button>
     </div>
   )

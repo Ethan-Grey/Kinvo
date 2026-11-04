@@ -40,10 +40,10 @@ export function NewLoanPage() {
       <Card>
         <EmptyState
           icon={<PeopleIcon className="size-6" />}
-          title="No one to lend with yet"
+          title="No one connected yet"
           action={
             <Link to="/loans" className="text-sm font-medium text-brand-ink underline">
-              Back to loans
+              Back
             </Link>
           }
         >
@@ -62,7 +62,7 @@ export function NewLoanPage() {
   if (!selected) {
     return (
       <div className="space-y-6">
-        <PageHeader back={{ to: '/loans', label: 'Loans' }} title="Who with?" />
+        <PageHeader back={{ to: '/loans', label: 'Owed' }} title="Who with?" />
         <ul className="space-y-2">
           {pool.map((p) => (
             <li key={p.relationshipId}>
@@ -75,7 +75,7 @@ export function NewLoanPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block font-display text-lg font-semibold">{p.personName}</span>
                   <span className="block text-sm text-ink-muted">
-                    {p.myRole === 'borrower' ? 'Ask them to lend to you' : 'Offer them a loan'}
+                    {p.myRole === 'borrower' ? 'Add what you owe them' : 'Add what they owe you'}
                   </span>
                 </span>
                 <ChevronIcon className="size-5 text-ink-muted" />
@@ -93,11 +93,11 @@ export function NewLoanPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        back={{ to: '/loans', label: 'Loans' }}
+        back={{ to: '/loans', label: 'Owed' }}
         title={
           isRequest
-            ? `Ask ${selected.personName.split(' ')[0]} for a loan`
-            : `Offer ${selected.personName.split(' ')[0]} a loan`
+            ? `What you owe ${selected.personName.split(' ')[0]}`
+            : `What ${selected.personName.split(' ')[0]} owes you`
         }
       />
       <TermsForm

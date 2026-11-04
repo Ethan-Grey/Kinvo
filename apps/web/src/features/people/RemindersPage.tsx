@@ -8,14 +8,19 @@ import { listPeople } from '../../data/people'
 import {
   cancelCustomReminder,
   createCustomReminder,
+  describeDay,
   formatHour,
   getReminderSettings,
   listCustomReminders,
+  MAX_REMINDER_TIMES,
   REPEAT_LABELS,
   saveReminderSettings,
+  sortTimes,
   type CustomReminder,
   type ReminderSettings,
+  type ReminderTime,
 } from '../../data/reminders'
+import { CloseIcon, PlusIcon } from '../../shared/icons'
 import { useAsync } from '../../shared/useAsync'
 import { Button, Card, Notice, PageHeader, PageSkeleton, Select, Switch, TextArea, TextField } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
@@ -74,7 +79,7 @@ export function RemindersPage() {
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
 
   const { person, settings, reminders, loans } = data.data
-  if (!person) return <Notice tone="error">Only the person lending can set reminders.</Notice>
+  if (!person) return <Notice tone="error">Only the person who’s owed can set reminders.</Notice>
   const first = person.personName.split(' ')[0] ?? person.personName
 
   return (
@@ -95,6 +100,8 @@ export function RemindersPage() {
   )
 }
 
+const DAY_OPTIONS = [-7, -3, -2, -1, 0, 1, 2, 3, 5, 7, 14].map((d) => ({ value: String(d), label: describeDay(d) }))
+
 function AutomaticReminders({
   relationshipId,
   first,
@@ -111,6 +118,18 @@ function AutomaticReminders({
     setSettings((s) => ({ ...s, ...patch }))
     setStatus(null)
   }
+  const setTime = (index: number, patch: Partial<ReminderTime>) =>
+    set({ times: settings.times.map((t, i) => (i === index ? { ...t, ...patch } : t)) })
+
+  function addTime() {
+    const last = settings.times.at(-1)
+    set({
+      times: [
+        ...settings.times,
+        { daysFromDue: last ? last.daysFromDue : 0, sendHour: last ? Math.min(23, last.sendHour + 3) : 9 },
+      ],
+    })
+  }
 
   async function handleSave(event: FormEvent) {
     event.preventDefault()
@@ -118,6 +137,7 @@ function AutomaticReminders({
     setStatus(null)
     try {
       await saveReminderSettings(relationshipId, settings)
+      setSettings((s) => ({ ...s, times: sortTimes(s.times) }))
       setStatus({ tone: 'success', text: 'Saved.' })
     } catch (err) {
       setStatus({ tone: 'error', text: (err as Error).message })
@@ -131,38 +151,90 @@ function AutomaticReminders({
       <form onSubmit={handleSave} className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold">Payment reminders</h2>
-          <p className="text-sm text-ink-muted">Kinvo sends these to {first} for every loan with you.</p>
+          <p className="text-sm text-ink-muted">
+            Kinvo sends these to {first} for each payment, for everything {first} owes you. Add as many times as you
+            like.
+          </p>
         </div>
-        <Select
-          label="Send them at"
-          options={HOURS}
-          value={String(settings.sendHour)}
-          onChange={(e) => set({ sendHour: Number(e.target.value) })}
-        />
-        <div className="divide-y divide-line">
-          <Switch label="The day before" checked={settings.dayBefore} onChange={(v) => set({ dayBefore: v })} />
-          <Switch label="On the day it’s due" checked={settings.onTheDay} onChange={(v) => set({ onTheDay: v })} />
-          <Switch
-            label="When a payment is late"
-            checked={settings.whenOverdue}
-            onChange={(v) => set({ whenOverdue: v })}
-          />
-        </div>
-        {settings.whenOverdue && (
-          <Select
-            label="Repeat late reminders"
-            options={
-              OVERDUE_GAPS.some((g) => g.value === String(settings.overdueEveryDays))
-                ? OVERDUE_GAPS
-                : [
-                    ...OVERDUE_GAPS,
-                    { value: String(settings.overdueEveryDays), label: `Every ${settings.overdueEveryDays} days` },
-                  ]
-            }
-            value={String(settings.overdueEveryDays)}
-            onChange={(e) => set({ overdueEveryDays: Number(e.target.value) })}
-          />
+
+        {settings.times.length === 0 ? (
+          <p className="rounded-2xl border border-line p-4 text-sm text-ink-muted">
+            No reminders before or on the day.
+          </p>
+        ) : (
+          <ol className="space-y-2">
+            {settings.times.map((time, index) => (
+              <li key={index} className="flex items-end gap-1.5">
+                <Select
+                  label={`Reminder ${index + 1}`}
+                  options={
+                    DAY_OPTIONS.some((o) => o.value === String(time.daysFromDue))
+                      ? DAY_OPTIONS
+                      : [...DAY_OPTIONS, { value: String(time.daysFromDue), label: describeDay(time.daysFromDue) }]
+                  }
+                  value={String(time.daysFromDue)}
+                  onChange={(e) => setTime(index, { daysFromDue: Number(e.target.value) })}
+                  className="min-w-0 flex-1"
+                />
+                <Select
+                  label="Time"
+                  options={HOURS}
+                  value={String(time.sendHour)}
+                  onChange={(e) => setTime(index, { sendHour: Number(e.target.value) })}
+                  className="w-24 shrink-0"
+                />
+                <Button
+                  variant="ghost"
+                  className="shrink-0 px-1.5"
+                  aria-label={`Remove reminder ${index + 1}`}
+                  onClick={() => set({ times: settings.times.filter((_, i) => i !== index) })}
+                >
+                  <CloseIcon className="size-4" />
+                </Button>
+              </li>
+            ))}
+          </ol>
         )}
+        {settings.times.length < MAX_REMINDER_TIMES && (
+          <Button variant="secondary" onClick={addTime}>
+            <PlusIcon className="size-4" />
+            Add a reminder time
+          </Button>
+        )}
+
+        <div className="space-y-3 border-t border-line pt-4">
+          <Switch
+            label="Keep reminding while late"
+            description="After the last reminder above, until it’s paid."
+            checked={settings.lateEveryDays !== null}
+            onChange={(on) => set({ lateEveryDays: on ? 7 : null })}
+          />
+          {settings.lateEveryDays !== null && (
+            <div className="flex gap-2">
+              <Select
+                label="How often"
+                options={
+                  OVERDUE_GAPS.some((g) => g.value === String(settings.lateEveryDays))
+                    ? OVERDUE_GAPS
+                    : [
+                        ...OVERDUE_GAPS,
+                        { value: String(settings.lateEveryDays), label: `Every ${settings.lateEveryDays} days` },
+                      ]
+                }
+                value={String(settings.lateEveryDays)}
+                onChange={(e) => set({ lateEveryDays: Number(e.target.value) })}
+                className="min-w-0 flex-1"
+              />
+              <Select
+                label="Time"
+                options={HOURS}
+                value={String(settings.lateHour)}
+                onChange={(e) => set({ lateHour: Number(e.target.value) })}
+                className="w-28"
+              />
+            </div>
+          )}
+        </div>
         <p className="text-xs text-ink-muted">You’ll always be told when one of {first}’s payments is late.</p>
         {status && <Notice tone={status.tone}>{status.text}</Notice>}
         <Button type="submit" className="w-full" busy={busy}>
@@ -325,16 +397,16 @@ function NewReminder({
         />
         {loans.length > 0 && (
           <Select
-            label="About a loan (optional)"
+            label="About one thing owed (optional)"
             options={[
-              { value: '', label: 'No particular loan' },
-              ...loans.map((l) => ({ value: l.id, label: `Loan of ${formatCents(l.principalCents)}` })),
+              { value: '', label: 'Everything' },
+              ...loans.map((l) => ({ value: l.id, label: `${formatCents(l.totalCents)} owed` })),
             ]}
             value={loanId}
             onChange={(e) => setLoanId(e.target.value)}
           />
         )}
-        {loanId && <p className="text-xs text-ink-muted">It stops by itself once that loan is paid off.</p>}
+        {loanId && <p className="text-xs text-ink-muted">It stops by itself once that’s paid off.</p>}
         {status && <Notice tone={status.tone}>{status.text}</Notice>}
         <Button type="submit" className="w-full" busy={busy}>
           Set reminder

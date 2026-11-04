@@ -6,7 +6,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 
-select plan(32);
+select plan(37);
 
 create function pg_temp.receipt(p_loan uuid) returns text language plpgsql security definer as $h$
 declare v_path text := p_loan || '/' || gen_random_uuid() || '.jpg';
@@ -122,56 +122,72 @@ select is((select count(*)::int from public.audit_events where event_type = 'loa
 
 
 -- =============================================================================
--- Reminder settings
+-- Reminder times (ADR-0019)
 -- =============================================================================
+create function pg_temp.due(p_offset int) returns void language sql security definer as $$
+  update public.instalments set due_on = current_setting('test.today')::date + p_offset
+  where terms_id = pg_temp.terms_id() and sequence = 2;
+$$;
+grant execute on all functions in schema pg_temp to authenticated;
+
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select throws_ok(
-  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1', 18, true, true, true, 7) $$,
-  'P0001', 'lender_only', 'the borrower can''t change reminder settings'
+  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1', '[]', null, 9) $$,
+  'P0001', 'lender_only', 'the borrower can''t change reminder times'
 );
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000c"}', true);
 select throws_ok(
-  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1', 18, true, true, true, 7) $$,
+  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1', '[]', null, 9) $$,
   'P0001', 'relationship_not_found', 'nor can an outsider'
 );
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select throws_ok(
-  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1', 24, true, true, true, 7) $$,
+  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1', '[{"days_from_due": 0, "send_hour": 24}]', null, 9) $$,
   'P0001', 'invalid_setting', 'the hour must be 0-23'
 );
 select lives_ok(
-  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1', 18, false, true, true, 3) $$,
-  'the lender can set 6pm, no day-before reminder, overdue every 3 days'
+  $$ select public.save_reminder_settings('00000000-0000-4000-8000-0000000000e1',
+       '[{"days_from_due": 0, "send_hour": 9}, {"days_from_due": 0, "send_hour": 18}, {"days_from_due": 1, "send_hour": 12}]',
+       3, 18) $$,
+  'the lender can set 9am and 6pm on the day, noon the day after, then every 3 days at 6pm'
 );
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
-select is((select send_hour::int from public.reminder_settings), 18, 'the borrower can see when reminders come');
+select is((select count(*)::int from public.reminder_rules), 3, 'the borrower can see their reminder times');
 reset role;
 
--- The second instalment ($140 left) is due tomorrow, then today.
-update public.instalments set due_on = current_setting('test.today')::date + 1
-where terms_id = pg_temp.terms_id() and sequence = 2;
+select pg_temp.due(1);
 select private.queue_reminders(pg_temp.nz(0, '19:05'));
-select is(pg_temp.count_kind('due_tomorrow'), 0, 'day-before reminders can be turned off');
+select is(pg_temp.count_kind('due_tomorrow'), 0, 'no day-before reminder unless one is set');
 
-update public.instalments set due_on = current_setting('test.today')::date
-where terms_id = pg_temp.terms_id() and sequence = 2;
+select pg_temp.due(0);
 select private.queue_reminders(pg_temp.nz(0, '09:05'));
-select is(pg_temp.count_kind('due_today'), 0, 'nothing before the chosen hour');
+select is(pg_temp.count_kind('due_today'), 1, 'the first on-the-day reminder comes at 9am');
+select private.queue_reminders(pg_temp.nz(0, '12:05'));
+select is(pg_temp.count_kind('due_today'), 1, 'nothing in between');
 select private.queue_reminders(pg_temp.nz(0, '18:05'));
-select is(pg_temp.count_kind('due_today'), 1, 'the on-the-day reminder comes at the chosen hour');
+select is(pg_temp.count_kind('due_today'), 2, 'and a second one at 6pm');
 
-update public.instalments set due_on = current_setting('test.today')::date - 4
-where terms_id = pg_temp.terms_id() and sequence = 2;
-select private.queue_reminders(pg_temp.nz(0, '18:05'));
-select is(pg_temp.count_kind('overdue'), 1, 'overdue reminders repeat on the chosen gap (every 3 days)');
+select pg_temp.due(-1);
+select private.queue_reminders(pg_temp.nz(0, '11:05'));
+select is(pg_temp.count_kind('overdue'), 0, 'the day after, nothing before noon');
+select private.queue_reminders(pg_temp.nz(0, '12:05'));
+select is(pg_temp.count_kind('overdue'), 1, 'then the day-after reminder');
+select is(pg_temp.count_kind('borrower_overdue'), 1, 'and the person owed is told');
 
-update public.reminder_settings set when_overdue = false;
-update public.instalments set due_on = current_setting('test.today')::date - 7
-where terms_id = pg_temp.terms_id() and sequence = 2;
+select pg_temp.due(-4);
+select private.queue_reminders(pg_temp.nz(0, '17:05'));
+select is(pg_temp.count_kind('overdue'), 1, 'late reminders wait for their hour');
 select private.queue_reminders(pg_temp.nz(0, '18:05'));
-select is(pg_temp.count_kind('overdue'), 1, 'overdue reminders to the borrower can be turned off');
-select is(pg_temp.count_kind('borrower_overdue'), 2, 'but the lender still hears about it');
+select is(pg_temp.count_kind('overdue'), 2, 'then repeat every 3 days after the last reminder');
+
+update public.reminder_settings set late_every_days = null;
+select pg_temp.due(-7);
+select private.queue_reminders(pg_temp.nz(0, '18:05'));
+select is(pg_temp.count_kind('overdue'), 2, 'repeating late reminders can be turned off');
+select pg_temp.due(-8);
+select private.queue_reminders(pg_temp.nz(0, '09:05'));
+select is(pg_temp.count_kind('borrower_overdue'), 2, 'but the person owed still hears weekly');
 
 
 -- =============================================================================

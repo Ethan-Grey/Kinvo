@@ -4,14 +4,14 @@ const LOAN_STEPS: [suffix: string, title: string][] = [
   ['/change', 'Suggest changes'],
   ['/sent', 'Money sent'],
   ['/pay', 'Record a payment'],
-  ['/remove', 'Remove loan'],
+  ['/remove', 'Remove'],
   ['/schedule', 'Change dates'],
 ]
 
 const SECTIONS: [prefix: string, title: string][] = [
-  ['/loans/new', 'New loan'],
-  ['/loans/', 'Loan'],
-  ['/loans', 'Loans'],
+  ['/loans/new', 'Add what’s owed'],
+  ['/loans/', 'Details'],
+  ['/loans', 'Owed'],
   ['/people/', 'Person'],
   ['/people', 'People'],
   ['/notifications', 'Alerts'],

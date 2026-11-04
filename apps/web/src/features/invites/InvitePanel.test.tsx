@@ -41,7 +41,7 @@ describe('InvitePanel', () => {
     expect(screen.queryByLabelText(/one-off charge/i)).toBeNull()
     await userEvent.click(screen.getByRole('button', { name: 'More payments' }))
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
-    await userEvent.type(screen.getByLabelText(/originally lent on/i), lentOn)
+    await userEvent.type(screen.getByLabelText(/owed since/i), lentOn)
     await userEvent.type(screen.getByLabelText(/what for/i), 'Car rego')
     await userEvent.click(screen.getByRole('button', { name: /create invite link/i }))
 
@@ -67,7 +67,7 @@ describe('InvitePanel', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
     await userEvent.click(screen.getByRole('button', { name: /create invite link/i }))
     expect(api.createInvite).not.toHaveBeenCalled()
-    expect(await screen.findByText(/when you lent the money/i)).toBeTruthy()
+    expect(await screen.findByText(/when this started/i)).toBeTruthy()
   })
 
   it('has no accessibility problems, including the existing-debt form', async () => {

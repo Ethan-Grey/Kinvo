@@ -50,13 +50,13 @@ export function PeoplePage() {
         <EmptyState icon={<PeopleIcon className="size-6" />} title="No one here yet">
           {profile.can_lend
             ? 'Create an invite link below and send it to someone in your family.'
-            : 'Ask the person lending to you for an invite link.'}
+            : 'Ask someone you owe for an invite link, or invite someone who owes you.'}
         </EmptyState>
       )}
 
       {people.borrowers.length > 0 && (
         <section className="space-y-3">
-          <SectionHeader title="You lend to" />
+          <SectionHeader title="Owe you" />
           <ul className="space-y-2">
             {people.borrowers.map((person) => (
               <PersonRow
@@ -72,7 +72,7 @@ export function PeoplePage() {
 
       {people.lenders.length > 0 && (
         <section className="space-y-3">
-          <SectionHeader title="Lends to you" />
+          <SectionHeader title="You owe" />
           <ul className="space-y-2">
             {people.lenders.map((person) => (
               <PersonRow key={person.relationshipId} person={person} loans={loans} />

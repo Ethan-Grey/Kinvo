@@ -8,7 +8,14 @@ import { RemindersPage } from './RemindersPage'
 
 const reminders = vi.hoisted(() => ({
   getReminderSettings: vi.fn(() =>
-    Promise.resolve({ sendHour: 9, dayBefore: true, onTheDay: true, whenOverdue: true, overdueEveryDays: 7 }),
+    Promise.resolve({
+      times: [
+        { daysFromDue: -1, sendHour: 9 },
+        { daysFromDue: 0, sendHour: 9 },
+      ],
+      lateEveryDays: 7,
+      lateHour: 9,
+    }),
   ),
   saveReminderSettings: vi.fn(() => Promise.resolve()),
   listCustomReminders: vi.fn(() =>
@@ -53,21 +60,31 @@ function renderPage() {
 }
 
 describe('RemindersPage', () => {
-  it('saves the reminder time and which reminders go out', async () => {
+  it('saves several reminder times, before, on and after the due date', async () => {
     const { container } = renderPage()
     await screen.findByRole('heading', { name: 'Reminders for Bob' })
     await expectNoAxeViolations(container)
 
-    await userEvent.selectOptions(screen.getByLabelText('Send them at'), '18')
-    await userEvent.click(screen.getByRole('switch', { name: 'The day before' }))
+    // Change the day-before one to 6pm, drop nothing, add a second on-the-day one at noon and one the day after.
+    const times = screen.getAllByLabelText('Time')
+    await userEvent.selectOptions(times[0] as HTMLSelectElement, '18')
+    await userEvent.click(screen.getByRole('button', { name: 'Add a reminder time' }))
+    await userEvent.selectOptions(screen.getByLabelText('Reminder 3'), '0')
+    await userEvent.selectOptions(screen.getAllByLabelText('Time')[2] as HTMLSelectElement, '12')
+    await userEvent.click(screen.getByRole('button', { name: 'Add a reminder time' }))
+    await userEvent.selectOptions(screen.getByLabelText('Reminder 4'), '1')
+    await userEvent.click(screen.getByRole('button', { name: 'Remove reminder 1' }))
+    await userEvent.click(screen.getByRole('switch', { name: /keep reminding while late/i }))
     await userEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(reminders.saveReminderSettings).toHaveBeenCalledWith('rel-1', {
-      sendHour: 18,
-      dayBefore: false,
-      onTheDay: true,
-      whenOverdue: true,
-      overdueEveryDays: 7,
+      times: [
+        { daysFromDue: 0, sendHour: 9 },
+        { daysFromDue: 0, sendHour: 12 },
+        { daysFromDue: 1, sendHour: 15 },
+      ],
+      lateEveryDays: null,
+      lateHour: 9,
     })
     expect(await screen.findByText('Saved.')).toBeTruthy()
   })

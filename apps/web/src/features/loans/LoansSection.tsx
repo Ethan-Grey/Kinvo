@@ -24,7 +24,7 @@ export function LoanList({ loans, showClosed = true }: { loans: LoanSummary[]; s
         <details className="group">
           <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-ink-muted hover:text-ink">
             <ChevronIcon className="size-4 transition-transform group-open:rotate-90" />
-            Closed loans ({closed.length})
+            Closed ({closed.length})
           </summary>
           <div className="mt-2">
             <Rows loans={closed} />
@@ -72,7 +72,7 @@ export function Rows({ loans }: { loans: LoanSummary[] }) {
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">
-                  {loan.role === 'lender' ? `To ${loan.otherPersonName}` : `From ${loan.otherPersonName}`}
+                  {loan.role === 'lender' ? `${loan.otherPersonName} owes you` : `You owe ${loan.otherPersonName}`}
                 </p>
                 <p className="truncate text-sm text-ink-muted tabular-nums">{summaryLine(loan)}</p>
               </div>
@@ -99,10 +99,10 @@ function summaryLine(loan: LoanSummary): string {
       ? `Next payment ${formatShortDate(balance.nextDueOn)}`
       : `${formatCents(balance.outstandingCents)} left of ${formatCents(balance.totalCents)}`
   }
-  if (loan.status === 'completed') return 'Repaid in full'
+  if (loan.status === 'completed') return 'Paid back in full'
   if (loan.status === 'written_off') return 'Forgiven'
   if (loan.kind === 'existing_debt') return 'Existing debt'
   return loan.firstDueOn
     ? `First payment ${formatShortDate(loan.firstDueOn)}`
-    : `Borrow ${formatCents(loan.principalCents)}`
+    : `${formatCents(loan.principalCents)} proposed`
 }

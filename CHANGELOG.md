@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Reminder times (ADR-0019): set as many reminders as you like for each person, each a day (before, on or after the due date) and a time, e.g. 9am and 6pm on the day, then noon the day after. Optionally keep reminding every few days while a payment is late.
+- Anyone can be owed: every account can invite people, so partners and flatmates can track what they owe each other both ways.
 - Lenders can change the dates and amounts of a running loan (ADR-0018): move every unpaid payment later or earlier in one tap, edit any payment, add or remove payments, or split what's left evenly. Paid payments stay as they are, the total owed can't change, and the borrower is notified straight away.
 - Reminder settings per borrower: the time reminders go out, and whether to send them the day before, on the day and when late (and how often).
 - Your own reminders: a message to a borrower at a date and time you choose, once or repeating.
@@ -23,6 +25,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Neutral wording throughout: "owes you" and "you owe" instead of lending and borrowing, so it fits paying someone back for shopping as well as loans. The Loans tab is now "Owed".
 - Only the lender sets a charge (ADR-0015). Borrowers' requests have none. Once the lender proposes one, the borrower can change the amount or plan, and the charge follows the lender's rate.
 - One question per step:
   - Asking for, offering or changing a loan goes through short steps: who, how much, any charge, how it's paid back, then check and send.

@@ -30,7 +30,7 @@ One row per signed-in user, created automatically on sign-up from `auth.users`.
 | id | uuid | PK, FK → `auth.users.id` |
 | display_name | text | 1–80 characters, from the Google name or email prefix |
 | email | text | Copied from auth for notifications |
-| can_lend | boolean | Lender access, granted manually (ADR-0008) |
+| can_lend | boolean | Always true since ADR-0019 (anyone can invite people who owe them) |
 | email_notifications | boolean | Default true. Off skips notification emails; the in-app list is unaffected |
 
 ### `lender_invites` (implemented)

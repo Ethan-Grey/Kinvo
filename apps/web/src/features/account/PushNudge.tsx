@@ -56,7 +56,7 @@ export function PushNudge() {
         <div className="min-w-0 flex-1">
           <h2 className="font-display text-lg font-semibold">Get a pop-up when it matters</h2>
           <p className="text-sm text-ink-muted">
-            Know straight away when someone asks to borrow, pays you, or a payment is due.
+            Know straight away when someone asks you for money, pays you, or a payment is due.
           </p>
         </div>
         <button
