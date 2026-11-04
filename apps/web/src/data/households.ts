@@ -4,7 +4,8 @@
  */
 import type { IsoDate } from '../domain/dates'
 import { toCents, type Cents } from '../domain/money'
-import type { BillCategory, BillMethod, Json, RepeatFrequency } from './database.types'
+import type { Database } from './database.types'
+import type { BillCategory, BillMethod, Json, RepeatFrequency, SpendCategory } from './database.types'
 import { toAppError } from './errors'
 import { supabase } from './supabase'
 
@@ -82,7 +83,30 @@ export interface TabEntryRow {
   voided: boolean
 }
 
+export interface Expense {
+  id: string
+  description: string | null
+  category: SpendCategory
+  amountCents: Cents
+  spentOn: IsoDate
+  paidBy: string | null
+  fromShared: boolean
+  receiptPath: string | null
+  createdBy: string | null
+  voided: boolean
+}
+
+export const SPEND_LABELS: Record<SpendCategory, string> = {
+  groceries: 'Groceries',
+  takeaways: 'Takeaways',
+  household: 'Household',
+  transport: 'Transport',
+  fun: 'Fun',
+  other: 'Other',
+}
+
 export interface HouseholdDetail extends Household {
+  expenses: Expense[]
   topups: Topup[]
   bills: Bill[]
   occurrences: BillOccurrence[]
@@ -171,6 +195,7 @@ export async function getHousehold(id: string): Promise<HouseholdDetail> {
   const { data, error } = await supabase().from('households').select(`*, ${MEMBERS}`).eq('id', id).maybeSingle()
   if (error) throw toAppError(error)
   if (!data) throw toAppError({ message: 'household_not_found' })
+  let expenses: Database['public']['Tables']['household_expenses']['Row'][] = []
   const [topups, bills, occurrences, shared, tab] = await Promise.all([
     supabase().from('household_topups').select('*').eq('household_id', id).eq('active', true),
     supabase().from('household_bills').select('*').eq('household_id', id).eq('active', true).order('created_at'),
@@ -182,7 +207,19 @@ export async function getHousehold(id: string): Promise<HouseholdDetail> {
       .limit(200),
     fetchShared([id]),
     fetchTab([id]),
-  ])
+    supabase()
+      .from('household_expenses')
+      .select('*')
+      .eq('household_id', id)
+      .is('voided_at', null)
+      .order('spent_on', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(500),
+  ]).then(([t, b, o, sh, tb, ex]) => {
+    if (ex.error) throw toAppError(ex.error)
+    expenses = ex.data
+    return [t, b, o, sh, tb] as const
+  })
   for (const r of [topups, bills, occurrences]) if (r.error) throw toAppError(r.error)
   return {
     ...toHousehold(data as unknown as HouseholdRow),
@@ -239,6 +276,18 @@ export async function getHousehold(id: string): Promise<HouseholdDetail> {
     }),
     sharedEntries: shared,
     tab,
+    expenses: expenses.map((e) => ({
+      id: e.id,
+      description: e.description,
+      category: e.category,
+      amountCents: toCents(e.amount_cents),
+      spentOn: e.spent_on,
+      paidBy: e.paid_by,
+      fromShared: e.from_shared,
+      receiptPath: e.receipt_path,
+      createdBy: e.created_by,
+      voided: e.voided_at !== null,
+    })),
   }
 }
 
@@ -473,3 +522,34 @@ export async function uploadHouseholdReceipt(householdId: string, jpeg: Blob): P
   if (error) throw toAppError({ message: error.message })
   return path
 }
+
+export interface ExpenseInput {
+  category: SpendCategory
+  amountCents: number
+  /** Null = from the shared account. */
+  paidBy: string | null
+  description: string
+  spentOn: IsoDate
+  split: { userId: string; shareBp: number }[] | null
+  receipt: Blob | null
+}
+
+export async function addExpense(householdId: string, input: ExpenseInput): Promise<string> {
+  const receiptPath = input.receipt ? await uploadHouseholdReceipt(householdId, input.receipt) : null
+  const id = await call(
+    supabase().rpc('add_household_expense', {
+      p_household_id: householdId,
+      p_category: input.category,
+      p_amount_cents: input.amountCents,
+      p_paid_by: input.paidBy,
+      p_description: input.description.trim() || null,
+      p_spent_on: input.spentOn,
+      p_split: splitArg(input.split),
+      p_receipt_path: receiptPath,
+    }),
+  )
+  return id ?? ''
+}
+
+export const removeExpense = (expenseId: string) =>
+  call(supabase().rpc('remove_household_expense', { p_expense_id: expenseId }))

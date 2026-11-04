@@ -93,6 +93,7 @@ const household = {
       voided: false,
     },
   ],
+  expenses: [],
   tab: [
     {
       id: 'x1',

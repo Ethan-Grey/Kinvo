@@ -4,6 +4,7 @@ import { SplitBillPage } from './features/bills/SplitBillPage'
 import { BillDuePage, BillPage, NewBillPage } from './features/households/BillPages'
 import { HouseholdPage } from './features/households/HouseholdPage'
 import { HouseholdSettingsPage, SettlePage } from './features/households/HouseholdSettings'
+import { MonthPage, QuickSpendPage, SpendPage } from './features/households/SpendPage'
 import { HouseholdInvitePage, HouseholdsPage, NewHouseholdPage } from './features/households/HouseholdsPage'
 import { NewRepeatingPage } from './features/repeating/NewRepeatingPage'
 import { RepeatingPage } from './features/repeating/RepeatingPage'
@@ -67,6 +68,9 @@ const router = createBrowserRouter([
               { path: 'households/new', element: <NewHouseholdPage /> },
               { path: 'households/:id', element: <HouseholdPage /> },
               { path: 'households/:id/settings', element: <HouseholdSettingsPage /> },
+              { path: 'households/:id/spend', element: <SpendPage /> },
+              { path: 'households/:id/month/:month', element: <MonthPage /> },
+              { path: 'spend', element: <QuickSpendPage /> },
               { path: 'households/:id/bills/new', element: <NewBillPage /> },
               { path: 'households/:id/bills/due/:occurrenceId', element: <BillDuePage /> },
               { path: 'households/:id/bills/:billId', element: <BillPage /> },

@@ -395,6 +395,26 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      household_expenses: {
+        Row: {
+          id: string
+          household_id: string
+          description: string | null
+          category: SpendCategory
+          amount_cents: number
+          spent_on: string
+          paid_by: string | null
+          from_shared: boolean
+          split: Json | null
+          receipt_path: string | null
+          created_by: string | null
+          created_at: string
+          voided_at: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       custom_reminders: {
         Row: {
           id: string
@@ -430,6 +450,23 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      add_household_expense: {
+        Args: {
+          p_household_id: string
+          p_category: SpendCategory
+          p_amount_cents: number
+          p_paid_by: string | null
+          p_description?: string | null
+          p_spent_on?: string | null
+          p_split?: Json | null
+          p_receipt_path?: string | null
+        }
+        Returns: string
+      }
+      remove_household_expense: {
+        Args: { p_expense_id: string }
+        Returns: undefined
+      }
       create_household: {
         Args: { p_name: string; p_has_shared_account?: boolean; p_shared_account_name?: string | null; p_opening_balance_cents?: number | null }
         Returns: string
@@ -815,6 +852,7 @@ type TermsArgs = {
 export type LoanStatus =
   'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off' | 'removed'
 export type LoanKind = 'new' | 'existing_debt' | 'bill' | 'repeating'
+export type SpendCategory = 'groceries' | 'takeaways' | 'household' | 'transport' | 'fun' | 'other'
 export type BillMethod = 'shared_account' | 'one_person' | 'each_own' | 'covered'
 export type BillCategory =
   | 'rent'

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { balanceOn, equalShares, lowestAhead, netWith, positions, settlePlan } from './household'
+import {
+  balanceOn,
+  equalShares,
+  lowestAhead,
+  monthSummary,
+  netWith,
+  positions,
+  settlePlan,
+  shiftMonth,
+} from './household'
 
 const tab = [
   { owedTo: 'me', owedBy: 'hana', amountCents: 3000, voided: false },
@@ -36,5 +45,63 @@ describe('household sums', () => {
 
   it('splits evenly in basis points', () => {
     expect(equalShares(['a', 'b', 'c']).map((s) => s.shareBp)).toEqual([3334, 3333, 3333])
+  })
+})
+
+describe('monthSummary', () => {
+  it('adds up spending and bills for the month, by category and payer', () => {
+    const s = monthSummary(
+      {
+        expenses: [
+          { category: 'groceries', amountCents: 12000, spentOn: '2026-11-03', paidBy: 'me', voided: false },
+          { category: 'groceries', amountCents: 8000, spentOn: '2026-11-10', paidBy: null, voided: false },
+          { category: 'takeaways', amountCents: 3000, spentOn: '2026-10-30', paidBy: 'me', voided: false },
+          { category: 'fun', amountCents: 999, spentOn: '2026-11-11', paidBy: 'me', voided: true },
+        ],
+        bills: [
+          {
+            category: 'rent',
+            amountCents: 60000,
+            dueOn: '2026-11-04',
+            payerId: null,
+            method: 'shared_account',
+            skipped: false,
+            shares: [],
+          },
+          {
+            category: 'power',
+            amountCents: null,
+            dueOn: '2026-11-20',
+            payerId: 'hana',
+            method: 'one_person',
+            skipped: false,
+            shares: [],
+          },
+          {
+            category: 'rent',
+            amountCents: 60000,
+            dueOn: '2026-11-11',
+            payerId: null,
+            method: 'shared_account',
+            skipped: true,
+            shares: [],
+          },
+        ],
+        topups: [{ memberId: 'me', amountCents: 35000, occurredOn: '2026-11-02', voided: false }],
+      },
+      '2026-11',
+    )
+    expect(s.totalCents).toBe(80000)
+    expect(s.byCategory).toEqual([
+      { category: 'rent', cents: 60000 },
+      { category: 'groceries', cents: 20000 },
+    ])
+    expect(s.paidBy).toEqual({ me: 12000, shared: 68000 })
+    expect(s.toppedUp).toEqual({ me: 35000 })
+  })
+
+  it('moves between months', () => {
+    expect(shiftMonth('2026-01', -1)).toBe('2025-12')
+    expect(shiftMonth('2026-12', 1)).toBe('2027-01')
   })
 })

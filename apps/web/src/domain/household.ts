@@ -99,3 +99,80 @@ export function equalShares(members: readonly string[]): { userId: string; share
     shareBp: Math.floor(10000 / n) + (i === 0 ? 10000 % n : 0),
   }))
 }
+
+export interface MonthInput {
+  expenses: readonly {
+    category: string
+    amountCents: number
+    spentOn: IsoDate
+    paidBy: string | null
+    voided: boolean
+  }[]
+  bills: readonly {
+    category: string
+    amountCents: number | null
+    dueOn: IsoDate
+    payerId: string | null
+    method: string
+    skipped: boolean
+    shares: readonly { userId: string; amountCents: number; paid: boolean }[]
+  }[]
+  topups: readonly { memberId: string | null; amountCents: number; occurredOn: IsoDate; voided: boolean }[]
+}
+
+export interface MonthSummary {
+  totalCents: number
+  /** Category → cents, largest first. */
+  byCategory: { category: string; cents: number }[]
+  /** Who paid (user id, or 'shared' for the shared account) → cents. */
+  paidBy: Record<string, number>
+  /** Top-ups into the shared account, by person. */
+  toppedUp: Record<string, number>
+}
+
+/** "2026-11" for a date. */
+export const monthOf = (date: IsoDate) => date.slice(0, 7)
+
+/** What the household spent in a month, by category and by who paid. Bills count on their due date. */
+export function monthSummary(input: MonthInput, month: string): MonthSummary {
+  const byCategory = new Map<string, number>()
+  const paidBy: Record<string, number> = {}
+  const add = (category: string, cents: number) => byCategory.set(category, (byCategory.get(category) ?? 0) + cents)
+  const pay = (who: string, cents: number) => (paidBy[who] = (paidBy[who] ?? 0) + cents)
+  let total = 0
+
+  for (const e of input.expenses) {
+    if (e.voided || monthOf(e.spentOn) !== month) continue
+    total += e.amountCents
+    add(e.category, e.amountCents)
+    pay(e.paidBy ?? 'shared', e.amountCents)
+  }
+  for (const b of input.bills) {
+    if (b.skipped || b.amountCents === null || monthOf(b.dueOn) !== month) continue
+    total += b.amountCents
+    add(b.category, b.amountCents)
+    if (b.method === 'shared_account') pay('shared', b.amountCents)
+    else if (b.method === 'each_own') for (const s of b.shares) pay(s.userId, s.amountCents)
+    else if (b.payerId) pay(b.payerId, b.amountCents)
+  }
+  const toppedUp: Record<string, number> = {}
+  for (const t of input.topups) {
+    if (t.voided || !t.memberId || monthOf(t.occurredOn) !== month) continue
+    toppedUp[t.memberId] = (toppedUp[t.memberId] ?? 0) + t.amountCents
+  }
+  return {
+    totalCents: total,
+    byCategory: [...byCategory.entries()]
+      .map(([category, cents]) => ({ category, cents }))
+      .sort((a, b) => b.cents - a.cents),
+    paidBy,
+    toppedUp,
+  }
+}
+
+/** The month before or after "2026-11". */
+export function shiftMonth(month: string, by: number): string {
+  const [y, m] = month.split('-').map(Number) as [number, number]
+  const d = new Date(Date.UTC(y, m - 1 + by, 1))
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+}

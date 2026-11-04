@@ -167,6 +167,12 @@ function SheetBody({ onDone }: { onDone: () => void }) {
         />
       )}
       <Action
+        icon={<PlusIcon />}
+        title="Add household spending"
+        detail="Groceries, takeaways and the like"
+        onClick={() => go('/spend')}
+      />
+      <Action
         icon={<HomeIcon />}
         title="Household"
         detail="Rent, bills and the shared account"
