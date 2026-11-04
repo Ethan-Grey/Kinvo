@@ -22,6 +22,7 @@ vi.mock('../../data/dashboard', () => ({
 vi.mock('../../data/people', () => ({ getMyProfile: api.getMyProfile, listPeople: api.listPeople }))
 vi.mock('../../data/repeating', () => ({ listRepeating: () => Promise.resolve([]) }))
 vi.mock('../../data/households', () => ({ listHouseholds: () => Promise.resolve([]) }))
+vi.mock('../../data/myMoney', () => ({ getMyMoney: () => Promise.resolve(null), planFor: () => null }))
 vi.mock('../auth/useAuth', () => ({ useAuth: () => ({ session: { user: { id: 'me' } }, loading: false }) }))
 
 const empty: DashboardSummary = {

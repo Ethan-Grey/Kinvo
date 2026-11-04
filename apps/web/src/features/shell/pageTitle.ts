@@ -16,6 +16,7 @@ const SECTIONS: [prefix: string, title: string][] = [
   ['/people', 'People'],
   ['/bills/new', 'Split a bill'],
   ['/spend', 'Add spending'],
+  ['/money', 'My money'],
   ['/households', 'Household'],
   ['/household-invite/', 'Join a household'],
   ['/repeating/new', 'Repeating'],

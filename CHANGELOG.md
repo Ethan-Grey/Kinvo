@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- My money (ADR-0024), private to you: add your take-home pay and pay day, your own bills (phone, insurance, subscriptions and so on), and your balance when you check it. Kinvo shows what's safe to spend until pay day, after your bills, shared-account top-ups, loan payments you owe and household shares you pay yourself, with a per-day figure. It's on Home, and in Account → My money.
 - Household spending (ADR-0023): Add spending takes seconds. Enter the amount, tap Groceries, Takeaways or another type, and say who paid (you, them, or the shared account). It's split as usual, or customised, including all for one person. A receipt and date are optional. It's also at /spend, for an iPhone Back Tap shortcut.
 - This month: where the household's money went, by type, compared with the month before, who paid what, and who topped up the shared account.
 - Households (ADR-0022): create one, invite the people you live with, and set it up your way.

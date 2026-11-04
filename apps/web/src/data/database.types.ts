@@ -415,6 +415,37 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      personal_bills: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          category: PersonalBillCategory
+          amount_type: 'fixed' | 'varies'
+          amount_cents: number
+          frequency: PersonalFrequency
+          first_due_on: string
+          active: boolean
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      my_money: {
+        Row: {
+          user_id: string
+          pay_amount_cents: number | null
+          pay_frequency: RepeatFrequency | null
+          next_pay_on: string | null
+          balance_cents: number | null
+          balance_on: string | null
+          updated_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       custom_reminders: {
         Row: {
           id: string
@@ -450,6 +481,30 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      save_personal_bill: {
+        Args: {
+          p_id: string | null
+          p_name: string
+          p_category: PersonalBillCategory
+          p_amount_type: 'fixed' | 'varies'
+          p_amount_cents: number
+          p_frequency: PersonalFrequency
+          p_first_due_on: string
+        }
+        Returns: string
+      }
+      stop_personal_bill: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      save_pay: {
+        Args: { p_amount_cents: number; p_frequency: RepeatFrequency; p_next_pay_on: string }
+        Returns: undefined
+      }
+      set_my_balance: {
+        Args: { p_balance_cents: number }
+        Returns: undefined
+      }
       add_household_expense: {
         Args: {
           p_household_id: string
@@ -852,6 +907,20 @@ type TermsArgs = {
 export type LoanStatus =
   'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off' | 'removed'
 export type LoanKind = 'new' | 'existing_debt' | 'bill' | 'repeating'
+export type PersonalFrequency = 'weekly' | 'fortnightly' | 'monthly' | 'yearly'
+export type PersonalBillCategory =
+  | 'rent'
+  | 'power'
+  | 'internet'
+  | 'water'
+  | 'phone'
+  | 'insurance'
+  | 'subscriptions'
+  | 'car'
+  | 'health'
+  | 'savings'
+  | 'bills'
+  | 'other'
 export type SpendCategory = 'groceries' | 'takeaways' | 'household' | 'transport' | 'fun' | 'other'
 export type BillMethod = 'shared_account' | 'one_person' | 'each_own' | 'covered'
 export type BillCategory =
