@@ -102,3 +102,8 @@ export function allocateProportionally(total: Cents, weights: readonly number[])
 
   return [first + leftover, ...rest].map(toCents)
 }
+
+/** Formats cents that may be negative (e.g. an overdrawn balance) as "−$12.50". */
+export function formatSignedCents(amount: number): string {
+  return amount < 0 ? `−${nzd.format(-amount / 100)}` : nzd.format(amount / 100)
+}

@@ -10,6 +10,8 @@ import {
 } from '../../data/dashboard'
 import { listLoans, type LoanSummary } from '../../data/loans'
 import { listRepeating } from '../../data/repeating'
+import { listHouseholds } from '../../data/households'
+import { HouseholdCards } from '../households/HouseholdsPage'
 import { getMyProfile, listPeople } from '../../data/people'
 import { RingAvatar } from '../../shared/Avatar'
 import { AlertIcon, CheckIcon, DocumentIcon, InviteIcon, PaymentIcon, RepeatIcon, SendIcon } from '../../shared/icons'
@@ -37,22 +39,23 @@ export function HomePage() {
   const justJoined = (location.state as { joined?: boolean } | null)?.joined === true
 
   const [data] = useAsync(async () => {
-    const [profile, people, summary, upcoming, loans, repeating] = await Promise.all([
+    const [profile, people, summary, upcoming, loans, repeating, households] = await Promise.all([
       getMyProfile(userId),
       listPeople(userId),
       getDashboardSummary(),
       listUpcomingInstalments(6),
       listLoans(userId),
       listRepeating(userId),
+      listHouseholds(),
     ])
     const repeatingToAccept = repeating.filter((r) => r.status === 'proposed' && r.role === 'borrower').length
-    return { profile, people, summary, upcoming, loans, repeatingToAccept }
+    return { profile, people, summary, upcoming, loans, repeatingToAccept, households }
   }, userId)
 
   if (data.status === 'loading') return <PageSkeleton label="Loading your home screen" />
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
 
-  const { profile, people, summary, upcoming, loans, repeatingToAccept } = data.data
+  const { profile, people, summary, upcoming, loans, repeatingToAccept, households } = data.data
   const isLender = profile.can_lend && (people.borrowers.length > 0 || summary.lending.activeCount > 0)
   const isBorrower = people.lenders.length > 0 || summary.borrowing.activeCount > 0
   const firstName = profile.display_name.split(' ')[0]
@@ -75,6 +78,16 @@ export function HomePage() {
       ) : null}
 
       <NeedsYou summary={summary} repeatingToAccept={repeatingToAccept} />
+
+      {households.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeader
+            title={households.length === 1 ? 'Household' : 'Households'}
+            link={{ to: '/households', label: 'See all' }}
+          />
+          <HouseholdCards households={households} />
+        </section>
+      )}
 
       {(isLender || isBorrower) && <PushNudge />}
 

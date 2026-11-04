@@ -244,6 +244,157 @@ export interface Database {
         Update: never
         Relationships: []
       }
+      households: {
+        Row: {
+          id: string
+          name: string
+          has_shared_account: boolean
+          shared_account_name: string | null
+          created_by: string
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      household_members: {
+        Row: {
+          household_id: string
+          user_id: string
+          role: 'owner' | 'member'
+          share_bp: number | null
+          joined_at: string
+          left_at: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      household_invites: {
+        Row: {
+          id: string
+          household_id: string
+          created_by: string
+          expires_at: string
+          accepted_by: string | null
+          accepted_at: string | null
+          revoked_at: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      household_topups: {
+        Row: {
+          id: string
+          household_id: string
+          member_id: string
+          amount_cents: number
+          frequency: RepeatFrequency
+          first_on: string
+          created_count: number
+          next_on: string | null
+          active: boolean
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      household_bills: {
+        Row: {
+          id: string
+          household_id: string
+          name: string
+          category: BillCategory
+          amount_type: 'fixed' | 'varies'
+          amount_cents: number | null
+          frequency: RepeatFrequency
+          first_due_on: string
+          created_count: number
+          next_due_on: string | null
+          method: BillMethod
+          payer_id: string | null
+          split: Json | null
+          active: boolean
+          created_by: string
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      household_bill_occurrences: {
+        Row: {
+          id: string
+          bill_id: string
+          household_id: string
+          sequence: number
+          due_on: string
+          method: BillMethod
+          payer_id: string | null
+          amount_cents: number | null
+          status: 'needs_amount' | 'open' | 'done' | 'skipped'
+          receipt_path: string | null
+          entered_by: string | null
+          entered_at: string | null
+          created_at: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      household_bill_shares: {
+        Row: {
+          occurrence_id: string
+          user_id: string
+          amount_cents: number
+          paid_at: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      shared_account_entries: {
+        Row: {
+          id: string
+          household_id: string
+          kind: 'opening' | 'topup' | 'bill' | 'expense' | 'withdrawal' | 'adjustment'
+          amount_cents: number
+          member_id: string | null
+          topup_id: string | null
+          occurrence_id: string | null
+          note: string | null
+          occurred_on: string
+          created_by: string | null
+          created_at: string
+          voided_at: string | null
+          voided_by: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      household_tab_entries: {
+        Row: {
+          id: string
+          household_id: string
+          owed_to: string
+          owed_by: string
+          amount_cents: number
+          source: 'bill' | 'settle'
+          occurrence_id: string | null
+          note: string | null
+          receipt_path: string | null
+          created_by: string | null
+          created_at: string
+          voided_at: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       custom_reminders: {
         Row: {
           id: string
@@ -279,6 +430,110 @@ export interface Database {
     }
     Views: Record<never, never>
     Functions: {
+      create_household: {
+        Args: { p_name: string; p_has_shared_account?: boolean; p_shared_account_name?: string | null; p_opening_balance_cents?: number | null }
+        Returns: string
+      }
+      update_household: {
+        Args: { p_household_id: string; p_name: string; p_has_shared_account: boolean; p_shared_account_name?: string | null }
+        Returns: undefined
+      }
+      create_household_invite: {
+        Args: { p_household_id: string }
+        Returns: string
+      }
+      preview_household_invite: {
+        Args: { p_token: string }
+        Returns: { status: string; household_name: string | null; invited_by: string | null }[]
+      }
+      accept_household_invite: {
+        Args: { p_token: string }
+        Returns: string
+      }
+      leave_household: {
+        Args: { p_household_id: string; p_user_id?: string | null }
+        Returns: undefined
+      }
+      set_household_shares: {
+        Args: { p_household_id: string; p_shares: Json }
+        Returns: undefined
+      }
+      check_shared_balance: {
+        Args: { p_household_id: string; p_actual_cents: number }
+        Returns: undefined
+      }
+      add_shared_entry: {
+        Args: { p_household_id: string; p_kind: 'topup' | 'withdrawal'; p_amount_cents: number; p_on?: string | null; p_note?: string | null }
+        Returns: string
+      }
+      void_shared_entry: {
+        Args: { p_entry_id: string }
+        Returns: undefined
+      }
+      create_topup: {
+        Args: { p_household_id: string; p_amount_cents: number; p_frequency: RepeatFrequency; p_first_on: string }
+        Returns: string
+      }
+      stop_topup: {
+        Args: { p_topup_id: string }
+        Returns: undefined
+      }
+      create_bill: {
+        Args: {
+          p_household_id: string
+          p_name: string
+          p_category: BillCategory
+          p_amount_type: 'fixed' | 'varies'
+          p_amount_cents: number | null
+          p_frequency: RepeatFrequency
+          p_first_due_on: string
+          p_method: BillMethod
+          p_payer_id?: string | null
+          p_split?: Json | null
+        }
+        Returns: string
+      }
+      change_bill: {
+        Args: {
+          p_bill_id: string
+          p_name: string
+          p_category: BillCategory
+          p_amount_type: 'fixed' | 'varies'
+          p_amount_cents: number | null
+          p_method: BillMethod
+          p_payer_id?: string | null
+          p_split?: Json | null
+        }
+        Returns: undefined
+      }
+      stop_bill: {
+        Args: { p_bill_id: string }
+        Returns: undefined
+      }
+      enter_bill_amount: {
+        Args: { p_occurrence_id: string; p_amount_cents: number; p_receipt_path?: string | null }
+        Returns: undefined
+      }
+      pay_own_share: {
+        Args: { p_occurrence_id: string }
+        Returns: undefined
+      }
+      skip_bill_occurrence: {
+        Args: { p_occurrence_id: string }
+        Returns: undefined
+      }
+      change_occurrence_payment: {
+        Args: { p_occurrence_id: string; p_method: BillMethod; p_payer_id?: string | null }
+        Returns: undefined
+      }
+      settle_up: {
+        Args: { p_household_id: string; p_to_user: string; p_amount_cents: number; p_note?: string | null; p_receipt_path?: string | null }
+        Returns: string
+      }
+      void_settlement: {
+        Args: { p_entry_id: string }
+        Returns: undefined
+      }
       create_split_bill: {
         Args: { p_description: string; p_total_cents: number; p_paid_on: string; p_due_on: string; p_shares: Json }
         Returns: string[]
@@ -560,6 +815,17 @@ type TermsArgs = {
 export type LoanStatus =
   'negotiating' | 'agreed' | 'active' | 'completed' | 'rejected' | 'withdrawn' | 'written_off' | 'removed'
 export type LoanKind = 'new' | 'existing_debt' | 'bill' | 'repeating'
+export type BillMethod = 'shared_account' | 'one_person' | 'each_own' | 'covered'
+export type BillCategory =
+  | 'rent'
+  | 'power'
+  | 'internet'
+  | 'water'
+  | 'phone'
+  | 'insurance'
+  | 'subscriptions'
+  | 'bills'
+  | 'other'
 export type RepeatFrequency = 'weekly' | 'fortnightly' | 'monthly'
 export type RepeatingStatus = 'proposed' | 'active' | 'paused' | 'stopped' | 'declined'
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'
