@@ -90,7 +90,7 @@ export function RepaymentsPanel({ loan, userId, onLoanChanged }: PanelProps) {
           to={`/loans/${loan.id}/pay`}
           className={
             'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand px-5 font-semibold text-on-brand ' +
-            'shadow-[0_6px_16px_-6px_rgb(111_26_7/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
+            'shadow-[0_6px_16px_-6px_rgb(30_58_138/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
           }
         >
           <PaymentIcon className="size-5" />

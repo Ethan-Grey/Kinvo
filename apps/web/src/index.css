@@ -40,58 +40,56 @@
 }
 
 /*
- * Kinvo palette (docs/design.md, ADR-0020):
- *   Camel #AF9164 · Ivory Mist #F7F3E3 · Silver #B3B6B7
- *   Molten Lava #6F1A07 · Dark Coffee #2B2118
+ * Kinvo palette (docs/design.md, ADR-0021):
+ *   Royal Blue #1E3A8A · Sky #93B4FF · Silver #B3B6B7 · Midnight #0F1A33 (text)
  *
- * Light is Ivory Mist with Dark Coffee text and Molten Lava buttons; dark is
- * Dark Coffee with Ivory text and Camel buttons. Every text/background pair
- * meets WCAG AA (4.5:1). Red and green stay for overdue and paid, since people
- * read those colours as "problem" and "done"; the red is brighter than Molten
- * Lava so the two aren't confused.
+ * Backgrounds are pure white (light) or pure black (dark), with no tints.
+ * Light uses Royal Blue for buttons and the logo; dark uses Sky. Every
+ * text/background pair meets WCAG AA (4.5:1). Red and green stay for overdue
+ * and paid, since people read those colours as "problem" and "done".
  */
 :root {
   color-scheme: light;
-  --kv-canvas: #f7f3e3; /* Ivory Mist */
-  --kv-surface: #f7f3e3;
-  --kv-line: #d9d6cc; /* Silver, softened for card edges */
-  --kv-ink: #2b2118; /* Dark Coffee, 14.2:1 */
-  --kv-ink-muted: #6b5e51; /* 5.7:1 */
-  --kv-brand: #6f1a07; /* Molten Lava: buttons */
-  --kv-on-brand: #f7f3e3; /* 10.3:1 */
-  --kv-brand-ink: #6f1a07; /* accent text, 10.3:1 */
-  --kv-brand-soft: #d7c7aa; /* Camel, lightened: info panels */
-  --kv-on-brand-soft: #2b2118; /* 9.5:1 */
-  --kv-attention: #af9164; /* Camel: "needs you" */
-  --kv-on-attention: #2b2118; /* 5.3:1 */
-  --kv-positive: #2e6b38; /* 5.8:1 */
+  --kv-canvas: #ffffff;
+  --kv-surface: #ffffff;
+  --kv-line: #dcdedf; /* Silver, lightened for card edges */
+  --kv-ink: #0f1a33; /* Midnight, 17.3:1 */
+  --kv-ink-muted: #5f6264; /* grey, 6.1:1 */
+  --kv-brand: #1e3a8a; /* Royal Blue: buttons, with white text 10.4:1 */
+  --kv-on-brand: #ffffff;
+  --kv-brand-ink: #1e3a8a; /* accent text, 10.4:1 */
+  --kv-brand-soft: #dce6fa; /* pale blue: info panels */
+  --kv-on-brand-soft: #1e3a8a; /* 8.3:1 */
+  --kv-attention: #b9ccf4; /* "needs you" */
+  --kv-on-attention: #0f1a33; /* 10.7:1 */
+  --kv-positive: #2e6b38;
   --kv-on-positive: #ffffff;
-  --kv-danger: #b3261e; /* 5.9:1 */
+  --kv-danger: #c62828; /* 5.6:1 */
   --kv-on-danger: #ffffff;
-  --kv-on-brand-muted: #dcc8b7; /* secondary text on Molten Lava, 7.1:1 */
-  --kv-ring-track: #dfdacb;
+  --kv-on-brand-muted: #c7d4f2; /* secondary text on Royal Blue, 7:1 */
+  --kv-ring-track: #e6e7e8;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --kv-canvas: #2b2118; /* Dark Coffee */
-  --kv-surface: #2b2118;
-  --kv-line: #4a4036;
-  --kv-ink: #f7f3e3; /* Ivory Mist, 14.2:1 */
-  --kv-ink-muted: #b3b6b7; /* Silver, 7.7:1 */
-  --kv-brand: #af9164; /* Camel: buttons, with Dark Coffee text 5.3:1 */
-  --kv-on-brand: #2b2118;
-  --kv-brand-ink: #af9164; /* accent text, 5.3:1 */
-  --kv-brand-soft: #6f1a07; /* Molten Lava */
-  --kv-on-brand-soft: #f7f3e3; /* 10.3:1 */
-  --kv-attention: #af9164;
-  --kv-on-attention: #2b2118;
+  --kv-canvas: #000000;
+  --kv-surface: #000000;
+  --kv-line: #2e2f30;
+  --kv-ink: #ffffff;
+  --kv-ink-muted: #b3b6b7; /* Silver, 10.3:1 */
+  --kv-brand: #93b4ff; /* Sky: buttons, with black text 10.2:1 */
+  --kv-on-brand: #000000;
+  --kv-brand-ink: #93b4ff; /* accent text, 10.2:1 */
+  --kv-brand-soft: #172b66; /* deep royal: info panels */
+  --kv-on-brand-soft: #ffffff; /* 13.3:1 */
+  --kv-attention: #2c4a9a; /* "needs you" */
+  --kv-on-attention: #ffffff; /* 8.2:1 */
   --kv-positive: #8fd19a;
-  --kv-on-positive: #2b2118;
-  --kv-danger: #f4a097;
-  --kv-on-danger: #2b2118;
-  --kv-on-brand-muted: #33281d; /* secondary text on Camel, 4.8:1 */
-  --kv-ring-track: #4a4036;
+  --kv-on-positive: #000000;
+  --kv-danger: #ff8a80; /* 9.2:1 */
+  --kv-on-danger: #000000;
+  --kv-on-brand-muted: #14275e; /* secondary text on Sky, 6.9:1 */
+  --kv-ring-track: #2e2f30;
 }
 
 @keyframes sheet-up {

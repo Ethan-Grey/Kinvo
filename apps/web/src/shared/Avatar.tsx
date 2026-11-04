@@ -10,11 +10,11 @@ import { avatarUrl } from '../data/images'
 import { ProgressRing } from './ProgressRing'
 
 const SWATCHES = [
-  'bg-[#af9164] text-[#2b2118]', // Camel
-  'bg-[#b3b6b7] text-[#2b2118]', // Silver
-  'bg-[#6f1a07] text-[#f7f3e3]', // Molten Lava
-  'bg-[#2b2118] text-[#f7f3e3] dark:ring-1 dark:ring-[#f7f3e3]/25', // Dark Coffee
-  'bg-[#d7c7aa] text-[#2b2118]', // Camel, light
+  'bg-[#1e3a8a] text-white', // Royal Blue
+  'bg-[#93b4ff] text-[#0f1a33]', // Sky
+  'bg-[#dce6fa] text-[#1e3a8a]', // Pale blue
+  'bg-[#b3b6b7] text-[#0f1a33]', // Silver
+  'bg-[#0f1a33] text-white dark:ring-1 dark:ring-white/25', // Midnight
 ]
 
 type AvatarSize = 'sm' | 'md' | 'lg' | 'xl'
