@@ -19,7 +19,7 @@ export function TermsSummary({
   return (
     <div className="space-y-4">
       <dl className="grid grid-cols-3 gap-2 tabular-nums">
-        <Figure label={`${lenderName.split(' ')[0]} lends`} value={formatCents(terms.principalCents)} />
+        <Figure label={`${lenderName.split(' ')[0]} pays out`} value={formatCents(terms.principalCents)} />
         <Figure
           label={`Charge (${chargePercent(terms.principalCents, terms.chargeCents)})`}
           value={formatCents(terms.chargeCents)}

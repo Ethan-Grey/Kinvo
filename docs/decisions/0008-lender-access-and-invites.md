@@ -1,6 +1,6 @@
 # 0008. Lender access is granted manually; borrowers join by single-use invite
 
-- **Status:** Accepted
+- **Status:** Partly superseded by ADR-0019 (anyone can be owed; invites unchanged)
 - **Date:** 2026-11-02
 
 ## Context

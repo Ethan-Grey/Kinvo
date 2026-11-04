@@ -7,21 +7,30 @@ import type { ReminderRepeat } from './database.types'
 import { toAppError } from './errors'
 import { supabase } from './supabase'
 
-export interface ReminderSettings {
+/** One reminder: a day relative to the due date (-1 = day before, 0 = on the day, 2 = two days late) and an hour. */
+export interface ReminderTime {
+  daysFromDue: number
   /** Hour of the day in NZ time, 0–23. */
   sendHour: number
-  dayBefore: boolean
-  onTheDay: boolean
-  whenOverdue: boolean
-  overdueEveryDays: number
 }
 
+export interface ReminderSettings {
+  times: ReminderTime[]
+  /** Keep reminding every this many days while a payment is late, after the last reminder. Null = don't. */
+  lateEveryDays: number | null
+  lateHour: number
+}
+
+export const MAX_REMINDER_TIMES = 10
+
 export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
-  sendHour: 9,
-  dayBefore: true,
-  onTheDay: true,
-  whenOverdue: true,
-  overdueEveryDays: 7,
+  times: [
+    { daysFromDue: -1, sendHour: 9 },
+    { daysFromDue: 0, sendHour: 9 },
+    { daysFromDue: 1, sendHour: 9 },
+  ],
+  lateEveryDays: 7,
+  lateHour: 9,
 }
 
 export interface CustomReminder {
@@ -46,32 +55,41 @@ export interface NewCustomReminder {
 }
 
 export async function getReminderSettings(relationshipId: string): Promise<ReminderSettings> {
-  const { data, error } = await supabase()
-    .from('reminder_settings')
-    .select('*')
-    .eq('relationship_id', relationshipId)
-    .maybeSingle()
-  if (error) throw toAppError(error)
-  if (!data) return DEFAULT_REMINDER_SETTINGS
+  const [settings, rules] = await Promise.all([
+    supabase().from('reminder_settings').select('*').eq('relationship_id', relationshipId).maybeSingle(),
+    supabase().from('reminder_rules').select('*').eq('relationship_id', relationshipId),
+  ])
+  if (settings.error) throw toAppError(settings.error)
+  if (rules.error) throw toAppError(rules.error)
+  if (!settings.data) return DEFAULT_REMINDER_SETTINGS
   return {
-    sendHour: data.send_hour,
-    dayBefore: data.day_before,
-    onTheDay: data.on_the_day,
-    whenOverdue: data.when_overdue,
-    overdueEveryDays: data.overdue_every_days,
+    times: sortTimes(rules.data.map((r) => ({ daysFromDue: r.days_from_due, sendHour: r.send_hour }))),
+    lateEveryDays: settings.data.late_every_days,
+    lateHour: settings.data.late_hour,
   }
 }
 
 export async function saveReminderSettings(relationshipId: string, settings: ReminderSettings): Promise<void> {
   const { error } = await supabase().rpc('save_reminder_settings', {
     p_relationship_id: relationshipId,
-    p_send_hour: settings.sendHour,
-    p_day_before: settings.dayBefore,
-    p_on_the_day: settings.onTheDay,
-    p_when_overdue: settings.whenOverdue,
-    p_overdue_every_days: settings.overdueEveryDays,
+    p_rules: sortTimes(settings.times).map((t) => ({ days_from_due: t.daysFromDue, send_hour: t.sendHour })),
+    p_late_every_days: settings.lateEveryDays,
+    p_late_hour: settings.lateHour,
   })
   if (error) throw toAppError(error)
+}
+
+/** Earliest first: by day, then by hour. */
+export function sortTimes(times: readonly ReminderTime[]): ReminderTime[] {
+  return [...times].sort((a, b) => a.daysFromDue - b.daysFromDue || a.sendHour - b.sendHour)
+}
+
+/** "3 days before", "Day before", "On the day", "Day after", "2 days after". */
+export function describeDay(daysFromDue: number): string {
+  if (daysFromDue === 0) return 'On the day'
+  if (daysFromDue === -1) return 'Day before'
+  if (daysFromDue === 1) return 'Day after'
+  return daysFromDue < 0 ? `${-daysFromDue} days before` : `${daysFromDue} days after`
 }
 
 /** Upcoming custom reminders for one borrower, soonest first. */

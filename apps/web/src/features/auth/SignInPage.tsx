@@ -32,9 +32,7 @@ export function SignInPage() {
         </span>
         <p className="mt-4 font-display text-4xl font-semibold">Kinvo</p>
         <h1 className="mt-2 font-sans text-base font-normal text-ink-muted">
-          {arrivingFromInvite
-            ? 'Sign in to accept your invite.'
-            : 'Lend and borrow within your family, and keep track together.'}
+          {arrivingFromInvite ? 'Sign in to accept your invite.' : 'Keep track of who owes who, together.'}
         </h1>
       </header>
 

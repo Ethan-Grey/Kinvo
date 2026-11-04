@@ -17,7 +17,7 @@ The realistic threats for a family app are: someone outside the family finding t
 | Layer | Control | Where |
 |---|---|---|
 | Sign-in | Google or a one-time email code, no passwords. PKCE for Google. Sessions are managed by Supabase Auth. | ADR-0005 |
-| Who can lend | `can_lend` is granted by hand in the SQL Editor. Borrowers join only through a single-use invite. | ADR-0008 |
+| Who can be owed | Anyone signed in. People connect only through a single-use invite the other person accepts. | ADR-0008, ADR-0019 |
 | Invites | Random 32-byte tokens, stored only as SHA-256 hashes, single use, expire after 7 days, revocable | `create_invite` |
 | Reading data | Row Level Security on every table. You see only your own profile, your relationships, and their loans. | all migrations |
 | Changing data | No table accepts direct writes. Every change goes through a `SECURITY DEFINER` function that checks who you are, validates the input, and writes an audit event. | ADR-0003 |

@@ -70,7 +70,7 @@ export function NotificationsPage() {
   const [clearing, setClearing] = useState(false)
 
   async function handleClear() {
-    if (!window.confirm('Clear all alerts? Your loans and payments aren’t affected.')) return
+    if (!window.confirm('Clear all alerts? What’s owed and paid isn’t affected.')) return
     setClearing(true)
     try {
       await clearNotifications()
@@ -111,7 +111,7 @@ export function NotificationsPage() {
       />
       {state.data.length === 0 ? (
         <EmptyState icon={<BellIcon className="size-6" />} title="You’re all caught up">
-          Loan requests, payments and due-date reminders will appear here, and by email.
+          Requests, payments and due-date reminders will appear here, and by email.
         </EmptyState>
       ) : (
         [...groups.entries()].map(([day, items]) => (

@@ -41,7 +41,8 @@ export function AcceptInvitePage() {
   const { status, lenderName, existingDebt } = preview.data
 
   if (status !== 'valid') {
-    const code = status === 'own_invite' ? 'invite_own' : status === 'not_found' ? 'invite_not_found' : `invite_${status}`
+    const code =
+      status === 'own_invite' ? 'invite_own' : status === 'not_found' ? 'invite_not_found' : `invite_${status}`
     return (
       <Card className="space-y-4">
         <Notice tone="error">{messageFor(code)}</Notice>
@@ -56,15 +57,15 @@ export function AcceptInvitePage() {
     <Card className="space-y-4">
       <h1 className="text-xl font-semibold tracking-tight">{lenderName} invited you to Kinvo</h1>
       <p className="text-sm text-ink-muted">
-        Accepting lets you request loans from {lenderName} and see the loans between you. {lenderName}{' '}
-        will see your name and email. Nobody else can see your records.
+        Accepting lets you request loans from {lenderName} and see the loans between you. {lenderName} will see your
+        name and email. Nobody else can see your records.
       </p>
       {existingDebt && (
         <Notice>
           {lenderName} has recorded that you already owe them <strong>{formatCents(existingDebt.amountCents)}</strong>
-          {existingDebt.reason ? ` for ${existingDebt.reason}` : ''}, lent around {formatDate(existingDebt.lentOn)}.
-          After joining you’ll see their proposed repayment plan, and you can confirm it, suggest changes, or say
-          it isn’t right.
+          {existingDebt.reason ? ` for ${existingDebt.reason}` : ''}, owed since around{' '}
+          {formatDate(existingDebt.lentOn)}. After joining you’ll see their proposed repayment plan, and you can confirm
+          it, suggest changes, or say it isn’t right.
         </Notice>
       )}
       {error && <Notice tone="error">{error}</Notice>}

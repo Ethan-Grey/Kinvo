@@ -59,7 +59,7 @@ function TabBar() {
     >
       <div className="mx-auto grid max-w-2xl grid-cols-5 items-start">
         <Tab to="/" end label="Home" icon={<HomeIcon className="size-6" />} />
-        <Tab to="/loans" label="Loans" icon={<LoansIcon className="size-6" />} />
+        <Tab to="/loans" label="Owed" icon={<LoansIcon className="size-6" />} />
         <div className="flex justify-center">
           <QuickActionsButton />
         </div>

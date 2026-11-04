@@ -63,7 +63,7 @@ export function HomePage() {
         <h1 className="text-[1.75rem] leading-tight font-semibold">Kia ora, {firstName}</h1>
       </header>
 
-      {justJoined && <Notice tone="success">You’re connected. Tap + to ask for a loan.</Notice>}
+      {justJoined && <Notice tone="success">You’re connected. Tap + to add what you owe.</Notice>}
 
       {isLender ? (
         <LendingHero summary={summary} loans={loans} />
@@ -86,7 +86,7 @@ export function HomePage() {
           {profile.can_lend ? (
             <EmptyState
               icon={<InviteIcon className="size-6" />}
-              title="Invite your first borrower"
+              title="Invite someone"
               action={
                 <Link
                   to="/people#invite"
@@ -96,11 +96,11 @@ export function HomePage() {
                 </Link>
               }
             >
-              Send them a link. Once they join, you can offer a loan or record money they already owe.
+              Send them a link. Once they join, you can record what they owe you.
             </EmptyState>
           ) : (
             <EmptyState icon={<InviteIcon className="size-6" />} title="Waiting for an invite">
-              Ask the person lending to you to send you a Kinvo invite link, then open it on this device.
+              Ask the person you owe to send you a Kinvo invite link, then open it on this device.
             </EmptyState>
           )}
         </Card>
@@ -156,11 +156,11 @@ function HeroFrame({
             {formatCents(amount)}
           </p>
         </div>
-        <div className="relative shrink-0" role="img" aria-label={`${percent}% repaid so far`}>
+        <div className="relative shrink-0" role="img" aria-label={`${percent}% paid back so far`}>
           <ProgressRing value={ring} size={76} stroke={7} tone="on-brand" track="stroke-white/25" />
           <span className="absolute inset-0 flex flex-col items-center justify-center leading-none">
             <span className="font-display text-lg font-semibold tabular-nums">{percent}%</span>
-            <span className="text-[10px] text-on-brand-muted">repaid</span>
+            <span className="text-[10px] text-on-brand-muted">paid back</span>
           </span>
         </div>
       </div>
@@ -210,8 +210,8 @@ function LendingHero({ summary, loans }: { summary: DashboardSummary; loans: Loa
         value={l.overdueCount > 0 ? formatCents(l.overdueCents) : 'Nothing'}
         alert={l.overdueCount > 0}
       />
-      <HeroFigure label="Active loans" value={String(l.activeCount)} />
-      <HeroFigure label="Lent in total" value={formatCents(l.totalLentCents)} />
+      <HeroFigure label="Active" value={String(l.activeCount)} />
+      <HeroFigure label="Paid out in total" value={formatCents(l.totalLentCents)} />
       <HeroFigure label="Charges this tax year" value={formatCents(l.chargesReceivedCents)} />
     </HeroFrame>
   )
@@ -283,8 +283,8 @@ function NeedsYou({ summary }: { summary: DashboardSummary }) {
     },
     {
       count: fundsToSend,
-      one: 'loan to send money for',
-      many: 'loans to send money for',
+      one: 'to pay out',
+      many: 'to pay out',
       icon: <SendIcon />,
       tone: 'attention' as const,
       to: '/loans?show=waiting',
@@ -441,7 +441,7 @@ function OwedBars({ people }: { people: PersonBalance[] }) {
                     ? 'A payment is overdue'
                     : person.nextDueOn
                       ? `Next payment ${formatShortDate(person.nextDueOn)}`
-                      : `${Math.round(person.progress * 100)}% repaid`}
+                      : `${Math.round(person.progress * 100)}% paid back`}
                 </p>
               </div>
               <span className="font-display text-xl font-semibold tabular-nums">
@@ -483,7 +483,7 @@ function DateTile({ iso, overdue }: { iso: string; overdue: boolean }) {
 function ComingUp({ upcoming }: { upcoming: UpcomingInstalment[] }) {
   return (
     <section className="space-y-3">
-      <SectionHeader title="Coming up" link={{ to: '/loans', label: 'All loans' }} />
+      <SectionHeader title="Coming up" link={{ to: '/loans', label: 'See all' }} />
       <ul className="space-y-2">
         {upcoming.map((item) => {
           const overdue = item.status === 'overdue'

@@ -12,8 +12,8 @@ type Filter = 'all' | 'waiting' | 'lending' | 'borrowing' | 'closed'
 const FILTERS: Record<Filter, { label: string; test: (loan: LoanSummary) => boolean }> = {
   all: { label: 'All', test: () => true },
   waiting: { label: 'Needs you', test: (l) => l.awaitingMe },
-  lending: { label: 'Lending', test: (l) => l.role === 'lender' && OPEN_STATUSES.has(l.status) },
-  borrowing: { label: 'Borrowing', test: (l) => l.role === 'borrower' && OPEN_STATUSES.has(l.status) },
+  lending: { label: 'Owed to you', test: (l) => l.role === 'lender' && OPEN_STATUSES.has(l.status) },
+  borrowing: { label: 'You owe', test: (l) => l.role === 'borrower' && OPEN_STATUSES.has(l.status) },
   closed: { label: 'Closed', test: (l) => !OPEN_STATUSES.has(l.status) },
 }
 
@@ -31,7 +31,7 @@ export function LoansPage() {
   const flash = (useLocation().state as { flash?: string } | null)?.flash
   const [loans] = useAsync(() => listLoans(userId), userId)
 
-  if (loans.status === 'loading') return <PageSkeleton label="Loading loans" />
+  if (loans.status === 'loading') return <PageSkeleton label="Loading" />
   if (loans.status === 'error') return <Notice tone="error">{loans.error.message}</Notice>
 
   const all = loans.data
@@ -46,7 +46,7 @@ export function LoansPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Loans" />
+      <PageHeader title="Owed" />
       {flash && <Notice tone="success">{flash}</Notice>}
 
       {all.length > 0 && options.length > 1 && (
@@ -60,8 +60,8 @@ export function LoansPage() {
 
       {all.length === 0 ? (
         <Card>
-          <EmptyState icon={<LoansIcon className="size-6" />} title="No loans yet">
-            Tap + below to ask for a loan, offer one, or invite someone.
+          <EmptyState icon={<LoansIcon className="size-6" />} title="Nothing owed yet">
+            Tap + below to add what someone owes you, what you owe, or to invite someone.
           </EmptyState>
         </Card>
       ) : visible.length === 0 ? (

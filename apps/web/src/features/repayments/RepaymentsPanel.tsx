@@ -188,7 +188,7 @@ function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail
         aria-valuenow={percent}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Repaid"
+        aria-label="Paid back"
       >
         <div
           className="h-full rounded-full bg-brand-ink transition-[width] duration-700"
@@ -201,7 +201,7 @@ function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail
           {balance.overdueCount === 1 ? '' : 's'}).
         </Notice>
       )}
-      {loan.status === 'completed' && <Notice tone="success">Fully repaid. 🎉</Notice>}
+      {loan.status === 'completed' && <Notice tone="success">All paid back. 🎉</Notice>}
       {loan.status === 'active' && balance.nextDueOn && balance.nextDueCents !== null && balance.overdueCount === 0 && (
         <p className="text-sm">
           Next: <span className="font-semibold tabular-nums">{formatCents(balance.nextDueCents)}</span> due{' '}
@@ -313,7 +313,7 @@ function ProofOfPayment({
 
       {loan.fundsSentOn && (
         <section>
-          <h3 className="font-sans text-sm font-semibold text-ink-muted">Money sent by {lenderFirst}</h3>
+          <h3 className="font-sans text-sm font-semibold text-ink-muted">Paid out by {lenderFirst}</h3>
           <ul className="mt-2">
             <ProofRow
               path={loan.fundsReceiptPath}
@@ -621,7 +621,7 @@ function ForgiveButton({
   async function handleForgive() {
     if (
       !window.confirm(
-        `Forgive the remaining ${formatCents(toCents(outstandingCents))}? ${borrowerName} won’t owe anything more on this loan. This can’t be undone.`,
+        `Forgive the remaining ${formatCents(toCents(outstandingCents))}? ${borrowerName} won’t owe anything more on this. This can’t be undone.`,
       )
     ) {
       return

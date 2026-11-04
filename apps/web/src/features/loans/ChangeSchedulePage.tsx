@@ -30,9 +30,9 @@ export function ChangeSchedulePage() {
     <LoanStep title={() => 'Change dates or amounts'}>
       {(loan, done) =>
         loan.role !== 'lender' ? (
-          <Notice>Only the lender can change the schedule.</Notice>
+          <Notice>Only the person who’s owed can change the schedule.</Notice>
         ) : loan.status !== 'active' ? (
-          <Notice>The schedule can only be changed while the loan is being repaid.</Notice>
+          <Notice>The schedule can only be changed while it’s being paid back.</Notice>
         ) : (
           <ScheduleLoader loan={loan} onDone={done} />
         )

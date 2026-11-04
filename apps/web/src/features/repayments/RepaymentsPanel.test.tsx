@@ -150,7 +150,7 @@ describe('RepaymentsPanel', () => {
     for (const role of ['lender', 'borrower'] as const) {
       renderPanel(role)
       expect(await screen.findByRole('heading', { name: 'Proof of payment' })).toBeTruthy()
-      expect(screen.getByRole('heading', { name: 'Money sent by Lena' })).toBeTruthy()
+      expect(screen.getByRole('heading', { name: 'Paid out by Lena' })).toBeTruthy()
       expect(screen.getByRole('heading', { name: 'Payments back from Bob' })).toBeTruthy()
       expect(screen.getByText('Waiting to be confirmed')).toBeTruthy()
       expect(screen.getAllByText(/^Payment \d$/).length).toBe(progress.length)

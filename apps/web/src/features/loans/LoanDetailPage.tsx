@@ -26,7 +26,7 @@ export function LoanDetailPage() {
   const location = useLocation()
   const flash = (location.state as { flash?: string } | null)?.flash
 
-  if (loan.status === 'loading') return <PageSkeleton label="Loading loan" />
+  if (loan.status === 'loading') return <PageSkeleton label="Loading" />
   if (loan.status === 'error') return <Notice tone="error">{loan.error.message}</Notice>
 
   const data = loan.data
@@ -41,15 +41,15 @@ export function LoanDetailPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        back={{ to: '/loans', label: 'Loans' }}
+        back={{ to: '/loans', label: 'Owed' }}
         title={
           data.kind === 'existing_debt'
             ? data.role === 'lender'
               ? `${otherName}’s existing debt`
               : `Existing debt to ${otherName}`
             : data.role === 'lender'
-              ? `Loan to ${otherName}`
-              : `Loan from ${otherName}`
+              ? `${otherName} owes you`
+              : `You owe ${otherName}`
         }
         subtitle={
           (data.reason || data.originallyLentOn) && (
@@ -70,13 +70,13 @@ export function LoanDetailPage() {
 
           {data.fundsSentOn && data.fundsMethod && (
             <p className="text-sm text-ink-muted">
-              {data.lenderName} sent {formatCents(data.currentTerms.principalCents)} by{' '}
+              {data.lenderName} paid out {formatCents(data.currentTerms.principalCents)} by{' '}
               {methodLabel(data.fundsMethod).toLowerCase()} on {formatDate(data.fundsSentOn)}
               {data.fundsReference ? ` (ref ${data.fundsReference})` : ''}.
             </p>
           )}
 
-          <FullTerms loan={data} userId={userId} title="Loan agreement" showMessage />
+          <FullTerms loan={data} userId={userId} title="Agreement" showMessage />
         </>
       ) : (
         <>
@@ -105,7 +105,7 @@ export function LoanDetailPage() {
           to={`/loans/${data.id}/remove`}
           className="flex min-h-11 items-center justify-center text-sm font-medium text-ink-muted hover:text-danger"
         >
-          Remove this loan
+          Remove this
         </Link>
       )}
     </div>
@@ -126,9 +126,9 @@ function ProposalCard({ loan, userId }: { loan: LoanDetail; userId: string }) {
     : loan.role === 'lender'
       ? byMe
         ? `You offered ${first}`
-        : `${first} asks to borrow`
+        : `${first} asks you for`
       : byMe
-        ? 'You asked to borrow'
+        ? 'You asked for'
         : `${loan.lenderName.split(' ')[0]} offers you`
   const last = terms.instalments.at(-1)
   const count = terms.instalments.length
@@ -141,7 +141,7 @@ function ProposalCard({ loan, userId }: { loan: LoanDetail; userId: string }) {
           {formatCents(terms.principalCents)}
         </p>
         <p className="mt-2">
-          {isDebt ? 'Paid back' : 'Repay'}{' '}
+          {isDebt ? 'Paid back' : 'Pay back'}{' '}
           <span className="font-semibold tabular-nums">{formatCents(terms.totalCents)}</span>
           {terms.chargeCents > 0 && (
             <span className="text-ink-muted"> (includes {formatCents(terms.chargeCents)} charge)</span>

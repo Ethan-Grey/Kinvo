@@ -38,7 +38,7 @@ export function NameSetup({ profile, onDone }: { profile: Profile; onDone: () =>
       <div>
         <h1 className="text-[1.75rem] leading-tight font-semibold">What’s your name?</h1>
         <p className="mt-1 text-ink-muted">
-          This is what the people you lend to or borrow from will see, so use your real name.
+          This is what the people you’re connected with will see, so use your real name.
         </p>
       </div>
       <TextField

@@ -22,7 +22,7 @@ export function statusBadge(status: LoanStatus, role: Role, awaitingMe: boolean)
     case 'active':
       return { label: 'Active', tone: 'positive' }
     case 'completed':
-      return { label: 'Repaid', tone: 'positive' }
+      return { label: 'Paid back', tone: 'positive' }
     case 'rejected':
       return { label: 'Declined', tone: 'neutral' }
     case 'withdrawn':

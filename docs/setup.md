@@ -53,13 +53,9 @@ Useful commands:
 
 Import the repository and set **Root Directory** to `apps/web`. Add the environment variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
 
-## 5. Granting lender access
+## 5. Who can invite people
 
-Lender access is granted manually (ADR-0008). After signing in once, run this in the Supabase **SQL Editor**:
-
-```sql
-update public.profiles set can_lend = true where email = 'you@example.com';
-```
+Everyone can (ADR-0019): any account can invite people who owe them. There's nothing to switch on.
 
 ## 6. Notification emails
 
