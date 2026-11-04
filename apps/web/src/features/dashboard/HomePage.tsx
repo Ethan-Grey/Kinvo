@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { formatShortDate } from '../../domain/dates'
-import { formatCents, toCents, type Cents } from '../../domain/money'
+import { formatCents, formatSignedCents, toCents, type Cents } from '../../domain/money'
 import {
   getDashboardSummary,
   listUpcomingInstalments,
@@ -11,10 +11,21 @@ import {
 import { listLoans, type LoanSummary } from '../../data/loans'
 import { listRepeating } from '../../data/repeating'
 import { listHouseholds } from '../../data/households'
+import { getMyMoney, planFor } from '../../data/myMoney'
+import type { Plan } from '../../domain/moneyPlan'
 import { HouseholdCards } from '../households/HouseholdsPage'
 import { getMyProfile, listPeople } from '../../data/people'
 import { RingAvatar } from '../../shared/Avatar'
-import { AlertIcon, CheckIcon, DocumentIcon, InviteIcon, PaymentIcon, RepeatIcon, SendIcon } from '../../shared/icons'
+import {
+  AlertIcon,
+  CheckIcon,
+  ChevronIcon,
+  DocumentIcon,
+  InviteIcon,
+  PaymentIcon,
+  RepeatIcon,
+  SendIcon,
+} from '../../shared/icons'
 import { ProgressRing } from '../../shared/ProgressRing'
 import { useAsync } from '../../shared/useAsync'
 import { Card, EmptyState, IconBubble, Notice, PageSkeleton, SectionHeader } from '../../shared/ui'
@@ -39,7 +50,7 @@ export function HomePage() {
   const justJoined = (location.state as { joined?: boolean } | null)?.joined === true
 
   const [data] = useAsync(async () => {
-    const [profile, people, summary, upcoming, loans, repeating, households] = await Promise.all([
+    const [profile, people, summary, upcoming, loans, repeating, households, money] = await Promise.all([
       getMyProfile(userId),
       listPeople(userId),
       getDashboardSummary(),
@@ -47,15 +58,25 @@ export function HomePage() {
       listLoans(userId),
       listRepeating(userId),
       listHouseholds(),
+      getMyMoney(userId).catch(() => null),
     ])
     const repeatingToAccept = repeating.filter((r) => r.status === 'proposed' && r.role === 'borrower').length
-    return { profile, people, summary, upcoming, loans, repeatingToAccept, households }
+    return {
+      profile,
+      people,
+      summary,
+      upcoming,
+      loans,
+      repeatingToAccept,
+      households,
+      plan: money ? planFor(money) : null,
+    }
   }, userId)
 
   if (data.status === 'loading') return <PageSkeleton label="Loading your home screen" />
   if (data.status === 'error') return <Notice tone="error">{data.error.message}</Notice>
 
-  const { profile, people, summary, upcoming, loans, repeatingToAccept, households } = data.data
+  const { profile, people, summary, upcoming, loans, repeatingToAccept, households, plan } = data.data
   const isLender = profile.can_lend && (people.borrowers.length > 0 || summary.lending.activeCount > 0)
   const isBorrower = people.lenders.length > 0 || summary.borrowing.activeCount > 0
   const firstName = profile.display_name.split(' ')[0]
@@ -78,6 +99,8 @@ export function HomePage() {
       ) : null}
 
       <NeedsYou summary={summary} repeatingToAccept={repeatingToAccept} />
+
+      <MoneyCard plan={plan} />
 
       {households.length > 0 && (
         <section className="space-y-3">
@@ -535,5 +558,38 @@ function ComingUp({ upcoming }: { upcoming: UpcomingInstalment[] }) {
         })}
       </ul>
     </section>
+  )
+}
+
+/** "Safe to spend until Fri" from My money, or a nudge to set it up. */
+function MoneyCard({ plan }: { plan: Plan | null }) {
+  return (
+    <Link
+      to="/money"
+      className="flex items-center gap-3 rounded-3xl border border-line p-4 transition hover:border-brand-ink active:scale-[0.99]"
+    >
+      <span className="min-w-0 flex-1">
+        {plan && plan.safeCents !== null ? (
+          <>
+            <span className="block text-sm text-ink-muted">Safe to spend until {formatShortDate(plan.nextPayOn)}</span>
+            <span
+              className={`block font-display text-2xl font-semibold tabular-nums ${plan.safeCents < 0 ? 'text-danger' : ''}`}
+            >
+              {formatSignedCents(plan.safeCents)}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="block font-semibold">My money</span>
+            <span className="block text-sm text-ink-muted">
+              {plan
+                ? 'Add your balance to see what’s safe to spend'
+                : 'Add your pay and bills to see what’s safe to spend'}
+            </span>
+          </>
+        )}
+      </span>
+      <ChevronIcon className="size-5 shrink-0 text-ink-muted" />
+    </Link>
   )
 }

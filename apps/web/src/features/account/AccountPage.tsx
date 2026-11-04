@@ -4,7 +4,16 @@ import { signOut } from '../../data/auth'
 import type { Profile } from '../../data/database.types'
 import { getMyProfile } from '../../data/people'
 import { Link } from 'react-router'
-import { ChevronIcon, DownloadIcon, MailIcon, PaletteIcon, PeopleIcon, SignOutIcon } from '../../shared/icons'
+import {
+  ChevronIcon,
+  DownloadIcon,
+  HomeIcon,
+  MailIcon,
+  PaletteIcon,
+  PaymentIcon,
+  PeopleIcon,
+  SignOutIcon,
+} from '../../shared/icons'
 import { ThemeToggle } from '../../shared/ThemeToggle'
 import { useAsync } from '../../shared/useAsync'
 import { Button, Card, IconBubble, Notice, PageSkeleton, TextField } from '../../shared/ui'
@@ -47,6 +56,32 @@ export function AccountPage() {
           <ThemeToggle />
         </div>
       </Card>
+      <Link
+        to="/money"
+        className="flex items-center gap-3 rounded-3xl border border-line p-5 transition hover:border-brand-ink active:scale-[0.99]"
+      >
+        <IconBubble>
+          <PaymentIcon />
+        </IconBubble>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg font-semibold">My money</span>
+          <span className="block text-sm text-ink-muted">Your bills, pay day and what’s safe to spend</span>
+        </span>
+        <ChevronIcon className="size-5 text-ink-muted" />
+      </Link>
+      <Link
+        to="/households"
+        className="flex items-center gap-3 rounded-3xl border border-line p-5 transition hover:border-brand-ink active:scale-[0.99]"
+      >
+        <IconBubble>
+          <HomeIcon />
+        </IconBubble>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg font-semibold">Households</span>
+          <span className="block text-sm text-ink-muted">Rent, bills and the shared account</span>
+        </span>
+        <ChevronIcon className="size-5 text-ink-muted" />
+      </Link>
       <Link
         to="/people"
         className="flex items-center gap-3 rounded-3xl border border-line p-5 transition hover:border-brand-ink active:scale-[0.99]"

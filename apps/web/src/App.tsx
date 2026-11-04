@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import { AccountPage } from './features/account/AccountPage'
+import { MyMoneyPage } from './features/money/MyMoneyPage'
 import { SplitBillPage } from './features/bills/SplitBillPage'
 import { BillDuePage, BillPage, NewBillPage } from './features/households/BillPages'
 import { HouseholdPage } from './features/households/HouseholdPage'
@@ -71,6 +72,7 @@ const router = createBrowserRouter([
               { path: 'households/:id/spend', element: <SpendPage /> },
               { path: 'households/:id/month/:month', element: <MonthPage /> },
               { path: 'spend', element: <QuickSpendPage /> },
+              { path: 'money', element: <MyMoneyPage /> },
               { path: 'households/:id/bills/new', element: <NewBillPage /> },
               { path: 'households/:id/bills/due/:occurrenceId', element: <BillDuePage /> },
               { path: 'households/:id/bills/:billId', element: <BillPage /> },
