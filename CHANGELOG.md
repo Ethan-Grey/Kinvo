@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Household spending (ADR-0023): Add spending takes seconds. Enter the amount, tap Groceries, Takeaways or another type, and say who paid (you, them, or the shared account). It's split as usual, or customised, including all for one person. A receipt and date are optional. It's also at /spend, for an iPhone Back Tap shortcut.
+- This month: where the household's money went, by type, compared with the month before, who paid what, and who topped up the shared account.
 - Households (ADR-0022): create one, invite the people you live with, and set it up your way.
   - An optional shared account: regular top-ups (assumed to go in, tap Missed if one doesn't), an estimated balance you can check against your banking app, and a warning if a bill might not be covered.
   - Bills like rent, power and internet: the same amount each time or one that changes (you're asked for it before it's due, with an optional bill photo). Each is paid from the shared account, by one person (others' shares go on the tab), by everyone paying their own share, or covered by one person. Any single date can be skipped or paid differently, e.g. you covered the rent yourself that week.

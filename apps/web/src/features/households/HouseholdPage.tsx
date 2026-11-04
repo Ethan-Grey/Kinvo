@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { addDays, formatDate, formatShortDate, todayInNZ, type IsoDate } from '../../domain/dates'
-import { balanceOn, lowestAhead, netWith, positions, settlePlan } from '../../domain/household'
+import { balanceOn, lowestAhead, monthOf, netWith, positions, settlePlan } from '../../domain/household'
 import { formatCents, formatSignedCents, parseDollars, toCents } from '../../domain/money'
 import type { RepeatFrequency } from '../../data/database.types'
 import {
@@ -12,6 +12,8 @@ import {
   getHousehold,
   memberName,
   payOwnShare,
+  removeExpense,
+  SPEND_LABELS,
   stopTopup,
   voidSharedEntry,
   type HouseholdDetail,
@@ -63,9 +65,25 @@ export function HouseholdPage() {
         }
       />
       {flash && <Notice tone="success">{flash}</Notice>}
+      <div className="grid grid-cols-2 gap-2">
+        <Link
+          to={`/households/${h.id}/spend`}
+          className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-brand font-semibold text-on-brand transition active:scale-[0.98]"
+        >
+          <PlusIcon className="size-5" />
+          Add spending
+        </Link>
+        <Link
+          to={`/households/${h.id}/month/${monthOf(todayInNZ())}`}
+          className="flex min-h-12 items-center justify-center rounded-2xl border border-line font-semibold hover:border-brand-ink"
+        >
+          This month
+        </Link>
+      </div>
       <NeedsYou h={h} me={me} onChanged={reload} />
       <Tab h={h} me={me} />
       {h.hasSharedAccount && <SharedAccount h={h} me={me} onChanged={reload} />}
+      <Spending h={h} me={me} onChanged={reload} />
       <Bills h={h} me={me} />
       <People h={h} me={me} />
     </div>
@@ -561,7 +579,9 @@ function Bills({ h, me }: { h: HouseholdDetail; me: string }) {
                 <li key={o.id}>
                   <Link to={`/households/${h.id}/bills/${o.billId}`} className="flex items-center gap-3 p-4">
                     <span className="flex w-12 shrink-0 flex-col items-center rounded-xl bg-brand-soft py-1 text-on-brand-soft">
-                      <span className="text-[11px] font-semibold">{formatShortDate(o.dueOn).split(' ')[0]?.replace(',', '')}</span>
+                      <span className="text-[11px] font-semibold">
+                        {formatShortDate(o.dueOn).split(' ')[0]?.replace(',', '')}
+                      </span>
                       <span className="font-display text-lg leading-none font-semibold">
                         {o.dueOn.slice(8).replace(/^0/, '')}
                       </span>
@@ -674,6 +694,55 @@ function People({ h, me }: { h: HouseholdDetail; me: string }) {
         </Button>
       )}
       {error && <Notice tone="error">{error}</Notice>}
+    </section>
+  )
+}
+
+function Spending({ h, me, onChanged }: { h: HouseholdDetail; me: string; onChanged: Reload }) {
+  const [error, setError] = useState<string | null>(null)
+  const recent = h.expenses.slice(0, 8)
+  if (recent.length === 0) return null
+  return (
+    <section className="space-y-3" aria-labelledby="spending-heading">
+      <h2 id="spending-heading" className="text-lg font-semibold">
+        Recent spending
+      </h2>
+      {error && <Notice tone="error">{error}</Notice>}
+      <ul className="divide-y divide-line rounded-3xl border border-line">
+        {recent.map((e) => {
+          const label = e.description ?? SPEND_LABELS[e.category]
+          return (
+            <li key={e.id} className="flex items-center gap-3 p-4">
+              <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold">{label}</span>
+                <span className="block text-sm text-ink-muted">
+                  {formatShortDate(e.spentOn)},{' '}
+                  {e.fromShared ? 'shared account' : `${memberName(h, e.paidBy, me)} paid`}
+                </span>
+              </span>
+              <span className="font-semibold tabular-nums">{formatCents(e.amountCents)}</span>
+              {(e.createdBy === me || e.paidBy === me) && (
+                <Button
+                  variant="ghost"
+                  className="min-h-9 px-2 text-xs"
+                  onClick={async () => {
+                    if (!window.confirm(`Remove ${label}? Any shares it added come off the tab.`)) return
+                    setError(null)
+                    try {
+                      await removeExpense(e.id)
+                      onChanged()
+                    } catch (err) {
+                      setError((err as Error).message)
+                    }
+                  }}
+                >
+                  Remove<span className="sr-only"> {label}</span>
+                </Button>
+              )}
+            </li>
+          )
+        })}
+      </ul>
     </section>
   )
 }
