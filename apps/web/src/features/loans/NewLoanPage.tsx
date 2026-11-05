@@ -6,8 +6,7 @@ import { createLoan } from '../../data/loans'
 import { toCents } from '../../domain/money'
 import { listPeople, type Connection } from '../../data/people'
 import { useAsync } from '../../shared/useAsync'
-import { Card, EmptyState, Notice, PageHeader, PageSkeleton, TextArea, TextField } from '../../shared/ui'
-import { WizardStep } from '../../shared/Wizard'
+import { Card, EmptyState, Notice, PageHeader, PageSkeleton, TextField } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 import { TermsForm } from './TermsForm'
 
@@ -27,9 +26,6 @@ export function NewLoanPage() {
   const [people] = useAsync(() => listPeople(userId), userId)
   const [chosen, setChosen] = useState<string | null>(params.get('with'))
   const [reason, setReason] = useState('')
-  // Asking to borrow starts with what it's for (required); offers ask at the end (optional).
-  const [reasonDone, setReasonDone] = useState(false)
-  const [reasonError, setReasonError] = useState<string[]>([])
 
   if (people.status === 'loading') return <PageSkeleton label="Loading" />
   if (people.status === 'error') return <Notice tone="error">{people.error.message}</Notice>
@@ -79,7 +75,7 @@ export function NewLoanPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block font-display text-lg font-semibold">{p.personName}</span>
                   <span className="block text-sm text-ink-muted">
-                    {p.myRole === 'borrower' ? 'Add what you owe them' : 'Add what they owe you'}
+                    {p.myRole === 'borrower' ? 'Ask them for money' : 'Lend or record what they owe'}
                   </span>
                 </span>
                 <ChevronIcon className="size-5 text-ink-muted" />
@@ -95,50 +91,13 @@ export function NewLoanPage() {
   const canChangePerson = pool.length > 1 && !params.get('with')
   const first = selected.personName.split(' ')[0]
 
-  if (isRequest && !reasonDone) {
-    return (
-      <div className="space-y-6">
-        <PageHeader back={{ to: '/loans', label: 'Owed' }} title={`What you owe ${first}`} />
-        <form
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (!reason.trim()) return setReasonError([`Tell ${first} what it’s for.`])
-            setReasonError([])
-            setReasonDone(true)
-          }}
-        >
-          <WizardStep
-            step={1}
-            of={1}
-            title="What do you need it for?"
-            hint={`${first} sees this when they look at your request.`}
-            errors={reasonError}
-            onBack={canChangePerson ? () => setChosen(null) : undefined}
-            next={{ label: 'Continue', submit: true }}
-          >
-            <TextArea
-              label="What it’s for"
-              maxLength={500}
-              rows={3}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Car repairs, the WOF failed on the brakes"
-              autoFocus
-            />
-          </WizardStep>
-        </form>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       <PageHeader
         back={{ to: '/loans', label: 'Owed' }}
         title={
           isRequest
-            ? `What you owe ${selected.personName.split(' ')[0]}`
+            ? `Ask ${selected.personName.split(' ')[0]} for money`
             : `What ${selected.personName.split(' ')[0]} owes you`
         }
       />
@@ -148,13 +107,20 @@ export function NewLoanPage() {
         fixedCharge={isRequest ? () => toCents(0) : undefined}
         submitLabel={isRequest ? 'Send request' : 'Send offer'}
         messageLabel={`Message to ${selected.personName.split(' ')[0]} (optional)`}
-        onBackFromStart={isRequest ? () => setReasonDone(false) : canChangePerson ? () => setChosen(null) : undefined}
+        onBackFromStart={canChangePerson ? () => setChosen(null) : undefined}
+        reasonStep={
+          isRequest
+            ? {
+                value: reason,
+                onChange: setReason,
+                title: 'What do you need it for?',
+                hint: `${first} sees this when they look at your request.`,
+                required: true,
+              }
+            : undefined
+        }
         reviewExtras={
-          isRequest ? (
-            <p className="rounded-2xl bg-brand-soft px-4 py-3 text-sm text-on-brand-soft">
-              <span className="font-semibold">For:</span> {reason.trim()}
-            </p>
-          ) : (
+          isRequest ? undefined : (
             <TextField
               label="What’s it for? (optional)"
               maxLength={500}

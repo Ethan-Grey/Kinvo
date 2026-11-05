@@ -97,7 +97,7 @@ const claim: Repayment = {
 function renderPanel(role: 'lender' | 'borrower' = 'lender') {
   return render(
     <MemoryRouter>
-      <RepaymentsPanel loan={{ ...loan, role }} userId={role === 'lender' ? 'lena' : 'bob'} onLoanChanged={vi.fn()} />
+      <RepaymentsPanel loan={{ ...loan, role }} onLoanChanged={vi.fn()} />
     </MemoryRouter>,
   )
 }
@@ -146,21 +146,17 @@ describe('RepaymentsPanel', () => {
     await expectNoAxeViolations(container)
   })
 
-  it('separates money sent from payments back, and only loads a receipt when opened', async () => {
+  it('keeps the paid-out receipt in History and only loads it when opened', async () => {
     for (const role of ['lender', 'borrower'] as const) {
       renderPanel(role)
-      expect(await screen.findByRole('heading', { name: 'Proof of payment' })).toBeTruthy()
-      expect(screen.getByRole('heading', { name: 'Paid out by Lena' })).toBeTruthy()
-      expect(screen.getByRole('heading', { name: 'Payments back from Bob' })).toBeTruthy()
-      expect(screen.getByText('Waiting to be confirmed')).toBeTruthy()
-      expect(screen.getAllByText(/^Payment \d$/).length).toBe(progress.length)
+      await userEvent.click(await screen.findByText('History'))
+      expect(screen.getByText(/paid out by lena/i)).toBeTruthy()
+      expect(screen.queryByRole('heading', { name: 'Proof of payment' })).toBeNull()
 
-      // No images until a payment is tapped.
       expect(document.querySelectorAll('img').length).toBe(0)
-      await userEvent.click(screen.getByRole('button', { name: /view receipt:.*\$200\.00/i }))
-      const image = await screen.findByRole('img', { name: /receipt for \$200\.00/i })
+      await userEvent.click(screen.getByRole('button', { name: /receipt for the \$200\.00 paid out/i }))
+      const image = await screen.findByRole('img', { name: /receipt for the \$200\.00 paid out/i })
       expect(image.getAttribute('src')).toBe('blob:receipt')
-      expect(document.querySelectorAll('img').length).toBe(1)
       cleanup()
     }
   })

@@ -38,7 +38,7 @@ describe('TermsForm', () => {
   it('asks one thing per step and builds the brief’s example: $200 + $100, two weekly payments', async () => {
     const onSubmit = renderForm()
     expect(screen.getByText('Step 1 of 4')).toBeTruthy()
-    expect(screen.getByRole('heading', { name: 'How much will you owe?' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'How much do you need?' })).toBeTruthy()
 
     await userEvent.type(screen.getByLabelText(/^amount$/i), '200')
     await next()
@@ -119,9 +119,31 @@ describe('TermsForm', () => {
     expect((screen.getByLabelText(/^amount$/i) as HTMLInputElement).value).toBe('200')
     await next()
     expect((screen.getByLabelText(/one-off charge/i) as HTMLInputElement).value).toBe('20')
+  })
+
+  it('keeps existing late terms it no longer asks about', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(
+      <TermsForm
+        initial={{
+          principalCents: toCents(20000),
+          chargeCents: toCents(0),
+          instalments: [{ dueOn: week1, amountCents: toCents(20000) }],
+          lateTerms: 'Tell me early',
+          conditions: '',
+          message: '',
+        }}
+        perspective="lender"
+        submitLabel="Send"
+        onSubmit={onSubmit}
+      />,
+    )
     await next()
     await next()
-    expect(screen.getByDisplayValue('Tell me early')).toBeTruthy()
+    await next()
+    expect(screen.queryByLabelText(/if a payment is late/i)).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Send' }))
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ lateTerms: 'Tell me early' }))
   })
 
   it('shows server errors from the submit handler', async () => {
@@ -147,7 +169,7 @@ describe('TermsForm', () => {
     expect(screen.getByRole('heading', { name: 'How will it be paid back?' })).toBeTruthy()
     expect(screen.getByText('$330.00 in total.')).toBeTruthy()
     await next()
-    expect(screen.getByText(/only they can change it/i)).toBeTruthy()
+    expect(screen.getByText(/set by the person you’d owe/i)).toBeTruthy()
     await userEvent.click(screen.getByRole('button', { name: 'Send' }))
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ principalCents: 30000, chargeCents: 3000 }))
   })

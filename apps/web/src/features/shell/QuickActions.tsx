@@ -153,16 +153,16 @@ function SheetBody({ onDone }: { onDone: () => void }) {
       {hasLenders && (
         <Action
           icon={<HandIcon />}
-          title="I owe someone"
-          detail="Send a request with a repayment plan"
+          title="Ask for money"
+          detail="Ask someone to lend you money"
           onClick={() => go('/loans/new?as=borrower')}
         />
       )}
       {hasBorrowers && (
         <Action
           icon={<SendIcon />}
-          title="Someone owes me"
-          detail="Propose terms for someone to accept"
+          title="Lend money"
+          detail="Offer a loan, or record what someone owes you"
           onClick={() => go('/loans/new?as=lender')}
         />
       )}

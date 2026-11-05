@@ -1,20 +1,12 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router'
 import { todayInNZ } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
 import type { PaymentMethod } from '../../data/database.types'
 import { acceptTerms, confirmFundsSent, rejectTerms, withdrawLoan, type LoanDetail } from '../../data/loans'
 import { CheckIcon, DocumentIcon, SendIcon } from '../../shared/icons'
-import { Button, Notice, Segmented, TextField } from '../../shared/ui'
+import { Button, ButtonLink, Notice, Segmented, TextField } from '../../shared/ui'
 import { ReceiptField } from '../repayments/ReceiptField'
 import { PAYMENT_METHODS } from './labels'
-
-const primaryLink =
-  'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-brand px-5 font-semibold text-on-brand ' +
-  'shadow-[0_6px_16px_-6px_rgb(30_58_138/0.6)] transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
-const secondaryLink =
-  'flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-line px-5 font-semibold ' +
-  'transition hover:border-brand-ink active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink'
 
 /**
  * What the current user can do next on the loan page: at most one main
@@ -30,14 +22,14 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
   if (loan.status === 'negotiating' && !proposedByMe) {
     return (
       <div className="space-y-3">
-        <Link to={`/loans/${loan.id}/accept`} className={primaryLink}>
+        <ButtonLink to={`/loans/${loan.id}/accept`}>
           <CheckIcon className="size-5" />
           {isDebt ? 'Confirm this debt' : isBill ? 'Accept my share' : 'Accept'}
-        </Link>
-        <Link to={`/loans/${loan.id}/change`} className={secondaryLink}>
+        </ButtonLink>
+        <ButtonLink to={`/loans/${loan.id}/change`} variant="secondary">
           <DocumentIcon className="size-5" />
           Suggest changes
-        </Link>
+        </ButtonLink>
         <QuietAction
           label={isDebt ? 'This isn’t right' : 'Decline'}
           question={
@@ -57,13 +49,10 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
   if (loan.status === 'negotiating') {
     return (
       <div className="space-y-3">
-        <Notice>
-          Waiting for {otherName} to {isDebt ? 'confirm this debt' : isBill ? 'accept their share' : 'reply'}. You’ll
-          get an alert when they do.
-        </Notice>
-        <Link to={`/loans/${loan.id}/change`} className={secondaryLink}>
+        <Notice>Waiting for {otherName.split(' ')[0]} to reply.</Notice>
+        <ButtonLink to={`/loans/${loan.id}/change`} variant="secondary">
           Change my proposal
-        </Link>
+        </ButtonLink>
         <QuietAction
           label="Withdraw"
           question="Withdraw your proposal? This ends the request."
@@ -77,15 +66,14 @@ export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; use
   if (loan.status === 'agreed' && loan.role === 'lender') {
     return (
       <div className="space-y-3">
-        <p className="text-sm">
-          {loan.borrowerName} accepted. Send them{' '}
-          <span className="font-semibold">{formatCents(loan.currentTerms.principalCents)}</span> or pay for it, then
-          tell Kinvo. Paying back starts once you do.
-        </p>
-        <Link to={`/loans/${loan.id}/sent`} className={primaryLink}>
+        <Notice>
+          {loan.borrowerName.split(' ')[0]} accepted. Pay them{' '}
+          <span className="font-semibold">{formatCents(loan.currentTerms.principalCents)}</span>, then tap below.
+        </Notice>
+        <ButtonLink to={`/loans/${loan.id}/sent`}>
           <SendIcon className="size-5" />
           I’ve paid it out
-        </Link>
+        </ButtonLink>
         <QuietAction
           label="Cancel"
           question="Cancel this? Nothing has been paid out yet."
@@ -161,17 +149,13 @@ export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted:
   const total = formatCents(loan.currentTerms.totalCents)
 
   const statement =
-    loan.kind === 'bill'
+    loan.kind === 'bill' || isDebt
       ? isBorrower
-        ? `I agree I owe ${loan.lenderName} ${total} as my share of ${loan.reason ?? 'the bill'}, to be paid back on the date shown.`
-        : `I confirm ${loan.borrowerName} owes me ${total} as their share of ${loan.reason ?? 'the bill'}.`
-      : isDebt
-        ? isBorrower
-          ? `I confirm I owe ${loan.lenderName} ${total}, and I agree to pay it back on the dates shown.`
-          : `I confirm ${loan.borrowerName} owes me ${total}, to be paid back on the dates shown.`
-        : isBorrower
-          ? `I agree to pay ${loan.lenderName} back ${total} on the dates shown, under these terms.`
-          : `I agree to pay out ${formatCents(loan.currentTerms.principalCents)} for ${loan.borrowerName}, to be paid back under these terms.`
+        ? `I owe ${loan.lenderName.split(' ')[0]} ${total} and will pay it on these dates.`
+        : `${loan.borrowerName.split(' ')[0]} owes me ${total}.`
+      : isBorrower
+        ? `I’ll pay ${loan.lenderName.split(' ')[0]} back ${total} on these dates.`
+        : `I’ll pay ${loan.borrowerName.split(' ')[0]} ${formatCents(loan.currentTerms.principalCents)}.`
 
   async function handleAccept() {
     setBusy(true)
@@ -200,12 +184,8 @@ export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted:
       </label>
       {error && <Notice tone="error">{error}</Notice>}
       <Button className="w-full" disabled={!agreed} busy={busy} onClick={handleAccept}>
-        {isDebt ? 'Confirm what you owe' : loan.kind === 'bill' ? 'Accept my share' : 'Accept agreement'}
+        {isDebt ? 'Confirm' : loan.kind === 'bill' ? 'Accept my share' : 'Accept'}
       </Button>
-      <p className="text-xs text-ink-muted">
-        Accepting records your agreement, the date and time, and a fingerprint of these exact terms. It’s a record of
-        what you both agreed, not a guarantee that it’s legally enforceable.
-      </p>
     </div>
   )
 }
@@ -215,7 +195,6 @@ export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () =
   const today = todayInNZ()
   const [sentOn, setSentOn] = useState(today)
   const [method, setMethod] = useState<PaymentMethod>('bank_transfer')
-  const [reference, setReference] = useState('')
   const [receiptPath, setReceiptPath] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -229,7 +208,7 @@ export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () =
     setBusy(true)
     setError(null)
     try {
-      await confirmFundsSent(loan.id, sentOn, method, reference, receiptPath)
+      await confirmFundsSent(loan.id, sentOn, method, '', receiptPath)
       onSent()
     } catch (err) {
       setError((err as Error).message)
@@ -240,31 +219,24 @@ export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () =
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div>
-        <p className="mb-1.5 text-sm font-medium">How did you pay it?</p>
-        <Segmented label="How did you pay it?" options={PAYMENT_METHODS} value={method} onChange={setMethod} />
+        <p className="mb-1.5 text-sm font-medium">How</p>
+        <Segmented label="How" options={PAYMENT_METHODS} value={method} onChange={setMethod} />
       </div>
       <TextField
-        label="Date paid"
+        label="When"
         type="date"
         max={today}
         required
         value={sentOn}
         onChange={(e) => setSentOn(e.target.value)}
       />
-      <TextField
-        label="Reference (optional)"
-        maxLength={100}
-        value={reference}
-        onChange={(e) => setReference(e.target.value)}
-        placeholder="e.g. bank transfer reference"
-      />
       <div>
-        <p className="mb-1.5 text-sm font-medium">Receipt</p>
+        <p className="mb-1.5 text-sm font-medium">Proof of payment</p>
         <ReceiptField loanId={loan.id} onChange={setReceiptPath} />
       </div>
       {error && <Notice tone="error">{error}</Notice>}
       <Button type="submit" className="w-full" busy={busy}>
-        Confirm money sent
+        Confirm
       </Button>
     </form>
   )
