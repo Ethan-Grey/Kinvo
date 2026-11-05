@@ -8,7 +8,6 @@ import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
 import { useAuth } from '../auth/useAuth'
 import { statusBadge } from './labels'
 import { LoanActions } from './LoanActions'
-import { LoanReason } from './LoanStepPages'
 
 /** /loans/:id — what it's for, where it stands, and what to do next. */
 export function LoanDetailPage() {
@@ -45,9 +44,9 @@ export function LoanDetailPage() {
               : `You owe ${otherName}`
         }
         subtitle={
-          (data.originallyLentOn || (data.reason && (data.kind === 'bill' || data.kind === 'repeating'))) && (
+          (data.originallyLentOn || data.reason) && (
             <>
-              {data.reason && (data.kind === 'bill' || data.kind === 'repeating') && <p>For {data.reason}</p>}
+              {data.reason && <p className="break-words">For {data.reason}</p>}
               {data.originallyLentOn &&
                 (data.kind === 'bill' ? (
                   <p>Bill paid {formatDate(data.originallyLentOn)}</p>
@@ -70,7 +69,6 @@ export function LoanDetailPage() {
       />
 
       {flash && <Notice tone="success">{flash}</Notice>}
-      {data.kind === 'new' || data.kind === 'existing_debt' ? <LoanReason loan={data} /> : null}
 
       {funded ? (
         <RepaymentsPanel loan={data} onLoanChanged={reload} />
@@ -81,15 +79,6 @@ export function LoanDetailPage() {
             <LoanActions loan={data} userId={userId} onChanged={reload} />
           )}
         </>
-      )}
-
-      {data.role === 'lender' && (
-        <Link
-          to={`/loans/${data.id}/remove`}
-          className="flex min-h-11 items-center justify-center text-sm text-ink-muted hover:text-danger"
-        >
-          Remove this
-        </Link>
       )}
     </div>
   )

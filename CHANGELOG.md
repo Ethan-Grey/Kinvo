@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Main buttons are now fixed to the bottom of the screen, above the tab bar. This covers loan pages, the accept and paid-out pages, payments and every step-by-step form.
+- A request shows just Accept and Decline. Decline asks whether to make changes or remove the request. The same pattern applies to "Change or cancel" on your own request, Cancel once agreed, and More on an active loan (change dates, forgive the rest, remove).
+- The reason is shown under the title on the loan page and inside the summary on the accept page, instead of in its own box.
+
 - Asking for money: new wording ("Ask for money", "Ask Hana for money", "How much do you need?"), and the amount comes before the reason.
 - Loan page: removed full terms, earlier proposals, timestamps/fingerprints and the reminders link. Proof of payment and payment history are now one collapsed History list.
 - Accept page: one total, the due dates and a one-line statement, with no legal fine print.

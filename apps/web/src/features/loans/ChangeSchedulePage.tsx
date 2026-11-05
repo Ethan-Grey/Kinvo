@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { addDays, formatDate, isIsoDate, todayInNZ } from '../../domain/dates'
+import { ActionBar } from '../../shared/ActionBar'
 import { formatCents, sumCents, toCents } from '../../domain/money'
 import {
   amountOf,
@@ -239,9 +240,11 @@ export function ScheduleEditor({
       )}
       {error && <Notice tone="error">{error}</Notice>}
 
-      <Button type="submit" className="w-full" busy={busy}>
-        Save new schedule
-      </Button>
+      <ActionBar>
+        <Button type="submit" busy={busy}>
+          Save new schedule
+        </Button>
+      </ActionBar>
     </form>
   )
 }

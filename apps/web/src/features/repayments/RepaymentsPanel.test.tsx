@@ -136,7 +136,7 @@ describe('RepaymentsPanel', () => {
 
   it('links the lender to the record-a-payment page', async () => {
     renderPanel()
-    const link = await screen.findByRole('link', { name: /record a payment/i })
+    const link = await screen.findByRole('link', { name: /record payment/i })
     expect(link.getAttribute('href')).toBe('/loans/loan-1/pay')
   })
 
