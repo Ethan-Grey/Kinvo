@@ -28,7 +28,7 @@ import {
 } from '../../shared/icons'
 import { ProgressRing } from '../../shared/ProgressRing'
 import { useAsync } from '../../shared/useAsync'
-import { Card, EmptyState, IconBubble, Notice, PageSkeleton, SectionHeader } from '../../shared/ui'
+import { ButtonLink, Card, EmptyState, IconBubble, Notice, PageSkeleton, SectionHeader } from '../../shared/ui'
 import { PushNudge } from '../account/PushNudge'
 import { useAuth } from '../auth/useAuth'
 
@@ -90,7 +90,7 @@ export function HomePage() {
         <h1 className="text-[1.75rem] leading-tight font-semibold">Kia ora, {firstName}</h1>
       </header>
 
-      {justJoined && <Notice tone="success">You’re connected. Tap + to add what you owe.</Notice>}
+      {justJoined && <Notice tone="success">You’re connected. Tap + to ask for money.</Notice>}
 
       {isLender ? (
         <LendingHero summary={summary} loans={loans} />
@@ -127,12 +127,9 @@ export function HomePage() {
               icon={<InviteIcon className="size-6" />}
               title="Invite someone"
               action={
-                <Link
-                  to="/people#invite"
-                  className="inline-flex min-h-12 items-center rounded-2xl bg-brand px-5 font-semibold text-on-brand"
-                >
+                <ButtonLink to="/people#invite" className="">
                   Create an invite link
-                </Link>
+                </ButtonLink>
               }
             >
               Send them a link. Once they join, you can record what they owe you.

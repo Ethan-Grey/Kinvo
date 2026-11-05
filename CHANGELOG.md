@@ -6,6 +6,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- Asking for money: new wording ("Ask for money", "Ask Hana for money", "How much do you need?"), and the amount comes before the reason.
+- Loan page: removed full terms, earlier proposals, timestamps/fingerprints and the reminders link. Proof of payment and payment history are now one collapsed History list.
+- Accept page: one total, the due dates and a one-line statement, with no legal fine print.
+- "I've paid it out": just how, when and a receipt. The reference field is gone.
+- The terms form no longer asks for late-payment terms or other conditions. Any already on a loan are kept.
+- Refactor: a shared `ButtonLink` replaces copied button class strings, and the unused payment allocation module has been removed.
+
 ### Added
 
 - My money (ADR-0024), private to you: add your take-home pay and pay day, your own bills (phone, insurance, subscriptions and so on), and your balance when you check it. Kinvo shows what's safe to spend until pay day, after your bills, shared-account top-ups, loan payments you owe and household shares you pay yourself, with a per-day figure. It's on Home, and in Account → My money.

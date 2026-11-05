@@ -30,7 +30,7 @@ const FREQUENCIES: { value: Frequency; label: string }[] = [
 /** One-tap charges, as a share of the amount. */
 const CHARGE_PRESETS = [0, 10, 25, 50] as const
 
-type Step = 'amount' | 'charge' | 'plan' | 'review'
+type Step = 'amount' | 'reason' | 'charge' | 'plan' | 'review'
 
 interface TermsFormProps {
   /** Pre-fills the form, e.g. with the terms being changed. */
@@ -53,6 +53,8 @@ interface TermsFormProps {
   fixedCharge?: (principalCents: Cents) => Cents
   /** Extra fields for the review step, e.g. "What's it for?". */
   reviewExtras?: ReactNode
+  /** Asks what the money is for, straight after the amount (required when asking to borrow). */
+  reasonStep?: { value: string; onChange: (value: string) => void; title: string; hint?: string; required: boolean }
   /** Back from the first step, e.g. to choose a different person. */
   onBackFromStart?: () => void
   onSubmit: (input: TermsInput) => Promise<void>
@@ -82,13 +84,20 @@ export function TermsForm({
   messageLabel,
   variant = 'new',
   reviewExtras,
+  reasonStep,
   onBackFromStart,
   onSubmit,
 }: TermsFormProps) {
   const isExistingDebt = variant === 'existing_debt'
   const today = todayInNZ()
   const choosesCharge = !isExistingDebt && !fixedCharge
-  const steps: Step[] = choosesCharge ? ['amount', 'charge', 'plan', 'review'] : ['amount', 'plan', 'review']
+  const steps: Step[] = [
+    'amount',
+    ...(reasonStep ? (['reason'] as const) : []),
+    ...(choosesCharge ? (['charge'] as const) : []),
+    'plan',
+    'review',
+  ]
   const [stepIndex, setStepIndex] = useState(0)
   const step = steps[stepIndex] ?? 'amount'
 
@@ -99,8 +108,9 @@ export function TermsForm({
   const [frequency, setFrequency] = useState<Frequency>(start.frequency)
   const [firstDueOn, setFirstDueOn] = useState<string>(initial?.instalments[0]?.dueOn ?? addDays(today, 7))
   const [manualRows, setManualRows] = useState<Row[] | null>(start.manual)
-  const [lateTerms, setLateTerms] = useState(initial?.lateTerms ?? '')
-  const [conditions, setConditions] = useState(initial?.conditions ?? '')
+  // Kept as they were: the form no longer asks for late terms or conditions.
+  const lateTerms = initial?.lateTerms ?? ''
+  const conditions = initial?.conditions ?? ''
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
@@ -130,6 +140,7 @@ export function TermsForm({
         ? [isExistingDebt ? 'Enter the amount they owe.' : 'Enter the amount.']
         : []
     }
+    if (s === 'reason') return reasonStep?.required && !reasonStep.value.trim() ? ['Say what it’s for.'] : []
     if (s === 'charge') return charge.ok ? [] : ['Enter the charge in dollars, or 0.']
     if (s === 'plan')
       return [...new Set(validateTerms({ principalCents, chargeCents, instalments }, today).map(describeProblem))]
@@ -184,7 +195,7 @@ export function TermsForm({
               ? 'How much do they owe you now?'
               : perspective === 'lender'
                 ? 'How much will they owe you?'
-                : 'How much will you owe?'
+                : 'How much do you need?'
           }
           hint={isExistingDebt ? 'Only what’s still owed today. Past payments don’t need entering.' : undefined}
           errors={errors}
@@ -195,6 +206,27 @@ export function TermsForm({
             label={isExistingDebt ? 'Amount they owe you now' : 'Amount'}
             value={principalText}
             onChange={setPrincipalText}
+            autoFocus
+          />
+        </WizardStep>
+      )}
+
+      {step === 'reason' && reasonStep && (
+        <WizardStep
+          {...position}
+          title={reasonStep.title}
+          hint={reasonStep.hint}
+          errors={errors}
+          onBack={back}
+          next={continueButton}
+        >
+          <TextArea
+            label="What it’s for"
+            maxLength={500}
+            rows={3}
+            value={reasonStep.value}
+            onChange={(e) => reasonStep.onChange(e.target.value)}
+            placeholder="e.g. Car repairs, the WOF failed on the brakes"
             autoFocus
           />
         </WizardStep>
@@ -303,12 +335,8 @@ export function TermsForm({
           next={{ label: submitLabel, submit: true, busy: submitting }}
         >
           <TotalCard principalCents={principalCents} chargeCents={chargeCents} hideBreakdown={isExistingDebt} />
-          {fixedCharge && (
-            <p className="text-sm text-ink-muted">
-              {chargeCents > 0
-                ? 'The charge is set by the person you’d owe, at the rate they proposed. Only they can change it.'
-                : 'No charge. If the person you’d owe wants one, they’ll add it when they reply, and you can accept or ask for changes.'}
-            </p>
+          {fixedCharge && chargeCents > 0 && (
+            <p className="text-sm text-ink-muted">The charge is set by the person you’d owe.</p>
           )}
           <SchedulePreview rows={rows} />
           {reviewExtras}
@@ -321,28 +349,6 @@ export function TermsForm({
               onChange={(e) => setMessage(e.target.value)}
             />
           )}
-          <details open={Boolean(lateTerms || conditions)} className="group rounded-2xl border border-line p-4">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 font-semibold">
-              Late payments and other conditions
-              <span className="text-sm font-normal text-ink-muted group-open:hidden">Optional</span>
-            </summary>
-            <div className="mt-4 space-y-4">
-              <TextArea
-                label="If a payment is late (optional)"
-                maxLength={1000}
-                value={lateTerms}
-                onChange={(e) => setLateTerms(e.target.value)}
-                placeholder="e.g. Let me know before the due date and we’ll sort out a new date."
-                hint="Plain words both of you agree to. Kinvo never adds late fees automatically."
-              />
-              <TextArea
-                label="Other conditions (optional)"
-                maxLength={2000}
-                value={conditions}
-                onChange={(e) => setConditions(e.target.value)}
-              />
-            </div>
-          </details>
         </WizardStep>
       )}
     </form>

@@ -27,6 +27,30 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   busy?: boolean
 }
 
+const BUTTON_BASE =
+  'inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-[0.95rem] font-semibold ' +
+  'transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink ' +
+  'active:scale-[0.98] '
+
+/** A link that looks like a button, for actions that open their own page. */
+export function ButtonLink({
+  to,
+  variant = 'primary',
+  className = 'w-full',
+  children,
+}: {
+  to: string
+  variant?: ButtonVariant
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <Link to={to} className={`${BUTTON_BASE}${BUTTON_STYLES[variant]} ${className}`}>
+      {children}
+    </Link>
+  )
+}
+
 export function Button({
   variant = 'primary',
   busy = false,
@@ -42,11 +66,7 @@ export function Button({
       disabled={disabled || busy}
       aria-busy={busy || undefined}
       className={
-        'inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 text-[0.95rem] font-semibold ' +
-        'transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink ' +
-        'active:scale-[0.98] ' +
-        'disabled:cursor-not-allowed disabled:opacity-60 ' +
-        `${BUTTON_STYLES[variant]} ${className}`
+        BUTTON_BASE + 'disabled:cursor-not-allowed disabled:opacity-60 ' + `${BUTTON_STYLES[variant]} ${className}`
       }
       {...rest}
     >

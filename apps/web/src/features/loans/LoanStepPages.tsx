@@ -5,7 +5,7 @@ import { formatCents, toCents } from '../../domain/money'
 import { borrowerCharge, counterOffer, getLoan, removeLoan, type LoanDetail } from '../../data/loans'
 import { getBalance, getInstalmentProgress } from '../../data/repayments'
 import { useAsync } from '../../shared/useAsync'
-import { Button, Card, Notice, PageHeader, PageSkeleton, TextField } from '../../shared/ui'
+import { Button, Notice, PageHeader, PageSkeleton, TextField } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 import { PaymentForm } from '../repayments/PaymentForm'
 import { AcceptForm, FundsSentForm } from './LoanActions'
@@ -55,9 +55,7 @@ export function AcceptLoanPage() {
       {(loan, done) => (
         <>
           <LoanReason loan={loan} />
-          <Card>
-            <TermsSummary terms={loan.currentTerms} lenderName={loan.lenderName} borrowerName={loan.borrowerName} />
-          </Card>
+          <TermsSummary terms={loan.currentTerms} />
           <AcceptForm loan={loan} onAccepted={() => done(loan.kind === 'existing_debt' ? 'Confirmed.' : 'Accepted.')} />
         </>
       )}
@@ -91,11 +89,9 @@ export function ChangeTermsPage() {
 export function FundsSentPage() {
   return (
     <LoanStep
-      title={(loan) =>
-        `Paid out ${formatCents(loan.currentTerms.principalCents)} for ${loan.borrowerName.split(' ')[0]}?`
-      }
+      title={(loan) => `Paid ${loan.borrowerName.split(' ')[0]} ${formatCents(loan.currentTerms.principalCents)}?`}
     >
-      {(loan, done) => <FundsSentForm loan={loan} onSent={() => done('Started. Payments back are now tracked.')} />}
+      {(loan, done) => <FundsSentForm loan={loan} onSent={() => done('Done. Payments back are now tracked.')} />}
     </LoanStep>
   )
 }

@@ -14,7 +14,7 @@ import {
   type ReminderSettings,
 } from '../../data/reminders'
 import { useAsync } from '../../shared/useAsync'
-import { BackLink, Button, Card, Notice, PageSkeleton, SectionHeader, Stat } from '../../shared/ui'
+import { BackLink, Button, ButtonLink, Card, Notice, PageSkeleton, SectionHeader, Stat } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 import { LoanList } from '../loans/LoansSection'
 
@@ -66,13 +66,10 @@ export function PersonPage() {
         />
         <h1 className="mt-3 text-[1.75rem] leading-tight font-semibold">{person.personName}</h1>
         <p className="text-sm text-ink-muted">{iLend ? 'Owes you' : 'You owe them'}</p>
-        <Link
-          to={`/loans/new?with=${relationshipId}`}
-          className="mt-4 inline-flex min-h-12 items-center gap-2 rounded-2xl bg-brand px-5 font-semibold text-on-brand transition active:scale-[0.98]"
-        >
+        <ButtonLink to={`/loans/new?with=${relationshipId}`} className="mt-4">
           <PlusIcon className="size-5" />
-          {iLend ? 'Add what they owe' : 'Add what you owe'}
-        </Link>
+          {iLend ? 'Lend money' : 'Ask for money'}
+        </ButtonLink>
       </section>
 
       {iLend && record && <TrackRecord record={record} />}
