@@ -37,6 +37,7 @@ const MESSAGES: Record<string, string> = {
   invalid_principal: 'Enter an amount between $0.01 and $100,000.',
   invalid_charge: 'The charge must be between $0 and $100,000.',
   invalid_reason: 'Keep the reason under 500 characters.',
+  loan_reason_required: 'Say what the money is for.',
   invalid_schedule: 'Add between 1 and 52 payments, each with a date and an amount.',
   schedule_date_in_past: 'Payment dates can’t be in the past.',
   schedule_dates_not_increasing: 'Each payment date must be after the one before it.',

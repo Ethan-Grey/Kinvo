@@ -32,7 +32,7 @@ grant execute on all functions in schema pg_temp to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select set_config('test.loan', public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0,
-  jsonb_build_array(jsonb_build_object('due_on', (current_setting('test.today')::date + 7)::text, 'amount_cents', 20000)))::text, true);
+  jsonb_build_array(jsonb_build_object('due_on', (current_setting('test.today')::date + 7)::text, 'amount_cents', 20000)), 'Test reason')::text, true);
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select public.accept_terms(l.id, t.id, t.terms_hash)
 from public.loans l join public.loan_terms t on t.id = l.current_terms_id where l.id = current_setting('test.loan')::uuid;

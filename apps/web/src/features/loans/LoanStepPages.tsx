@@ -47,9 +47,14 @@ const otherOf = (loan: LoanDetail) => (loan.role === 'lender' ? loan.borrowerNam
 
 export function AcceptLoanPage() {
   return (
-    <LoanStep title={(loan) => (loan.kind === 'existing_debt' ? 'Confirm what you owe' : loan.kind === 'bill' ? 'Accept your share' : 'Accept')}>
+    <LoanStep
+      title={(loan) =>
+        loan.kind === 'existing_debt' ? 'Confirm what you owe' : loan.kind === 'bill' ? 'Accept your share' : 'Accept'
+      }
+    >
       {(loan, done) => (
         <>
+          <LoanReason loan={loan} />
           <Card>
             <TermsSummary terms={loan.currentTerms} lenderName={loan.lenderName} borrowerName={loan.borrowerName} />
           </Card>
@@ -196,5 +201,18 @@ function RemoveForm({ loan }: { loan: LoanDetail }) {
         Remove
       </Button>
     </form>
+  )
+}
+
+/** What the money is for, as the person asking put it. */
+export function LoanReason({ loan }: { loan: LoanDetail }) {
+  if (!loan.reason) return null
+  const asker = loan.createdBy === loan.borrowerId ? loan.borrowerName.split(' ')[0] : loan.lenderName.split(' ')[0]
+  return (
+    <section className="rounded-3xl bg-brand-soft p-5 text-on-brand-soft" aria-label="What it’s for">
+      <p className="text-sm font-semibold">What it’s for</p>
+      <p className="mt-1 text-lg break-words">{loan.reason}</p>
+      <p className="mt-1 text-xs">From {asker}</p>
+    </section>
   )
 }

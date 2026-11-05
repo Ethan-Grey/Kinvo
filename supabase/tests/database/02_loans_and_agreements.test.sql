@@ -104,31 +104,31 @@ select set_config('test.v1_hash', (select terms_hash from public.loan_terms wher
 -- -----------------------------------------------------------------------------
 select throws_ok(
   $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0,
-       pg_temp.one(current_setting('test.d1'), 19999)) $$,
+       pg_temp.one(current_setting('test.d1'), 19999), 'Test reason') $$,
   'P0001', 'schedule_total_mismatch', 'instalments must add up to principal + charge'
 );
 select throws_ok(
   $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0,
-       pg_temp.one(current_setting('test.yesterday'), 20000)) $$,
+       pg_temp.one(current_setting('test.yesterday'), 20000), 'Test reason') $$,
   'P0001', 'schedule_date_in_past', 'due dates cannot be in the past'
 );
 select throws_ok(
   $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0,
-       pg_temp.two(current_setting('test.d1'), 10000, current_setting('test.d1'), 10000)) $$,
+       pg_temp.two(current_setting('test.d1'), 10000, current_setting('test.d1'), 10000), 'Test reason') $$,
   'P0001', 'schedule_dates_not_increasing', 'due dates must be in order with no repeats'
 );
 select throws_ok(
-  $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0, '[]'::jsonb) $$,
+  $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0, '[]'::jsonb, 'Test reason') $$,
   'P0001', 'invalid_schedule', 'a schedule needs at least one instalment'
 );
 select throws_ok(
   $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 0, 0,
-       pg_temp.one(current_setting('test.d1'), 1)) $$,
+       pg_temp.one(current_setting('test.d1'), 1), 'Test reason') $$,
   'P0001', 'invalid_principal', 'the amount borrowed must be positive'
 );
 select throws_ok(
   $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, -1,
-       pg_temp.one(current_setting('test.d1'), 19999)) $$,
+       pg_temp.one(current_setting('test.d1'), 19999), 'Test reason') $$,
   'P0001', 'invalid_charge', 'the charge cannot be negative'
 );
 
@@ -154,7 +154,7 @@ select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-000000
 
 select throws_ok(
   $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0,
-       pg_temp.one(current_setting('test.d1'), 20000)) $$,
+       pg_temp.one(current_setting('test.d1'), 20000), 'Test reason') $$,
   'P0001', 'relationship_not_found', 'outsiders cannot create loans in a relationship'
 );
 select is((select count(*)::int from public.loans), 0, 'outsiders see no loans');
@@ -319,7 +319,7 @@ update public.profiles set can_lend = false where id = '00000000-0000-4000-8000-
 set local role authenticated;
 select throws_ok(
   $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0,
-       pg_temp.one(current_setting('test.d1'), 20000)) $$,
+       pg_temp.one(current_setting('test.d1'), 20000), 'Test reason') $$,
   'P0001', 'lender_access_required', 'no new loans once the lender loses lender access'
 );
 

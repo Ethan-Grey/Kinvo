@@ -29,7 +29,7 @@ select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-000000
 -- Bob asks to borrow, which notifies Lena.
 select set_config('test.loan', public.create_loan('00000000-0000-4000-8000-0000000000e1', 10000, 0,
   jsonb_build_array(jsonb_build_object(
-    'due_on', ((now() at time zone 'Pacific/Auckland')::date + 7)::text, 'amount_cents', 10000)))::text, true);
+    'due_on', ((now() at time zone 'Pacific/Auckland')::date + 7)::text, 'amount_cents', 10000)), 'Test reason')::text, true);
 
 -- Lena switches emails off.
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
