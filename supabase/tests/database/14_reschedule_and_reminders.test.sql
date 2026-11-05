@@ -51,7 +51,7 @@ grant execute on all functions in schema pg_temp to authenticated;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select set_config('test.loan',
-  public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0, pg_temp.plan2(10, 10000, 40, 10000))::text, true);
+  public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0, pg_temp.plan2(10, 10000, 40, 10000), 'Test reason')::text, true);
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select public.accept_terms(current_setting('test.loan')::uuid, pg_temp.terms_id(),
   (select terms_hash from public.loan_terms where id = pg_temp.terms_id()));

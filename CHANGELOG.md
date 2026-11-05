@@ -34,6 +34,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Asking to borrow now needs a reason (ADR-0025), asked first. The person being asked sees it in the alert, in a "What it's for" panel on the request and when accepting, and on the loan in lists.
 - Staying signed in: the session is also kept in IndexedDB on the device, so losing localStorage no longer signs you out. Your email is remembered for the next sign-in. On an iPhone Home Screen app, sign-in uses the email code only, because Google sign-in finishes in Safari and left the app signed out. In Safari on iPhone, a tip explains that the Home Screen app signs in separately.
 - New look (ADR-0021): royal blue on pure white (light) and sky blue on pure black (dark), with silver accents, and a new royal-blue logo and app icon.
 - Neutral wording throughout: "owes you" and "you owe" instead of lending and borrowing, so it fits paying someone back for shopping as well as loans. The Loans tab is now "Owed".

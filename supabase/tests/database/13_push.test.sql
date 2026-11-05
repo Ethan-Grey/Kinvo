@@ -35,7 +35,7 @@ select throws_ok('select * from public.claim_notification_pushes()', '42501', nu
 
 -- Bob asks to borrow: Lena (who has a device) gets a push; Bob doesn't need one.
 select public.create_loan('00000000-0000-4000-8000-0000000000e1', 10000, 0,
-  jsonb_build_array(jsonb_build_object('due_on', ((now() at time zone 'Pacific/Auckland')::date + 7)::text, 'amount_cents', 10000)));
+  jsonb_build_array(jsonb_build_object('due_on', ((now() at time zone 'Pacific/Auckland')::date + 7)::text, 'amount_cents', 10000)), 'Test reason');
 reset role;
 
 set local role service_role;

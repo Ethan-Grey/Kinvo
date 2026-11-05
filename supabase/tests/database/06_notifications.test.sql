@@ -64,7 +64,7 @@ select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-000000
 select set_config('test.loan', public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0,
   jsonb_build_array(
     jsonb_build_object('due_on', (current_setting('test.today')::date + 7)::text, 'amount_cents', 10000),
-    jsonb_build_object('due_on', (current_setting('test.today')::date + 14)::text, 'amount_cents', 10000)))::text, true);
+    jsonb_build_object('due_on', (current_setting('test.today')::date + 14)::text, 'amount_cents', 10000)), 'Test reason')::text, true);
 reset role;
 
 select is(

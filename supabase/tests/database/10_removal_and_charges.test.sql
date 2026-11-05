@@ -53,11 +53,11 @@ set local role authenticated;
 -- =============================================================================
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select throws_ok(
-  $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 2000, pg_temp.one(22000)) $$,
+  $$ select public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 2000, pg_temp.one(22000), 'Test reason') $$,
   'P0001', 'charge_set_by_lender', 'a borrower can''t add a charge to a request'
 );
 select set_config('test.loan',
-  public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0, pg_temp.one(20000))::text, true);
+  public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 0, pg_temp.one(20000), 'Test reason')::text, true);
 select is((pg_temp.terms()).charge_cents, 0::bigint, 'a request has no charge');
 
 -- Lena counters with a 10% charge.

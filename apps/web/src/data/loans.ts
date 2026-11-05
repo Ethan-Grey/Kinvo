@@ -64,6 +64,8 @@ export interface LoanDetail {
   /** Every proposal, newest first. */
   history: TermsVersion[]
   repeatingDebtId: string | null
+  /** Who started it: the person asking (borrower) or offering (lender). */
+  createdBy: string
 }
 
 export interface LoanSummary {
@@ -84,6 +86,8 @@ export interface LoanSummary {
   createdAt: string
   /** Set when this was created by a repeating debt. */
   repeatingDebtId: string | null
+  /** What it's for, as the person who started it put it. */
+  reason: string | null
 }
 
 /** What a proposal contains, as entered in the terms form. */
@@ -142,6 +146,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
       awaitingMe: isAwaitingUser(loan.status, role, current?.proposed_by ?? null, userId),
       createdAt: loan.created_at,
       repeatingDebtId: loan.repeating_debt_id,
+      reason: loan.reason,
     }
   })
 }
@@ -186,6 +191,7 @@ export async function getLoan(loanId: string, userId: string): Promise<LoanDetai
     fundsReference: loan.funds_reference,
     fundsReceiptPath: loan.funds_receipt_path,
     repeatingDebtId: loan.repeating_debt_id,
+    createdBy: loan.created_by,
     currentTerms,
     history,
   }

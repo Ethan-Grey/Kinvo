@@ -57,7 +57,7 @@ select set_config('test.loan', public.create_loan(
   jsonb_build_array(
     jsonb_build_object('due_on', current_setting('test.tomorrow'), 'amount_cents', 15000),
     jsonb_build_object('due_on', (current_setting('test.tomorrow')::date + 7)::text, 'amount_cents', 15000)
-  ))::text, true);
+  ), 'Test reason')::text, true);
 
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select public.accept_terms(l.id, t.id, t.terms_hash)

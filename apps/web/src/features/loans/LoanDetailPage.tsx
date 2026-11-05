@@ -9,6 +9,7 @@ import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
 import { useAuth } from '../auth/useAuth'
 import { methodLabel, statusBadge } from './labels'
 import { LoanActions } from './LoanActions'
+import { LoanReason } from './LoanStepPages'
 import { TermsSummary } from './TermsSummary'
 
 const timestamp = new Intl.DateTimeFormat('en-NZ', {
@@ -52,9 +53,9 @@ export function LoanDetailPage() {
               : `You owe ${otherName}`
         }
         subtitle={
-          (data.reason || data.originallyLentOn) && (
+          (data.originallyLentOn || (data.reason && (data.kind === 'bill' || data.kind === 'repeating'))) && (
             <>
-              {data.reason && <p>For {data.reason}</p>}
+              {data.reason && (data.kind === 'bill' || data.kind === 'repeating') && <p>For {data.reason}</p>}
               {data.originallyLentOn &&
                 (data.kind === 'bill' ? (
                   <p>Bill paid {formatDate(data.originallyLentOn)}</p>
@@ -77,6 +78,7 @@ export function LoanDetailPage() {
       />
 
       {flash && <Notice tone="success">{flash}</Notice>}
+      {data.kind === 'new' || data.kind === 'existing_debt' ? <LoanReason loan={data} /> : null}
 
       {funded ? (
         <>

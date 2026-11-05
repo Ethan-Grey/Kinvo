@@ -74,7 +74,7 @@ set local role authenticated;
 -- Loan A: Lena offers with a charge (only lenders set one), Bob accepts, Lena funds.
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select set_config('test.loan_a', public.create_loan('00000000-0000-4000-8000-0000000000e1', 20000, 10000,
-  pg_temp.sched(current_setting('test.d1'), current_setting('test.d2')))::text, true);
+  pg_temp.sched(current_setting('test.d1'), current_setting('test.d2')), 'Test reason')::text, true);
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000b"}', true);
 select pg_temp.accept(current_setting('test.loan_a')::uuid);
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
@@ -99,12 +99,12 @@ select set_config('test.claim', pg_temp.record_repayment(
 
 -- Loan B: Bob's unanswered request.
 select public.create_loan('00000000-0000-4000-8000-0000000000e1', 5000, 0,
-  jsonb_build_array(jsonb_build_object('due_on', current_setting('test.d1'), 'amount_cents', 5000)));
+  jsonb_build_array(jsonb_build_object('due_on', current_setting('test.d1'), 'amount_cents', 5000)), 'Test reason');
 
 -- Loan C: Lena offers Casey; Casey accepts; money not sent yet.
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000a"}', true);
 select set_config('test.loan_c', public.create_loan('00000000-0000-4000-8000-0000000000e2', 30000, 0,
-  pg_temp.sched(current_setting('test.d1'), current_setting('test.d2')))::text, true);
+  pg_temp.sched(current_setting('test.d1'), current_setting('test.d2')), 'Test reason')::text, true);
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-00000000000c"}', true);
 select pg_temp.accept(current_setting('test.loan_c')::uuid);
 
