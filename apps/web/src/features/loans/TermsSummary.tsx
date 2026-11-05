@@ -3,7 +3,7 @@ import { formatCents } from '../../domain/money'
 import type { TermsVersion } from '../../data/loans'
 
 /** What's being agreed, at a glance: the total, and when each payment is due. */
-export function TermsSummary({ terms }: { terms: TermsVersion }) {
+export function TermsSummary({ terms, reason }: { terms: TermsVersion; reason?: string | null }) {
   const count = terms.instalments.length
   return (
     <section className="space-y-4 rounded-3xl border border-line p-5" aria-label="What you’re agreeing to">
@@ -17,6 +17,7 @@ export function TermsSummary({ terms }: { terms: TermsVersion }) {
             {formatCents(terms.principalCents)} + {formatCents(terms.chargeCents)} charge
           </p>
         )}
+        {reason && <p className="mt-2 break-words">For {reason}</p>}
       </div>
       <ul className="divide-y divide-line text-sm tabular-nums" aria-label={count === 1 ? 'Due' : `${count} payments`}>
         {terms.instalments.map((i) => (

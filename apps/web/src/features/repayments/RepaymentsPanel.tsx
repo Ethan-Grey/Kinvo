@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
 import { formatDate, formatShortDate } from '../../domain/dates'
 import { formatCents, toCents } from '../../domain/money'
 import type { LoanDetail } from '../../data/loans'
@@ -15,9 +14,10 @@ import {
   type LoanBalance,
   type Repayment,
 } from '../../data/repayments'
+import { ActionBar, ChoiceSheet, type Choice } from '../../shared/ActionBar'
 import { useAsync } from '../../shared/useAsync'
 import { RingAvatar } from '../../shared/Avatar'
-import { CheckIcon, ChevronIcon, DocumentIcon, PaymentIcon } from '../../shared/icons'
+import { CheckIcon, ChevronIcon, DocumentIcon } from '../../shared/icons'
 import { Badge, Button, ButtonLink, Card, Notice, Skeleton, TextField } from '../../shared/ui'
 import { methodLabel } from '../loans/labels'
 import { ReceiptButton } from './ReceiptViewer'
@@ -83,25 +83,8 @@ export function RepaymentsPanel({ loan, onLoanChanged }: PanelProps) {
         </Card>
       )}
 
-      {isActive && balance.outstandingCents > 0 && (
-        <ButtonLink to={`/loans/${loan.id}/pay`}>
-          <PaymentIcon className="size-5" />
-          {isLender ? 'Record a payment' : 'I’ve paid'}
-        </ButtonLink>
-      )}
-
       <Card>
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-semibold">Schedule</h2>
-          {isLender && isActive && balance.outstandingCents > 0 && (
-            <Link
-              to={`/loans/${loan.id}/schedule`}
-              className="text-sm font-semibold text-brand-ink hover:underline focus-visible:outline-2 focus-visible:outline-brand-ink"
-            >
-              Change dates
-            </Link>
-          )}
-        </div>
+        <h2 className="text-lg font-semibold">Schedule</h2>
         <ScheduleProgress progress={progress} />
       </Card>
 
@@ -129,14 +112,7 @@ export function RepaymentsPanel({ loan, onLoanChanged }: PanelProps) {
         </details>
       )}
 
-      {isLender && isActive && balance.outstandingCents > 0 && (
-        <ForgiveButton
-          loanId={loan.id}
-          outstandingCents={balance.outstandingCents}
-          borrowerName={loan.borrowerName}
-          onChanged={changed}
-        />
-      )}
+      <FundedActionBar loan={loan} outstandingCents={balance.outstandingCents} onChanged={changed} />
     </div>
   )
 }
@@ -435,44 +411,65 @@ function SettledPayment({
   )
 }
 
-function ForgiveButton({
-  loanId,
+/** Pay or record a payment, with everything else behind "More". */
+function FundedActionBar({
+  loan,
   outstandingCents,
-  borrowerName,
   onChanged,
 }: {
-  loanId: string
+  loan: LoanDetail
   outstandingCents: number
-  borrowerName: string
   onChanged: () => void
 }) {
-  const [busy, setBusy] = useState(false)
+  const [sheet, setSheet] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const isLender = loan.role === 'lender'
+  const owing = loan.status === 'active' && outstandingCents > 0
+  const left = formatCents(toCents(outstandingCents))
 
-  async function handleForgive() {
-    if (
-      !window.confirm(
-        `Forgive the remaining ${formatCents(toCents(outstandingCents))}? ${borrowerName} won’t owe anything more on this. This can’t be undone.`,
-      )
-    ) {
-      return
-    }
-    setBusy(true)
-    try {
-      await forgiveRemaining(loanId, '')
-      onChanged()
-    } catch (err) {
-      setError((err as Error).message)
-      setBusy(false)
-    }
-  }
+  const more: Choice[] = isLender
+    ? [
+        ...(owing
+          ? [
+              { label: 'Change dates', hint: 'Move when payments are due', to: `/loans/${loan.id}/schedule` },
+              {
+                label: `Forgive the rest (${left})`,
+                hint: `${loan.borrowerName.split(' ')[0]} won’t owe anything more. Can’t be undone.`,
+                danger: true,
+                run: async () => {
+                  setError(null)
+                  try {
+                    await forgiveRemaining(loan.id, '')
+                    onChanged()
+                  } catch (err) {
+                    setError((err as Error).message)
+                  }
+                },
+              },
+            ]
+          : []),
+        {
+          label: 'Remove it completely',
+          hint: 'For a test or a mistake',
+          danger: true,
+          to: `/loans/${loan.id}/remove`,
+        },
+      ]
+    : []
 
+  if (!owing && more.length === 0) return null
   return (
-    <div className="space-y-2">
+    <>
       {error && <Notice tone="error">{error}</Notice>}
-      <Button variant="ghost" className="w-full" busy={busy} onClick={handleForgive}>
-        Forgive the rest ({formatCents(toCents(outstandingCents))})
-      </Button>
-    </div>
+      <ActionBar>
+        {more.length > 0 && (
+          <Button variant="secondary" onClick={() => setSheet(true)} aria-haspopup="dialog">
+            More
+          </Button>
+        )}
+        {owing && <ButtonLink to={`/loans/${loan.id}/pay`}>{isLender ? 'Record payment' : 'I’ve paid'}</ButtonLink>}
+      </ActionBar>
+      <ChoiceSheet open={sheet} title="More" choices={more} onClose={() => setSheet(false)} />
+    </>
   )
 }

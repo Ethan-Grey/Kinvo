@@ -1,146 +1,188 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { todayInNZ } from '../../domain/dates'
 import { formatCents } from '../../domain/money'
 import type { PaymentMethod } from '../../data/database.types'
 import { acceptTerms, confirmFundsSent, rejectTerms, withdrawLoan, type LoanDetail } from '../../data/loans'
-import { CheckIcon, DocumentIcon, SendIcon } from '../../shared/icons'
+import { ActionBar, ChoiceSheet, type Choice } from '../../shared/ActionBar'
+import { CheckIcon, SendIcon } from '../../shared/icons'
 import { Button, ButtonLink, Notice, Segmented, TextField } from '../../shared/ui'
 import { ReceiptField } from '../repayments/ReceiptField'
 import { PAYMENT_METHODS } from './labels'
 
+type End = (action: () => Promise<void>) => () => Promise<void>
+
 /**
- * What the current user can do next on the loan page: at most one main
- * button, one alternative, and one quiet way out. Each main action opens its
- * own page. Every rule here is also enforced by the database.
+ * The way out of a loan that hasn't started: the button's label, and the
+ * sheet it opens asking whether to change things or end it.
  */
-export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; userId: string; onChanged: () => void }) {
-  const proposedByMe = loan.currentTerms.proposedBy === userId
-  const otherName = loan.role === 'lender' ? loan.borrowerName : loan.lenderName
+function wayOut(
+  loan: LoanDetail,
+  userId: string,
+  end: End,
+): { label: string; title: string; choices: Choice[] } | null {
+  const otherFirst = (loan.role === 'lender' ? loan.borrowerName : loan.lenderName).split(' ')[0]
   const isDebt = loan.kind === 'existing_debt'
-  const isBill = loan.kind === 'bill'
-
-  if (loan.status === 'negotiating' && !proposedByMe) {
-    return (
-      <div className="space-y-3">
-        <ButtonLink to={`/loans/${loan.id}/accept`}>
-          <CheckIcon className="size-5" />
-          {isDebt ? 'Confirm this debt' : isBill ? 'Accept my share' : 'Accept'}
-        </ButtonLink>
-        <ButtonLink to={`/loans/${loan.id}/change`} variant="secondary">
-          <DocumentIcon className="size-5" />
-          Suggest changes
-        </ButtonLink>
-        <QuietAction
-          label={isDebt ? 'This isn’t right' : 'Decline'}
-          question={
-            isDebt
-              ? `Tell ${otherName} this debt isn't right? It won't be recorded. You can talk it through and they can invite you again.`
-              : isBill
-                ? `Decline your share of ${loan.reason ?? 'this bill'}? It won't be recorded.`
-                : `Decline ${otherName}'s proposal? This ends the request.`
-          }
-          action={() => rejectTerms(loan.id, '')}
-          onDone={onChanged}
-        />
-      </div>
-    )
+  const change: Choice = {
+    label: 'Make changes',
+    hint: `Send ${otherFirst} different terms`,
+    to: `/loans/${loan.id}/change`,
   }
+  const remove: Choice[] =
+    loan.role === 'lender'
+      ? [
+          {
+            label: 'Remove it completely',
+            hint: 'For a test or a mistake',
+            danger: true,
+            to: `/loans/${loan.id}/remove`,
+          },
+        ]
+      : []
 
+  if (loan.status === 'negotiating' && loan.currentTerms.proposedBy !== userId) {
+    return {
+      label: 'Decline',
+      title: 'Decline this?',
+      choices: [
+        ...(loan.kind === 'bill' ? [] : [change]),
+        {
+          label: isDebt ? 'It isn’t right, remove it' : 'Remove this request',
+          hint: 'Nothing is recorded',
+          danger: true,
+          run: end(() => rejectTerms(loan.id, '')),
+        },
+        ...remove,
+      ],
+    }
+  }
   if (loan.status === 'negotiating') {
-    return (
-      <div className="space-y-3">
-        <Notice>Waiting for {otherName.split(' ')[0]} to reply.</Notice>
-        <ButtonLink to={`/loans/${loan.id}/change`} variant="secondary">
-          Change my proposal
-        </ButtonLink>
-        <QuietAction
-          label="Withdraw"
-          question="Withdraw your proposal? This ends the request."
-          action={() => withdrawLoan(loan.id, '')}
-          onDone={onChanged}
-        />
-      </div>
-    )
+    return {
+      label: 'Change or cancel',
+      title: 'Your request',
+      choices: [
+        change,
+        {
+          label: 'Cancel request',
+          hint: 'Nothing is recorded',
+          danger: true,
+          run: end(() => withdrawLoan(loan.id, '')),
+        },
+        ...remove,
+      ],
+    }
   }
-
-  if (loan.status === 'agreed' && loan.role === 'lender') {
-    return (
-      <div className="space-y-3">
-        <Notice>
-          {loan.borrowerName.split(' ')[0]} accepted. Pay them{' '}
-          <span className="font-semibold">{formatCents(loan.currentTerms.principalCents)}</span>, then tap below.
-        </Notice>
-        <ButtonLink to={`/loans/${loan.id}/sent`}>
-          <SendIcon className="size-5" />
-          I’ve paid it out
-        </ButtonLink>
-        <QuietAction
-          label="Cancel"
-          question="Cancel this? Nothing has been paid out yet."
-          action={() => withdrawLoan(loan.id, '')}
-          onDone={onChanged}
-        />
-      </div>
-    )
-  }
-
   if (loan.status === 'agreed') {
-    return (
-      <div className="space-y-3">
-        <Notice>Agreed. Waiting for {loan.lenderName} to pay it out.</Notice>
-        <QuietAction
-          label="Cancel"
-          question="Cancel this? Nothing has been paid out yet."
-          action={() => withdrawLoan(loan.id, '')}
-          onDone={onChanged}
-        />
-      </div>
-    )
+    return {
+      label: 'Cancel',
+      title: 'Cancel this?',
+      choices: [
+        {
+          label: 'Cancel it',
+          hint: 'Nothing has been paid out yet',
+          danger: true,
+          run: end(() => withdrawLoan(loan.id, '')),
+        },
+        ...remove,
+      ],
+    }
   }
-
   return null
 }
 
-/** A low-key text button for ending things, always behind a confirmation. */
-function QuietAction({
-  label,
-  question,
-  action,
-  onDone,
+/**
+ * The bottom bar for a loan that hasn't started: the main action, and the
+ * way out. Used on the loan page and on its accept and paid-out pages.
+ */
+export function LoanActionBar({
+  loan,
+  userId,
+  primary,
+  onEnded,
 }: {
-  label: string
-  question: string
-  action: () => Promise<void>
-  onDone: () => void
+  loan: LoanDetail
+  userId: string
+  primary?: ReactNode
+  onEnded: () => void
 }) {
-  const [busy, setBusy] = useState(false)
+  const [sheet, setSheet] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  async function handleClick() {
-    if (!window.confirm(question)) return
-    setBusy(true)
+  const end: End = (action) => async () => {
     setError(null)
     try {
       await action()
-      onDone()
+      onEnded()
     } catch (err) {
       setError((err as Error).message)
-      setBusy(false)
     }
   }
+  const out = wayOut(loan, userId, end)
 
   return (
     <>
       {error && <Notice tone="error">{error}</Notice>}
-      <Button variant="ghost" className="w-full text-danger" busy={busy} onClick={handleClick}>
-        {label}
-      </Button>
+      <ActionBar>
+        {out && (
+          <Button variant="secondary" onClick={() => setSheet(true)} aria-haspopup="dialog">
+            {out.label}
+          </Button>
+        )}
+        {primary}
+      </ActionBar>
+      {out && <ChoiceSheet open={sheet} title={out.title} choices={out.choices} onClose={() => setSheet(false)} />}
+    </>
+  )
+}
+
+/** What the current user can do next on the loan page. Every rule is also enforced by the database. */
+export function LoanActions({ loan, userId, onChanged }: { loan: LoanDetail; userId: string; onChanged: () => void }) {
+  const otherFirst = (loan.role === 'lender' ? loan.borrowerName : loan.lenderName).split(' ')[0]
+  const waitingOnThem = loan.status === 'negotiating' && loan.currentTerms.proposedBy !== userId
+
+  let notice: string | null = null
+  let primary: ReactNode = null
+  if (waitingOnThem) {
+    primary = (
+      <ButtonLink to={`/loans/${loan.id}/accept`}>
+        <CheckIcon className="size-5" />
+        {loan.kind === 'existing_debt' ? 'Confirm' : 'Accept'}
+      </ButtonLink>
+    )
+  } else if (loan.status === 'negotiating') {
+    notice = `Waiting for ${otherFirst} to reply.`
+  } else if (loan.status === 'agreed' && loan.role === 'lender') {
+    notice = `${otherFirst} accepted. Pay them ${formatCents(loan.currentTerms.principalCents)}, then tap below.`
+    primary = (
+      <ButtonLink to={`/loans/${loan.id}/sent`}>
+        <SendIcon className="size-5" />
+        I’ve paid it out
+      </ButtonLink>
+    )
+  } else if (loan.status === 'agreed') {
+    notice = `Agreed. Waiting for ${otherFirst} to pay it out.`
+  } else {
+    return null
+  }
+
+  return (
+    <>
+      {notice && <Notice>{notice}</Notice>}
+      <LoanActionBar loan={loan} userId={userId} primary={primary} onEnded={onChanged} />
     </>
   )
 }
 
 /** /loans/:id/accept — the one thing on the page is the promise you're making. */
-export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted: () => void }) {
+export function AcceptForm({
+  loan,
+  userId,
+  onAccepted,
+  onEnded,
+}: {
+  loan: LoanDetail
+  userId: string
+  onAccepted: () => void
+  onEnded: () => void
+}) {
   const [agreed, setAgreed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -183,15 +225,32 @@ export function AcceptForm({ loan, onAccepted }: { loan: LoanDetail; onAccepted:
         <span>{statement}</span>
       </label>
       {error && <Notice tone="error">{error}</Notice>}
-      <Button className="w-full" disabled={!agreed} busy={busy} onClick={handleAccept}>
-        {isDebt ? 'Confirm' : loan.kind === 'bill' ? 'Accept my share' : 'Accept'}
-      </Button>
+      <LoanActionBar
+        loan={loan}
+        userId={userId}
+        onEnded={onEnded}
+        primary={
+          <Button disabled={!agreed} busy={busy} onClick={handleAccept}>
+            {isDebt ? 'Confirm' : 'Accept'}
+          </Button>
+        }
+      />
     </div>
   )
 }
 
 /** /loans/:id/sent — the lender confirms the money went out, which starts the loan. */
-export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () => void }) {
+export function FundsSentForm({
+  loan,
+  userId,
+  onSent,
+  onEnded,
+}: {
+  loan: LoanDetail
+  userId: string
+  onSent: () => void
+  onEnded: () => void
+}) {
   const today = todayInNZ()
   const [sentOn, setSentOn] = useState(today)
   const [method, setMethod] = useState<PaymentMethod>('bank_transfer')
@@ -235,9 +294,16 @@ export function FundsSentForm({ loan, onSent }: { loan: LoanDetail; onSent: () =
         <ReceiptField loanId={loan.id} onChange={setReceiptPath} />
       </div>
       {error && <Notice tone="error">{error}</Notice>}
-      <Button type="submit" className="w-full" busy={busy}>
-        Confirm
-      </Button>
+      <LoanActionBar
+        loan={loan}
+        userId={userId}
+        onEnded={onEnded}
+        primary={
+          <Button type="submit" busy={busy}>
+            Confirm
+          </Button>
+        }
+      />
     </form>
   )
 }

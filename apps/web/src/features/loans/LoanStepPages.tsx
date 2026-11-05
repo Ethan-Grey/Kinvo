@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useState, type FormEvent } from 'react'
+import { ActionBar } from '../../shared/ActionBar'
 import { useNavigate, useParams } from 'react-router'
 import { formatCents, toCents } from '../../domain/money'
 import { borrowerCharge, counterOffer, getLoan, removeLoan, type LoanDetail } from '../../data/loans'
@@ -46,6 +47,9 @@ export function LoanStep({
 const otherOf = (loan: LoanDetail) => (loan.role === 'lender' ? loan.borrowerName : loan.lenderName)
 
 export function AcceptLoanPage() {
+  const { session } = useAuth()
+  const userId = session?.user.id ?? ''
+  const navigate = useNavigate()
   return (
     <LoanStep
       title={(loan) =>
@@ -54,9 +58,13 @@ export function AcceptLoanPage() {
     >
       {(loan, done) => (
         <>
-          <LoanReason loan={loan} />
-          <TermsSummary terms={loan.currentTerms} />
-          <AcceptForm loan={loan} onAccepted={() => done(loan.kind === 'existing_debt' ? 'Confirmed.' : 'Accepted.')} />
+          <TermsSummary terms={loan.currentTerms} reason={loan.reason} />
+          <AcceptForm
+            loan={loan}
+            userId={userId}
+            onAccepted={() => done(loan.kind === 'existing_debt' ? 'Confirmed.' : 'Accepted.')}
+            onEnded={() => navigate('/loans', { replace: true, state: { flash: 'Done.' } })}
+          />
         </>
       )}
     </LoanStep>
@@ -87,11 +95,21 @@ export function ChangeTermsPage() {
 }
 
 export function FundsSentPage() {
+  const { session } = useAuth()
+  const userId = session?.user.id ?? ''
+  const navigate = useNavigate()
   return (
     <LoanStep
       title={(loan) => `Paid ${loan.borrowerName.split(' ')[0]} ${formatCents(loan.currentTerms.principalCents)}?`}
     >
-      {(loan, done) => <FundsSentForm loan={loan} onSent={() => done('Done. Payments back are now tracked.')} />}
+      {(loan, done) => (
+        <FundsSentForm
+          loan={loan}
+          userId={userId}
+          onSent={() => done('Done. Payments back are now tracked.')}
+          onEnded={() => navigate('/loans', { replace: true, state: { flash: 'Cancelled.' } })}
+        />
+      )}
     </LoanStep>
   )
 }
@@ -193,22 +211,11 @@ function RemoveForm({ loan }: { loan: LoanDetail }) {
         placeholder="e.g. Just testing"
       />
       {error && <Notice tone="error">{error}</Notice>}
-      <Button type="submit" variant="danger" className="w-full" busy={busy}>
-        Remove
-      </Button>
+      <ActionBar>
+        <Button type="submit" variant="danger" busy={busy}>
+          Remove
+        </Button>
+      </ActionBar>
     </form>
-  )
-}
-
-/** What the money is for, as the person asking put it. */
-export function LoanReason({ loan }: { loan: LoanDetail }) {
-  if (!loan.reason) return null
-  const asker = loan.createdBy === loan.borrowerId ? loan.borrowerName.split(' ')[0] : loan.lenderName.split(' ')[0]
-  return (
-    <section className="rounded-3xl bg-brand-soft p-5 text-on-brand-soft" aria-label="What it’s for">
-      <p className="text-sm font-semibold">What it’s for</p>
-      <p className="mt-1 text-lg break-words">{loan.reason}</p>
-      <p className="mt-1 text-xs">From {asker}</p>
-    </section>
   )
 }

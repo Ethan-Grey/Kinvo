@@ -4,6 +4,7 @@
  * you are, and has Back and Continue in the same place every time.
  */
 import { useEffect, useId, useRef, type ReactNode, type Ref } from 'react'
+import { ActionBar } from './ActionBar'
 import { Button, Notice } from './ui'
 
 export function WizardStep({
@@ -74,21 +75,20 @@ export function WizardStep({
         </Notice>
       )}
 
-      <div className="flex gap-2">
+      <ActionBar>
         {onBack && (
-          <Button variant="secondary" onClick={onBack} disabled={next.busy}>
+          <Button variant="secondary" className="!flex-none" onClick={onBack} disabled={next.busy}>
             {backLabel}
           </Button>
         )}
         <Button
           type={next.submit ? 'submit' : 'button'}
-          className="flex-1"
           busy={next.busy}
           onClick={next.submit ? undefined : next.onClick}
         >
           {next.label}
         </Button>
-      </div>
+      </ActionBar>
     </div>
   )
 }
