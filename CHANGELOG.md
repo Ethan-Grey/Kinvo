@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Paying or recording a payment is one screen: the amount and the receipt. The method, date and reference questions are gone.
+- The loan page shows what it's for under the title. Tap it to change it, or tap "Add what it's for" when there's none (ADR-0026).
+- Offers ask what it's for as an optional step.
+
 - Main buttons are now fixed to the bottom of the screen, above the tab bar. This covers loan pages, the accept and paid-out pages, payments and every step-by-step form.
 - A request shows just Accept and Decline. Decline asks whether to make changes or remove the request. The same pattern applies to "Change or cancel" on your own request, Cancel once agreed, and More on an active loan (change dates, forgive the rest, remove).
 - The reason is shown under the title on the loan page and inside the summary on the accept page, instead of in its own box.

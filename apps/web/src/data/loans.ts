@@ -328,6 +328,12 @@ export async function removeLoan(loanId: string, reason: string): Promise<void> 
   if (error) throw toAppError(error)
 }
 
+/** Either person: add or change what the loan is for. */
+export async function setLoanReason(loanId: string, reason: string): Promise<void> {
+  const { error } = await supabase().rpc('set_loan_reason', { p_loan_id: loanId, p_reason: reason.trim() })
+  if (error) throw toAppError(error)
+}
+
 /**
  * Lender only, on an active loan: replace the repayment schedule. Takes effect
  * straight away and the borrower is told. The total must stay the same.

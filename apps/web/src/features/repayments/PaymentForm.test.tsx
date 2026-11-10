@@ -27,7 +27,6 @@ function renderForm(onRecorded = vi.fn()) {
       lenderName="Lena"
       outstandingCents={toCents(15000)}
       suggestedCents={toCents(5000)}
-      earliestDate="2026-01-01"
       onRecorded={onRecorded}
     />,
   )
@@ -38,18 +37,14 @@ describe('PaymentForm', () => {
   beforeEach(() => recordRepayment.mockReset().mockResolvedValue(undefined))
   afterEach(cleanup)
 
-  it('asks the amount, then how and when, then the receipt, and records it', async () => {
+  it('takes the amount and receipt on one screen, and records it', async () => {
     const onRecorded = renderForm()
+    expect(screen.queryByText(/step 1 of/i)).toBeNull()
+    expect(screen.queryByLabelText(/date/i)).toBeNull()
     expect((screen.getByLabelText('Amount') as HTMLInputElement).value).toBe('50')
     await userEvent.click(screen.getByRole('button', { name: /all of it \$150\.00/i }))
-    await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
-
-    expect(screen.getByText('Step 2 of 3')).toBeTruthy()
-    await userEvent.click(screen.getByRole('radio', { name: 'Cash' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
 
     // The receipt is required.
-    expect(screen.getByRole('heading', { name: 'Add the receipt' })).toBeTruthy()
     await userEvent.click(screen.getByRole('button', { name: 'Record payment' }))
     expect(screen.getByText(/add a photo of the receipt/i)).toBeTruthy()
     expect(recordRepayment).not.toHaveBeenCalled()
@@ -63,12 +58,7 @@ describe('PaymentForm', () => {
 
     expect(recordRepayment).toHaveBeenCalledWith(
       'loan-1',
-      expect.objectContaining({
-        amountCents: 15000,
-        receivedOn: today,
-        method: 'cash',
-        receiptPath: 'loan-1/receipt.jpg',
-      }),
+      expect.objectContaining({ amountCents: 15000, receivedOn: today, receiptPath: 'loan-1/receipt.jpg' }),
     )
     expect(onRecorded).toHaveBeenCalled()
   })
@@ -78,9 +68,8 @@ describe('PaymentForm', () => {
     const amount = screen.getByLabelText('Amount')
     await userEvent.clear(amount)
     await userEvent.type(amount, '200')
-    await userEvent.click(screen.getByRole('button', { name: 'Continue' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Record payment' }))
     expect(screen.getByText(/most you can record is \$150\.00/i)).toBeTruthy()
-    expect(screen.getByText('Step 1 of 3')).toBeTruthy()
   })
 
   it('has no accessibility problems', async () => {
