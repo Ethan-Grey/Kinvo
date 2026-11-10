@@ -6,7 +6,7 @@ import { createLoan } from '../../data/loans'
 import { toCents } from '../../domain/money'
 import { listPeople, type Connection } from '../../data/people'
 import { useAsync } from '../../shared/useAsync'
-import { Card, EmptyState, Notice, PageHeader, PageSkeleton, TextField } from '../../shared/ui'
+import { Card, EmptyState, Notice, PageHeader, PageSkeleton } from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 import { TermsForm } from './TermsForm'
 
@@ -108,28 +108,15 @@ export function NewLoanPage() {
         submitLabel={isRequest ? 'Send request' : 'Send offer'}
         messageLabel={`Message to ${selected.personName.split(' ')[0]} (optional)`}
         onBackFromStart={canChangePerson ? () => setChosen(null) : undefined}
-        reasonStep={
-          isRequest
-            ? {
-                value: reason,
-                onChange: setReason,
-                title: 'What do you need it for?',
-                hint: `${first} sees this when they look at your request.`,
-                required: true,
-              }
-            : undefined
-        }
-        reviewExtras={
-          isRequest ? undefined : (
-            <TextField
-              label="What’s it for? (optional)"
-              maxLength={500}
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Car repairs"
-            />
-          )
-        }
+        reasonStep={{
+          value: reason,
+          onChange: setReason,
+          title: isRequest ? 'What do you need it for?' : 'What’s it for?',
+          hint: isRequest
+            ? `${first} sees this when they look at your request.`
+            : 'Optional, but it helps you both remember later.',
+          required: isRequest,
+        }}
         onSubmit={async (input) => {
           const loanId = await createLoan(selected.relationshipId, reason, input)
           navigate(`/loans/${loanId}`, { replace: true, state: { flash: isRequest ? 'Request sent.' : 'Offer sent.' } })

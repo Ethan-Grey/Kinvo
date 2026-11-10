@@ -45,14 +45,18 @@ export function WizardStep({
   return (
     <div className="space-y-6">
       <div>
-        <div className="flex items-center gap-1.5" aria-hidden="true">
-          {Array.from({ length: of }, (_, i) => (
-            <span key={i} className={`h-1.5 flex-1 rounded-full ${i < step ? 'bg-brand' : 'bg-ring-track'}`} />
-          ))}
-        </div>
-        <p className="mt-2 text-sm text-ink-muted">
-          Step {step} of {of}
-        </p>
+        {of > 1 && (
+          <>
+            <div className="flex items-center gap-1.5" aria-hidden="true">
+              {Array.from({ length: of }, (_, i) => (
+                <span key={i} className={`h-1.5 flex-1 rounded-full ${i < step ? 'bg-brand' : 'bg-ring-track'}`} />
+              ))}
+            </div>
+            <p className="mt-2 text-sm text-ink-muted">
+              Step {step} of {of}
+            </p>
+          </>
+        )}
         <h2 ref={headingRef} tabIndex={-1} className="mt-1 text-2xl leading-tight font-semibold outline-none">
           {title}
         </h2>

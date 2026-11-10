@@ -523,11 +523,21 @@ export interface Database {
         Returns: undefined
       }
       create_household: {
-        Args: { p_name: string; p_has_shared_account?: boolean; p_shared_account_name?: string | null; p_opening_balance_cents?: number | null }
+        Args: {
+          p_name: string
+          p_has_shared_account?: boolean
+          p_shared_account_name?: string | null
+          p_opening_balance_cents?: number | null
+        }
         Returns: string
       }
       update_household: {
-        Args: { p_household_id: string; p_name: string; p_has_shared_account: boolean; p_shared_account_name?: string | null }
+        Args: {
+          p_household_id: string
+          p_name: string
+          p_has_shared_account: boolean
+          p_shared_account_name?: string | null
+        }
         Returns: undefined
       }
       create_household_invite: {
@@ -555,7 +565,13 @@ export interface Database {
         Returns: undefined
       }
       add_shared_entry: {
-        Args: { p_household_id: string; p_kind: 'topup' | 'withdrawal'; p_amount_cents: number; p_on?: string | null; p_note?: string | null }
+        Args: {
+          p_household_id: string
+          p_kind: 'topup' | 'withdrawal'
+          p_amount_cents: number
+          p_on?: string | null
+          p_note?: string | null
+        }
         Returns: string
       }
       void_shared_entry: {
@@ -619,7 +635,13 @@ export interface Database {
         Returns: undefined
       }
       settle_up: {
-        Args: { p_household_id: string; p_to_user: string; p_amount_cents: number; p_note?: string | null; p_receipt_path?: string | null }
+        Args: {
+          p_household_id: string
+          p_to_user: string
+          p_amount_cents: number
+          p_note?: string | null
+          p_receipt_path?: string | null
+        }
         Returns: string
       }
       void_settlement: {
@@ -694,6 +716,10 @@ export interface Database {
       }
       remove_loan: {
         Args: { p_loan_id: string; p_reason?: string | null }
+        Returns: undefined
+      }
+      set_loan_reason: {
+        Args: { p_loan_id: string; p_reason: string }
         Returns: undefined
       }
       clear_notifications: {
@@ -924,15 +950,7 @@ export type PersonalBillCategory =
 export type SpendCategory = 'groceries' | 'takeaways' | 'household' | 'transport' | 'fun' | 'other'
 export type BillMethod = 'shared_account' | 'one_person' | 'each_own' | 'covered'
 export type BillCategory =
-  | 'rent'
-  | 'power'
-  | 'internet'
-  | 'water'
-  | 'phone'
-  | 'insurance'
-  | 'subscriptions'
-  | 'bills'
-  | 'other'
+  'rent' | 'power' | 'internet' | 'water' | 'phone' | 'insurance' | 'subscriptions' | 'bills' | 'other'
 export type RepeatFrequency = 'weekly' | 'fortnightly' | 'monthly'
 export type RepeatingStatus = 'proposed' | 'active' | 'paused' | 'stopped' | 'declined'
 export type PaymentMethod = 'bank_transfer' | 'cash' | 'other'

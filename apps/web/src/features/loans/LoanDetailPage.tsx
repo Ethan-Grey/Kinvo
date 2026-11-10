@@ -8,6 +8,7 @@ import { RepaymentsPanel } from '../repayments/RepaymentsPanel'
 import { useAuth } from '../auth/useAuth'
 import { statusBadge } from './labels'
 import { LoanActions } from './LoanActions'
+import { ReasonLine } from './ReasonLine'
 
 /** /loans/:id — what it's for, where it stands, and what to do next. */
 export function LoanDetailPage() {
@@ -44,26 +45,24 @@ export function LoanDetailPage() {
               : `You owe ${otherName}`
         }
         subtitle={
-          (data.originallyLentOn || data.reason) && (
-            <>
-              {data.reason && <p className="break-words">For {data.reason}</p>}
-              {data.originallyLentOn &&
-                (data.kind === 'bill' ? (
-                  <p>Bill paid {formatDate(data.originallyLentOn)}</p>
-                ) : data.kind === 'repeating' ? (
-                  <p>
-                    Due {formatDate(data.originallyLentOn)}.{' '}
-                    {data.repeatingDebtId && (
-                      <Link to={`/repeating/${data.repeatingDebtId}`} className="font-medium text-brand-ink underline">
-                        See the repeating debt
-                      </Link>
-                    )}
-                  </p>
-                ) : (
-                  <p>Originally lent {formatDate(data.originallyLentOn)}, before Kinvo</p>
-                ))}
-            </>
-          )
+          <>
+            <ReasonLine loanId={data.id} reason={data.reason} onSaved={reload} />
+            {data.originallyLentOn &&
+              (data.kind === 'bill' ? (
+                <p>Bill paid {formatDate(data.originallyLentOn)}</p>
+              ) : data.kind === 'repeating' ? (
+                <p>
+                  Due {formatDate(data.originallyLentOn)}.{' '}
+                  {data.repeatingDebtId && (
+                    <Link to={`/repeating/${data.repeatingDebtId}`} className="font-medium text-brand-ink underline">
+                      See the repeating debt
+                    </Link>
+                  )}
+                </p>
+              ) : (
+                <p>Originally lent {formatDate(data.originallyLentOn)}, before Kinvo</p>
+              ))}
+          </>
         }
         action={<Badge tone={badge.tone}>{badge.label}</Badge>}
       />

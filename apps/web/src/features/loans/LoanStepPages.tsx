@@ -144,7 +144,6 @@ function PaymentStep({ loan, onDone }: { loan: LoanDetail; onDone: (flash: strin
       lenderName={loan.lenderName}
       outstandingCents={balance.outstandingCents}
       suggestedCents={toCents(Math.min(nextUnpaid?.remainingCents ?? 0, balance.outstandingCents))}
-      earliestDate={loan.fundsSentOn ?? '2000-01-01'}
       onRecorded={() => onDone(isLender ? 'Payment recorded.' : `Sent to ${loan.lenderName} to confirm.`)}
     />
   )
