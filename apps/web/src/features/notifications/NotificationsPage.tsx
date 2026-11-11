@@ -49,6 +49,7 @@ const KINDS: Record<string, { icon: ReactNode; tone: Tone }> = {
   overdue: { icon: <AlertIcon />, tone: 'danger' },
   borrower_overdue: { icon: <AlertIcon />, tone: 'danger' },
   loan_rescheduled: { icon: <ClockIcon />, tone: 'attention' },
+  payment_moved: { icon: <AlertIcon />, tone: 'danger' },
   custom_reminder: { icon: <BellIcon />, tone: 'soft' },
   bill_shared: { icon: <SplitIcon />, tone: 'attention' },
   bill_accepted: { icon: <CheckIcon />, tone: 'brand' },

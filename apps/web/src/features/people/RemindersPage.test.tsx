@@ -15,6 +15,10 @@ const reminders = vi.hoisted(() => ({
       ],
       lateEveryDays: 7,
       lateHour: 9,
+      lateUntilDays: null,
+      moveAfterDays: null,
+      moveByDays: 7,
+      moveWholePlan: true,
     }),
   ),
   saveReminderSettings: vi.fn(() => Promise.resolve()),
@@ -85,8 +89,31 @@ describe('RemindersPage', () => {
       ],
       lateEveryDays: null,
       lateHour: 9,
+      lateUntilDays: null,
+      moveAfterDays: null,
+      moveByDays: 7,
+      moveWholePlan: true,
     })
     expect(await screen.findByText('Saved.')).toBeTruthy()
+  })
+
+  it('stops late reminders after a set time, and moves late payments', async () => {
+    renderPage()
+    await screen.findByRole('heading', { name: 'Reminders for Bob' })
+    await userEvent.selectOptions(screen.getByLabelText('Stop reminding'), 'After 2 weeks late')
+
+    await userEvent.click(screen.getByRole('switch', { name: /move late payments/i }))
+    await userEvent.selectOptions(screen.getByLabelText('Once it’s'), 'A week late')
+    await userEvent.selectOptions(screen.getByLabelText('Move it to'), '2 weeks after it was due')
+    await userEvent.click(screen.getByRole('radio', { name: 'Just that payment' }))
+    expect(screen.getByText(/later payments keep their dates/i)).toBeTruthy()
+    await expectNoAxeViolations(document.body)
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(reminders.saveReminderSettings).toHaveBeenCalledWith(
+      'rel-1',
+      expect.objectContaining({ lateUntilDays: 14, moveAfterDays: 7, moveByDays: 14, moveWholePlan: false }),
+    )
   })
 
   it('lists, adds and cancels custom reminders', async () => {

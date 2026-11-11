@@ -36,7 +36,7 @@ export function LoanList({ loans, showClosed = true }: { loans: LoanSummary[]; s
 }
 
 function isOverdue(loan: LoanSummary): boolean {
-  return loan.status === 'active' && (loan.balance?.overdueCount ?? 0) > 0
+  return loan.status === 'active' && ((loan.balance?.overdueCount ?? 0) > 0 || loan.late !== null)
 }
 
 export function Rows({ loans }: { loans: LoanSummary[] }) {
@@ -95,6 +95,7 @@ function summaryLine(loan: LoanSummary): string {
   const balance = loan.balance
   if (loan.status === 'active' && balance) {
     if (balance.overdueCount > 0 && balance.nextDueOn) return `Overdue since ${formatShortDate(balance.nextDueOn)}`
+    if (loan.late) return `Overdue, moved to ${formatShortDate(loan.late.movedTo)}`
     return balance.nextDueOn
       ? `Next payment ${formatShortDate(balance.nextDueOn)}`
       : `${formatCents(balance.outstandingCents)} left of ${formatCents(balance.totalCents)}`

@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Reminders: choose when overdue reminders stop (after a week, 2 weeks, 30, 60 or 90 days late, or never).
+- Reminders: move late payments. Once a payment is late by a set number of days, it moves to a week (or 2 weeks, or a month) after its due date. Choose whether the whole plan moves or just that payment. The loan stays marked Overdue until it's paid, and shows how many times it has moved (ADR-0027).
+
 ### Changed
 
 - Paying or recording a payment is one screen: the amount and the receipt. The method, date and reference questions are gone.

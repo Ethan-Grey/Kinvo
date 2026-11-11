@@ -87,6 +87,9 @@ export interface Database {
       loans: {
         Row: {
           repeating_debt_id: string | null
+          late_since: string | null
+          moved_to: string | null
+          times_moved: number
           id: string
           relationship_id: string
           lender_id: string
@@ -206,6 +209,10 @@ export interface Database {
           relationship_id: string
           late_every_days: number | null
           late_hour: number
+          late_until_days: number | null
+          move_after_days: number | null
+          move_by_days: number
+          move_whole_plan: boolean
           updated_at: string
         }
         Insert: never
@@ -684,7 +691,16 @@ export interface Database {
         Returns: string
       }
       save_reminder_settings: {
-        Args: { p_relationship_id: string; p_rules: Json; p_late_every_days?: number | null; p_late_hour?: number }
+        Args: {
+          p_relationship_id: string
+          p_rules: Json
+          p_late_every_days?: number | null
+          p_late_hour?: number
+          p_late_until_days?: number | null
+          p_move_after_days?: number | null
+          p_move_by_days?: number
+          p_move_whole_plan?: boolean
+        }
         Returns: undefined
       }
       create_custom_reminder: {

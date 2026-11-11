@@ -229,9 +229,22 @@ function HeroFigure({ label, value, alert = false }: { label: string; value: str
   )
 }
 
+/** Overdue across loans, counting moved payments as still overdue (ADR-0027). */
+function overdueOf(
+  figures: { overdueCount: number; overdueCents: number },
+  active: LoanSummary[],
+): { count: number; cents: number } {
+  const moved = active.filter((loan) => loan.late && (loan.balance?.overdueCount ?? 0) === 0)
+  return {
+    count: figures.overdueCount + moved.length,
+    cents: figures.overdueCents + moved.reduce((sum, loan) => sum + (loan.balance?.nextDueCents ?? 0), 0),
+  }
+}
+
 function LendingHero({ summary, loans }: { summary: DashboardSummary; loans: LoanSummary[] }) {
   const l = summary.lending
   const lending = loans.filter((loan) => loan.role === 'lender' && loan.status === 'active')
+  const overdue = overdueOf(l, lending)
   return (
     <HeroFrame
       label="Owed to you"
@@ -243,8 +256,8 @@ function LendingHero({ summary, loans }: { summary: DashboardSummary; loans: Loa
     >
       <HeroFigure
         label="Overdue"
-        value={l.overdueCount > 0 ? formatCents(l.overdueCents) : 'Nothing'}
-        alert={l.overdueCount > 0}
+        value={overdue.count > 0 ? formatCents(toCents(overdue.cents)) : 'Nothing'}
+        alert={overdue.count > 0}
       />
       <HeroFigure label="Active" value={String(l.activeCount)} />
       <HeroFigure label="Paid out in total" value={formatCents(l.totalLentCents)} />
@@ -256,6 +269,7 @@ function LendingHero({ summary, loans }: { summary: DashboardSummary; loans: Loa
 function BorrowingHero({ summary, loans }: { summary: DashboardSummary; loans: LoanSummary[] }) {
   const b = summary.borrowing
   const borrowing = loans.filter((loan) => loan.role === 'borrower' && loan.status === 'active')
+  const overdue = overdueOf(b, borrowing)
   return (
     <HeroFrame
       label="You owe"
@@ -268,7 +282,7 @@ function BorrowingHero({ summary, loans }: { summary: DashboardSummary; loans: L
         value={b.nextDueOn && b.nextDueCents !== null ? formatCents(b.nextDueCents) : 'Nothing due'}
       />
       <HeroFigure label="Due" value={b.nextDueOn ? formatShortDate(b.nextDueOn) : '—'} />
-      {b.overdueCount > 0 && <HeroFigure label="Overdue" value={formatCents(b.overdueCents)} alert />}
+      {overdue.count > 0 && <HeroFigure label="Overdue" value={formatCents(toCents(overdue.cents))} alert />}
     </HeroFrame>
   )
 }

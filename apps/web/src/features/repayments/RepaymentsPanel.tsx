@@ -85,7 +85,10 @@ export function RepaymentsPanel({ loan, onLoanChanged }: PanelProps) {
 
       <Card>
         <h2 className="text-lg font-semibold">Schedule</h2>
-        <ScheduleProgress progress={progress} />
+        <ScheduleProgress
+          progress={progress}
+          movedTo={loan.status === 'active' ? (loan.late?.movedTo ?? null) : null}
+        />
       </Card>
 
       {(settled.length > 0 || loan.fundsSentOn) && (
@@ -129,7 +132,7 @@ function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail
           name={otherName}
           photo={loan.role === 'lender' ? loan.borrowerPhoto : loan.lenderPhoto}
           progress={share}
-          overdue={balance.overdueCount > 0}
+          overdue={balance.overdueCount > 0 || (loan.status === 'active' && loan.late !== null)}
           size="xl"
         />
         <div className="min-w-0">
@@ -161,22 +164,37 @@ function BalanceCard({ balance, loan }: { balance: LoanBalance; loan: LoanDetail
           {balance.overdueCount === 1 ? '' : 's'}).
         </Notice>
       )}
-      {loan.status === 'completed' && <Notice tone="success">All paid back. 🎉</Notice>}
-      {loan.status === 'active' && balance.nextDueOn && balance.nextDueCents !== null && balance.overdueCount === 0 && (
-        <p className="text-sm">
-          Next: <span className="font-semibold tabular-nums">{formatCents(balance.nextDueCents)}</span> due{' '}
-          {formatShortDate(balance.nextDueOn)}
-        </p>
+      {loan.status === 'active' && loan.late && balance.overdueCount === 0 && (
+        <Notice tone="error">
+          Overdue since {formatShortDate(loan.late.since)}. Moved to {formatShortDate(loan.late.movedTo)}
+          {loan.late.timesMoved > 1 ? ` (moved ${loan.late.timesMoved} times)` : ''}.
+        </Notice>
       )}
+      {loan.status === 'completed' && <Notice tone="success">All paid back. 🎉</Notice>}
+      {loan.status === 'active' &&
+        !loan.late &&
+        balance.nextDueOn &&
+        balance.nextDueCents !== null &&
+        balance.overdueCount === 0 && (
+          <p className="text-sm">
+            Next: <span className="font-semibold tabular-nums">{formatCents(balance.nextDueCents)}</span> due{' '}
+            {formatShortDate(balance.nextDueOn)}
+          </p>
+        )}
     </Card>
   )
 }
 
 /** The schedule as a timeline: a filled dot when paid, red when overdue. */
-function ScheduleProgress({ progress }: { progress: InstalmentProgress[] }) {
+function ScheduleProgress({ progress, movedTo }: { progress: InstalmentProgress[]; movedTo: string | null }) {
   return (
     <ol className="mt-3 tabular-nums">
-      {progress.map((p, index) => {
+      {progress.map((raw, index) => {
+        // A late payment that was moved still counts as overdue (ADR-0027).
+        const p =
+          raw.status === 'due' && movedTo !== null && raw.dueOn <= movedTo
+            ? { ...raw, status: 'overdue' as const }
+            : raw
         const last = index === progress.length - 1
         const dot =
           p.status === 'paid'
@@ -201,7 +219,9 @@ function ScheduleProgress({ progress }: { progress: InstalmentProgress[] }) {
                     ? `Paid${p.paidOn ? ` ${formatDate(p.paidOn)}` : ''}`
                     : p.paidCents > 0
                       ? `${formatCents(p.paidCents)} paid, ${formatCents(p.remainingCents)} left`
-                      : 'Not paid yet'}
+                      : raw.status === 'due' && p.status === 'overdue'
+                        ? 'Moved here, not paid yet'
+                        : 'Not paid yet'}
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">

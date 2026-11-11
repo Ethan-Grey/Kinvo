@@ -19,6 +19,14 @@ export interface ReminderSettings {
   /** Keep reminding every this many days while a payment is late, after the last reminder. Null = don't. */
   lateEveryDays: number | null
   lateHour: number
+  /** Stop late reminders once a payment is this many days late. Null = keep going. */
+  lateUntilDays: number | null
+  /** Move a payment once it's this many days late. Null = don't move (ADR-0027). */
+  moveAfterDays: number | null
+  /** Move it to this many days after it was due (further on if that's passed). */
+  moveByDays: number
+  /** Move every later payment by the same amount, or only the missed one. */
+  moveWholePlan: boolean
 }
 
 export const MAX_REMINDER_TIMES = 10
@@ -31,6 +39,10 @@ export const DEFAULT_REMINDER_SETTINGS: ReminderSettings = {
   ],
   lateEveryDays: 7,
   lateHour: 9,
+  lateUntilDays: null,
+  moveAfterDays: null,
+  moveByDays: 7,
+  moveWholePlan: true,
 }
 
 export interface CustomReminder {
@@ -66,6 +78,10 @@ export async function getReminderSettings(relationshipId: string): Promise<Remin
     times: sortTimes(rules.data.map((r) => ({ daysFromDue: r.days_from_due, sendHour: r.send_hour }))),
     lateEveryDays: settings.data.late_every_days,
     lateHour: settings.data.late_hour,
+    lateUntilDays: settings.data.late_until_days,
+    moveAfterDays: settings.data.move_after_days,
+    moveByDays: settings.data.move_by_days,
+    moveWholePlan: settings.data.move_whole_plan,
   }
 }
 
@@ -75,6 +91,10 @@ export async function saveReminderSettings(relationshipId: string, settings: Rem
     p_rules: sortTimes(settings.times).map((t) => ({ days_from_due: t.daysFromDue, send_hour: t.sendHour })),
     p_late_every_days: settings.lateEveryDays,
     p_late_hour: settings.lateHour,
+    p_late_until_days: settings.lateUntilDays,
+    p_move_after_days: settings.moveAfterDays,
+    p_move_by_days: settings.moveByDays,
+    p_move_whole_plan: settings.moveWholePlan,
   })
   if (error) throw toAppError(error)
 }
