@@ -22,7 +22,18 @@ import {
 } from '../../data/reminders'
 import { CloseIcon, PlusIcon } from '../../shared/icons'
 import { useAsync } from '../../shared/useAsync'
-import { Button, Card, Notice, PageHeader, PageSkeleton, Select, Switch, TextArea, TextField } from '../../shared/ui'
+import {
+  Button,
+  Card,
+  Notice,
+  PageHeader,
+  PageSkeleton,
+  Segmented,
+  Select,
+  Switch,
+  TextArea,
+  TextField,
+} from '../../shared/ui'
 import { useAuth } from '../auth/useAuth'
 
 const HOURS = Array.from({ length: 24 }, (_, h) => ({ value: String(h), label: formatHour(h) }))
@@ -35,6 +46,31 @@ const OVERDUE_GAPS = [
   { value: '14', label: 'Every fortnight' },
   { value: '30', label: 'Every 30 days' },
 ]
+
+const STOP_AFTER = [
+  { value: '', label: 'Never stop' },
+  { value: '7', label: 'After a week late' },
+  { value: '14', label: 'After 2 weeks late' },
+  { value: '30', label: 'After 30 days late' },
+  { value: '60', label: 'After 60 days late' },
+  { value: '90', label: 'After 90 days late' },
+]
+
+const MOVE_AFTER = [1, 3, 5, 7, 14, 30].map((d) => ({
+  value: String(d),
+  label: d === 1 ? 'A day late' : d === 7 ? 'A week late' : `${d} days late`,
+}))
+
+const MOVE_BY = [
+  { value: '7', label: 'A week after it was due' },
+  { value: '14', label: '2 weeks after it was due' },
+  { value: '30', label: 'A month after it was due' },
+]
+
+/** Keeps a value that isn't one of the presets selectable. */
+function withValue(options: { value: string; label: string }[], value: string, label: string) {
+  return options.some((o) => o.value === value) ? options : [...options, { value, label }]
+}
 
 const nextAtParts = new Intl.DateTimeFormat('en-NZ', {
   weekday: 'short',
@@ -235,7 +271,65 @@ function AutomaticReminders({
             </div>
           )}
         </div>
-        <p className="text-xs text-ink-muted">You’ll always be told when one of {first}’s payments is late.</p>
+        {settings.lateEveryDays !== null && (
+          <Select
+            label="Stop reminding"
+            options={withValue(
+              STOP_AFTER,
+              String(settings.lateUntilDays ?? ''),
+              `After ${settings.lateUntilDays} days late`,
+            )}
+            value={String(settings.lateUntilDays ?? '')}
+            onChange={(e) => set({ lateUntilDays: e.target.value ? Number(e.target.value) : null })}
+          />
+        )}
+
+        <div className="space-y-3 border-t border-line pt-4">
+          <Switch
+            label="Move late payments"
+            description="Give a late payment a new date instead of leaving it overdue. It stays marked as overdue until it’s paid."
+            checked={settings.moveAfterDays !== null}
+            onChange={(on) => set({ moveAfterDays: on ? 3 : null })}
+          />
+          {settings.moveAfterDays !== null && (
+            <>
+              <Select
+                label="Once it’s"
+                options={withValue(MOVE_AFTER, String(settings.moveAfterDays), `${settings.moveAfterDays} days late`)}
+                value={String(settings.moveAfterDays)}
+                onChange={(e) => set({ moveAfterDays: Number(e.target.value) })}
+              />
+              <Select
+                label="Move it to"
+                options={withValue(
+                  MOVE_BY,
+                  String(settings.moveByDays),
+                  `${settings.moveByDays} days after it was due`,
+                )}
+                value={String(settings.moveByDays)}
+                onChange={(e) => set({ moveByDays: Number(e.target.value) })}
+              />
+              <div>
+                <p className="mb-1.5 text-sm font-medium">What moves</p>
+                <Segmented
+                  label="What moves"
+                  options={[
+                    { value: 'plan', label: 'The whole plan' },
+                    { value: 'one', label: 'Just that payment' },
+                  ]}
+                  value={settings.moveWholePlan ? 'plan' : 'one'}
+                  onChange={(v) => set({ moveWholePlan: v === 'plan' })}
+                />
+                <p className="mt-1.5 text-xs text-ink-muted">
+                  {settings.moveWholePlan
+                    ? 'Every later payment moves by the same number of days.'
+                    : 'Later payments keep their dates. If it lands on one, they’re combined.'}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+        <p className="text-xs text-ink-muted">You’ll be told when one of {first}’s payments is late or moved.</p>
         {status && <Notice tone={status.tone}>{status.text}</Notice>}
         <Button type="submit" className="w-full" busy={busy}>
           Save

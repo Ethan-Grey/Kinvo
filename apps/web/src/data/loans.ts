@@ -66,6 +66,8 @@ export interface LoanDetail {
   repeatingDebtId: string | null
   /** Who started it: the person asking (borrower) or offering (lender). */
   createdBy: string
+  /** Running late: set when a late payment was moved, until it's paid (ADR-0027). */
+  late: LateState | null
 }
 
 export interface LoanSummary {
@@ -88,6 +90,28 @@ export interface LoanSummary {
   repeatingDebtId: string | null
   /** What it's for, as the person who started it put it. */
   reason: string | null
+  /** Running late: set when a late payment was moved, until it's paid (ADR-0027). */
+  late: LateState | null
+}
+
+/** A loan whose late payment was moved, until that payment is paid. */
+export interface LateState {
+  /** When the first missed payment was due. */
+  since: IsoDate
+  /** Where the missed payment is now due. */
+  movedTo: IsoDate
+  /** How many times payments on this loan have moved. */
+  timesMoved: number
+}
+
+function lateState(loan: {
+  late_since: string | null
+  moved_to: string | null
+  times_moved: number
+}): LateState | null {
+  return loan.late_since && loan.moved_to
+    ? { since: loan.late_since as IsoDate, movedTo: loan.moved_to as IsoDate, timesMoved: loan.times_moved }
+    : null
 }
 
 /** What a proposal contains, as entered in the terms form. */
@@ -147,6 +171,7 @@ export async function listLoans(userId: string): Promise<LoanSummary[]> {
       createdAt: loan.created_at,
       repeatingDebtId: loan.repeating_debt_id,
       reason: loan.reason,
+      late: lateState(loan),
     }
   })
 }
@@ -183,6 +208,7 @@ export async function getLoan(loanId: string, userId: string): Promise<LoanDetai
     lenderPhoto: loan.lender.avatar_path,
     borrowerPhoto: loan.borrower.avatar_path,
     reason: loan.reason,
+    late: lateState(loan),
     createdAt: loan.created_at,
     agreedAt: loan.agreed_at,
     fundsSentAt: loan.funds_sent_at,
