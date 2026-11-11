@@ -28,17 +28,17 @@ apps/web/src/
                  QuickPicks), ActionBar.tsx (ActionBar fixed above the tab bar, ChoiceSheet bottom sheet), icons, useAsync
   features/      loans, repayments, people, households, money, bills, repeating, notifications, dashboard, shell, auth, account, invites
 supabase/
-  migrations/    timestamped SQL; the latest is 20261110010000_set_loan_reason.sql
-  tests/database pgTAP files 01–20; plan(n) must equal the number of tests
+  migrations/    timestamped SQL; the latest is 20261111010000_overdue_handling.sql
+  tests/database pgTAP files 01–21; plan(n) must equal the number of tests
   functions/     Edge Functions (Deno)
-docs/            architecture, database-schema, design, security, setup, decisions/ (ADRs 0001–0026)
+docs/            architecture, database-schema, design, security, setup, decisions/ (ADRs 0001–0027)
 ```
 
 ## How to make a change
 
 1. Branch off `main` (`feat/...`, `fix/...`, `refactor/...`). Never commit directly to `main`.
 2. For database changes, add a new migration `supabase/migrations/<YYYYMMDDHHMMSS>_name.sql` (never edit old ones) and a pgTAP test. Add new RPC signatures to `apps/web/src/data/database.types.ts` by hand, or run `npm run db:types` with local Supabase. Add any new error keys to `data/errors.ts`.
-3. Add an ADR in `docs/decisions/` (next is 0027) for anything behavioural, and a `CHANGELOG.md` entry under **Unreleased**.
+3. Add an ADR in `docs/decisions/` (next is 0028) for anything behavioural, and a `CHANGELOG.md` entry under **Unreleased**.
 4. Run the checks from `apps/web`:
    ```
    npx tsc -b && npx eslint src && npx vitest run
@@ -73,6 +73,7 @@ docs/            architecture, database-schema, design, security, setup, decisio
 
 ## History (PRs, newest first)
 
+- **#59** Overdue handling: per-person "stop reminding after N days late" and "move late payments" (whole plan or just that payment); the loan stays Overdue until it's paid, and moves are counted.
 - **#57** One-screen payments; editable reason (`set_loan_reason`); offers ask for an optional reason.
 - **#53** Anchored ActionBar; Accept/Decline with a follow-up sheet everywhere.
 - **#52** Declutter: amount-first requests, simpler accept and paid-out pages, removed full terms, history and fingerprints.
@@ -87,20 +88,13 @@ docs/            architecture, database-schema, design, security, setup, decisio
 
 Open: Dependabot PRs #54–56. #55 (supabase CLI 3.0) may need workflow changes, so check CI before merging.
 
-## Next up (discussed, not built)
+## Next up (ideas, not built)
 
-Overdue payments: loans drift as they get extended again and again instead of being paid. The recommended first build:
+Overdue follow-ups:
 
-1. **Payday-aligned due dates.** Ask the borrower's pay cycle and day, and schedule payments on it.
-2. **Borrower "I can't pay this one".** Shown a few days before the due date. Options: pay part now, move it to next payday, or add it to the end. The lender approves with one tap.
-3. **Extension counter on the loan page.** For example, "Extended 3 times · 41 days behind the original plan".
-
-Later ideas:
-
-- Missed amounts carry forward automatically.
+- **Payday-aligned due dates.** Ask the borrower's pay cycle and day, and schedule payments on it.
+- **Borrower "I can't pay this one".** Pay part now, move it to next payday, or add it to the end. The lender approves with one tap.
 - Late, Behind and Stalled stages, with a "Needs attention" section on Home.
-- Reminders that build up, plus a one-tap Nudge.
-- A private on-time record for each person.
+- A one-tap Nudge.
 - A settle offer ("pay $X and we're square").
 - An agreed pause that restarts by itself.
-- Skip late fees.
